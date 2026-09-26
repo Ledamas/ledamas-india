@@ -8,24 +8,13 @@ import { getAllProducts, getProductsByCollection } from '../../lib/products';
 import { ProductCard } from '../product/product-card';
 
 export function FeaturedCollection() {
-  const [activeTab, setActiveTab] = useState<string>('bestseller');
+  const [activeTab, setActiveTab] = useState<string>('all');
   const allProducts = getAllProducts();
-
-  const tabs = [
-    { id: 'bestseller', label: 'Best Sellers' },
-    { id: 'trending', label: 'Trending' },
-    { id: 'kunafa-pistachio', label: 'Kunafa Pistachio' },
-    { id: 'dark-chocolate', label: 'Dark Chocolate' },
-    { id: 'milk-chocolate', label: 'Milk Chocolate' },
-    { id: 'speculoos', label: 'Speculoos' },
-    { id: 'lebubu', label: 'Lebubu' },
-    { id: 'mini-bar', label: 'Mini Bar' },
-  ];
 
   // Filter products dynamically based on tab selection
   let filteredProducts = allProducts;
-  if (activeTab === 'bestseller') {
-    filteredProducts = allProducts.filter((p) => p.isBestSeller);
+  if (activeTab === 'all' || activeTab === 'bestseller') {
+    filteredProducts = allProducts;
   } else if (activeTab === 'trending') {
     filteredProducts = allProducts.filter((p) => p.isFeatured || p.isNewRelease);
   } else if (activeTab === 'kunafa-pistachio') {
@@ -44,11 +33,49 @@ export function FeaturedCollection() {
     filteredProducts = getProductsByCollection(activeTab);
   }
 
+  const categoryCircles = [
+    {
+      id: 'all',
+      label: 'ALL PRODUCTS',
+      image: '/Discover product.png',
+    },
+    {
+      id: 'kunafa-pistachio',
+      label: 'KUNAFA PISTACHIO',
+      image: '/Kunafa Pistachio Dark Chocolate 1.png',
+    },
+    {
+      id: 'dark-chocolate',
+      label: 'DARK CHOCOLATE',
+      image: '/Kunafa Pistachio Dark Chocolate 2.png',
+    },
+    {
+      id: 'milk-chocolate',
+      label: 'MILK CHOCOLATE',
+      image: '/Hazelnut Creme Milk Chocolate 1.png',
+    },
+    {
+      id: 'speculoos',
+      label: 'SPECULOOS',
+      image: '/Speculoos Creme and Kunafa 1.png',
+    },
+    {
+      id: 'lebubu',
+      label: 'LEBUBU',
+      image: '/Le Bubu 1.png',
+    },
+    {
+      id: 'mini-bar',
+      label: 'MINI BAR',
+      image: '/Kunafa Pistachio Dark Chocolate – Mini Bar 35gm 1.png',
+    },
+  ];
+
   return (
-    <section className="py-16 sm:py-20 bg-white border-t border-stone-200 relative overflow-hidden">
-      <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12 space-y-8">
+    <section className="py-12 sm:py-16 bg-white border-t border-stone-200 relative overflow-hidden">
+      <div className="max-w-[1480px] w-full mx-auto px-4 sm:px-6 lg:px-12 space-y-8">
         
-        {/* Section Header: Centered 'Best Sellers & Trending' Title + View All Button */}
+        {/* Section Header */}
         <div className="relative flex flex-col items-center justify-center border-b border-stone-200 pb-6">
           <h2 className="font-serif text-3xl sm:text-5xl text-[#1A1817] font-bold tracking-tight text-center">
             Best Sellers & Trending
@@ -56,7 +83,7 @@ export function FeaturedCollection() {
 
           <div className="mt-4 sm:mt-0 sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
             <Link href="/shop">
-              <button className="px-5 py-2.5 bg-[#1A1817] hover:bg-[#CB9700] text-white text-xs font-sans uppercase font-extrabold tracking-widest transition-colors flex items-center gap-1.5 shadow-md cursor-pointer">
+              <button className="px-5 py-2.5 bg-[#1A1817] hover:bg-[#CB9700] text-white text-xs font-sans uppercase font-extrabold tracking-widest transition-colors flex items-center gap-1.5 shadow-md cursor-pointer rounded-sm">
                 <span>View All</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -64,28 +91,45 @@ export function FeaturedCollection() {
           </div>
         </div>
 
-        {/* High-Contrast Centered Sub-Filter Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 pt-2">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
+        {/* 1. Circular Category Bubbles Row (Matching User's Reference Image 1) */}
+        <div className="py-2">
+          <div className="flex items-center justify-start md:justify-center gap-5 sm:gap-8 overflow-x-auto no-scrollbar pb-4 pt-2 px-2 snap-x">
+            {categoryCircles.map((cat) => {
+              const isActive = activeTab === cat.id;
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-xs font-sans tracking-wider uppercase transition-all duration-200 rounded-lg cursor-pointer ${
-                  isActive
-                    ? 'bg-[#1A1817] text-white font-extrabold shadow-md border border-[#1A1817]'
-                    : 'bg-[#F5F3EC] text-[#222222] hover:text-[#1A1817] hover:bg-[#EAE6D9] font-bold border border-stone-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveTab(cat.id)}
+                  className="group flex flex-col items-center shrink-0 snap-center cursor-pointer transition-all focus:outline-none"
+                >
+                  <div
+                    className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-26 md:h-26 rounded-full overflow-hidden border-2 transition-all duration-300 shadow-sm ${
+                      isActive
+                        ? 'border-[#1A1817] ring-4 ring-[#1A1817]/15 scale-105'
+                        : 'border-stone-200/90 group-hover:border-[#CB9700] group-hover:scale-105'
+                    }`}
+                  >
+                    <img
+                      src={cat.image}
+                      alt={cat.label}
+                      className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                  <span
+                    className={`mt-2.5 text-[11px] sm:text-xs font-sans font-bold tracking-wider uppercase transition-colors text-center max-w-[100px] leading-tight ${
+                      isActive ? 'text-[#1A1817] font-extrabold' : 'text-[#5C4538] group-hover:text-[#1A1817]'
+                    }`}
+                  >
+                    {cat.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Animated Product Grid (4 Columns) */}
+        {/* Animated Product Grid (2 Columns on Mobile, 3 on Tablet, 4 on Desktop) */}
         <AnimatePresence mode="popLayout">
           <motion.div
             key={activeTab}
@@ -93,7 +137,7 @@ export function FeaturedCollection() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.35 }}
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6 md:gap-8 pt-4"
+            className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6 md:gap-8 pt-4"
           >
             {filteredProducts.map((product) => {
               let badge: string | undefined = undefined;
@@ -115,11 +159,11 @@ export function FeaturedCollection() {
           </div>
         )}
 
-        {/* View All Button Footer */}
-        <div className="text-center pt-6">
-          <Link href="/shop">
-            <button className="px-8 py-3.5 rounded-lg bg-[#1A1817] hover:bg-[#CB9700] text-white font-sans text-xs uppercase tracking-[0.25em] font-extrabold shadow-md transition-all duration-300 inline-flex items-center space-x-2 cursor-pointer">
-              <span>EXPLORE COMPLETE SHOP ({allProducts.length} ITEMS)</span>
+        {/* View All Button Footer (After All 12 Products) */}
+        <div className="text-center pt-6 flex justify-center">
+          <Link href="/shop" className="w-full max-w-xs sm:max-w-md">
+            <button className="w-full py-3.5 px-8 rounded-full bg-[#703019] hover:bg-[#1A1817] active:bg-[#1A1817] text-white text-xs font-sans font-bold uppercase tracking-[0.2em] shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer">
+              <span>VIEW ALL</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </Link>

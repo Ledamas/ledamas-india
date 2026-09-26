@@ -32,23 +32,27 @@ export function ProductCard({ product, badgeText }: ProductCardProps) {
 
   const currentBadge = badgeText || (product.isBestSeller ? 'BEST SELLER' : product.isFeatured ? 'FEATURED' : null);
 
+  const discountPercent = product.originalPrice && product.originalPrice > product.price
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-30px' }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative flex flex-col bg-white text-center cursor-pointer"
+      className="group relative flex flex-col bg-white text-left cursor-pointer"
     >
-      {/* CarbonSmith-Style Clean Studio Image Container with Dual-Image Hover Swap */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#FAFAFA] rounded-xs border border-stone-100">
+      {/* Studio Image Container with Badges */}
+      <div className="relative aspect-square w-full overflow-hidden bg-[#F5F3EF] rounded-sm border border-stone-200/60">
         <Link href={`/products/${product.slug}`} className="block w-full h-full relative">
           {/* Primary Studio Image */}
           <Image
             src={primaryImage}
             alt={product.imageAlt || product.name}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             className={`object-cover object-center transition-all duration-700 ease-out group-hover:scale-105 ${
               hasSecondaryImage ? 'group-hover:opacity-0' : ''
             }`}
@@ -60,106 +64,84 @@ export function ProductCard({ product, badgeText }: ProductCardProps) {
               src={secondaryImage}
               alt={`${product.name} lifestyle view`}
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
               className="object-cover object-center transition-all duration-700 ease-out opacity-0 group-hover:opacity-100 group-hover:scale-105"
             />
           )}
         </Link>
 
-        {/* Top Badges & Wishlist - CarbonSmith Style */}
-        <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10 pointer-events-none">
-          {/* Badge Display */}
+        {/* Top Badges (Left = BESTSELLER/NEW, Right = % OFF) */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex justify-between items-start z-10 pointer-events-none">
           <div>
-            {currentBadge ? (
-              <span
-                className={`px-2.5 py-1 text-[9px] font-sans font-bold uppercase tracking-[0.18em] rounded-none pointer-events-auto shadow-xs ${
-                  currentBadge === 'BEST SELLER'
-                    ? 'bg-[#1A1D20] text-white border border-stone-800'
-                    : 'bg-[#FAF1E6] text-[#C68A4C]'
-                }`}
-              >
-                {currentBadge}
+            {currentBadge && (
+              <span className="px-2 py-0.5 text-[9px] font-sans font-bold uppercase tracking-wider rounded-xs pointer-events-auto bg-[#1E2540] text-white shadow-xs">
+                {currentBadge.replace(' ', '')}
               </span>
-            ) : product.weight ? (
-              <span className="px-2 py-0.5 bg-stone-900/80 text-white text-[9px] font-sans font-medium uppercase tracking-wider rounded-none pointer-events-auto">
-                {product.weight}
-              </span>
-            ) : null}
+            )}
           </div>
 
-          {/* Top-Right Heart Wishlist Trigger (CarbonSmith Bare Outline Heart) */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleItem({
-                id: product.id,
-                slug: product.slug,
-                name: product.name,
-                price: product.price,
-                image: primaryImage,
-                category: product.category,
-                inStock: product.inStock,
-              });
-            }}
-            className="p-1 text-stone-400 hover:text-stone-900 transition-colors pointer-events-auto drop-shadow-xs"
-            aria-label="Add to Wishlist"
-          >
-            <Heart className={`w-4.5 h-4.5 ${isInWishlist ? 'fill-red-500 text-red-500' : 'stroke-[1.3]'}`} />
-          </button>
-        </div>
-
-        {/* Quick Add Overlay Bar (Hover on Desktop, Always Visible on Mobile) */}
-        <div className="absolute inset-x-3 bottom-3 z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 transform translate-y-0 md:translate-y-2 md:group-hover:translate-y-0">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              addItem(product);
-            }}
-            className="w-full py-2.5 px-4 rounded-xs bg-[#232628] hover:bg-[#CB9700] active:bg-[#CB9700] text-white text-[11px] font-sans font-medium uppercase tracking-[0.2em] transition-colors shadow-md flex items-center justify-center space-x-1.5"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span>ADD TO CART</span>
-          </button>
+          <div className="flex items-center gap-1.5 pointer-events-auto">
+            {discountPercent && (
+              <span className="px-2 py-0.5 text-[9px] font-sans font-bold uppercase tracking-wider rounded-xs bg-[#BF523C] text-white shadow-xs">
+                {discountPercent}% Off
+              </span>
+            )}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleItem({
+                  id: product.id,
+                  slug: product.slug,
+                  name: product.name,
+                  price: product.price,
+                  image: primaryImage,
+                  category: product.category,
+                  inStock: product.inStock,
+                });
+              }}
+              className="p-1 text-stone-600 hover:text-stone-900 bg-white/80 backdrop-blur-xs rounded-full shadow-xs transition-colors"
+              aria-label="Add to Wishlist"
+            >
+              <Heart className={`w-3.5 h-3.5 ${isInWishlist ? 'fill-red-500 text-red-500' : 'stroke-[1.5]'}`} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* CarbonSmith Centered Product Details below Image */}
-      <div className="pt-2.5 pb-1 px-1 flex flex-col items-center text-center space-y-1">
-        {/* Product Title */}
-        <Link href={`/products/${product.slug}`} className="block">
-          <h3 className="font-serif type-product-name font-normal text-stone-900 group-hover:text-[#CB9700] transition-colors leading-snug line-clamp-1">
-            {product.name}
-          </h3>
-        </Link>
+      {/* Details Row (Name & Prices on Left, Circular Cart Button on Right) */}
+      <div className="pt-3 pb-1 flex items-start justify-between gap-2">
+        <div className="flex flex-col text-left space-y-0.5 min-w-0 flex-1">
+          {/* Product Title */}
+          <Link href={`/products/${product.slug}`} className="block">
+            <h3 className="font-sans font-semibold text-xs sm:text-sm text-stone-900 uppercase tracking-tight line-clamp-1 group-hover:text-[#CB9700] transition-colors leading-tight">
+              {product.name}
+            </h3>
+          </Link>
 
-        {/* Category & Collection Subtitle */}
-        <span className="font-sans type-label text-stone-400 font-light tracking-wider uppercase">
-          {product.category} Collection
-        </span>
-
-        {/* Price */}
-        <div className="pt-0.5 flex items-center justify-center gap-1.5">
-          <span className="font-sans type-product-price text-stone-900">
-            ₹{product.price.toLocaleString('en-IN')}
-          </span>
+          {/* Strikethrough original MRP price */}
           {product.originalPrice && (
-            <span className="font-sans text-xs text-stone-400 line-through font-light">
-              ₹{product.originalPrice.toLocaleString('en-IN')}
+            <span className="font-sans text-[11px] text-stone-400 line-through font-normal leading-none pt-0.5">
+              MRP RS. {product.originalPrice.toLocaleString('en-IN')}.00
             </span>
           )}
+
+          {/* Selling Price */}
+          <span className="font-sans font-medium text-xs sm:text-sm text-[#C65538] leading-tight">
+            RS. {product.price.toLocaleString('en-IN')}.00
+          </span>
         </div>
 
-        {/* Dedicated Mobile Quick Add Button */}
+        {/* Circular Quick Add Bag Icon Button */}
         <button
           onClick={(e) => {
             e.preventDefault();
             addItem(product);
           }}
-          className="md:hidden mt-2 w-full py-2 px-3 rounded-xs bg-[#232628] hover:bg-[#CB9700] active:bg-[#CB9700] text-white text-[10px] font-sans font-semibold uppercase tracking-[0.15em] transition-colors shadow-xs flex items-center justify-center space-x-1.5"
+          className="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-stone-800 bg-white hover:bg-[#1E2540] hover:border-[#1E2540] hover:text-white text-stone-900 flex items-center justify-center transition-all duration-200 shadow-xs active:scale-95 group/btn"
+          aria-label={`Add ${product.name} to cart`}
         >
-          <ShoppingBag className="w-3 h-3 text-[#CB9700]" />
-          <span>ADD TO CART</span>
+          <ShoppingBag className="w-4 h-4 stroke-[1.6] group-hover/btn:scale-110 transition-transform" />
         </button>
       </div>
     </motion.div>

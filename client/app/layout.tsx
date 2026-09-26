@@ -41,13 +41,35 @@ export const metadata: Metadata = {
     'middle eastern chocolates',
     'artisan patisserie'
   ],
+  icons: {
+    icon: [
+      { url: '/Le-Damas-Sweets-Logo-enhanced.png', type: 'image/png' },
+      { url: '/icon.png', type: 'image/png' }
+    ],
+    shortcut: '/Le-Damas-Sweets-Logo-enhanced.png',
+    apple: '/Le-Damas-Sweets-Logo-enhanced.png',
+  },
   openGraph: {
     title: 'LE DAMAS — Delicious Since 1951 | Heritage & Luxury Chocolates',
     description: 'Discover LE DAMAS — Delicious Since 1951. Artisan Middle Eastern chocolates, Kunafa pistachio chocolates, speculoos cremes, and luxury confectionery.',
     url: 'https://ledamas.in',
     siteName: 'LE DAMAS',
+    images: [
+      {
+        url: '/Le-Damas-Sweets-Logo-enhanced.png',
+        width: 800,
+        height: 600,
+        alt: 'LE DAMAS Luxury Chocolaterie Logo',
+      }
+    ],
     locale: 'en_IN',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'LE DAMAS — Delicious Since 1951',
+    description: 'Artisan Middle Eastern chocolates, Kunafa pistachio chocolates, and luxury confectionery.',
+    images: ['/Le-Damas-Sweets-Logo-enhanced.png'],
   },
 };
 
