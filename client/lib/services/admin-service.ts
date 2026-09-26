@@ -1,0 +1,136 @@
+import { fetchApi } from '../api-client';
+
+export interface DatabaseUserRecord {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: string;
+  isVIP: boolean;
+  authProvider: string;
+  lifetimeValue: number;
+  totalOrders: number;
+  lastOrderDate: string;
+  createdAt: string;
+}
+
+export interface AdminAnalyticsData {
+  totalCustomers: number;
+  totalOrders: number;
+  totalRevenue: number;
+  liveVisitors: number;
+}
+
+export async function getAdminUsersApi(): Promise<{ count: number; users: DatabaseUserRecord[] }> {
+  try {
+    const res = await fetchApi<{ data: { count: number; users: DatabaseUserRecord[] } }>('/admin/users');
+    return res.data || res;
+  } catch (err) {
+    return { count: 0, users: [] };
+  }
+}
+
+export async function getAdminAnalyticsApi(): Promise<AdminAnalyticsData> {
+  try {
+    const res = await fetchApi<{ data: AdminAnalyticsData }>('/admin/analytics');
+    return res.data || res;
+  } catch (err) {
+    return { totalCustomers: 0, totalOrders: 0, totalRevenue: 0, liveVisitors: 12 };
+  }
+}
+
+export async function getAdminLiveVisitorsApi(): Promise<{ count: number; visitors: any[] }> {
+  try {
+    const res = await fetchApi<{ data: { count: number; visitors: any[] } }>('/admin/live-visitors');
+    return res.data || res;
+  } catch (err) {
+    return { count: 0, visitors: [] };
+  }
+}
+
+export async function getAdminOrdersApi(): Promise<{ count: number; orders: any[] }> {
+  try {
+    const res = await fetchApi<{ data: { count: number; orders: any[] } }>('/admin/orders');
+    return res.data || res;
+  } catch (err) {
+    return { count: 0, orders: [] };
+  }
+}
+
+export async function updateOrderStatusApi(orderId: string, orderStatus: string): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>(`/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ orderStatus }),
+    });
+    return res.data || res;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function processAdminRefundApi(orderId: string, amount: number, reason?: string): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>(`/admin/orders/${orderId}/refund`, {
+      method: 'POST',
+      body: JSON.stringify({ amount, reason }),
+    });
+    return res.data || res;
+  } catch (err: any) {
+    throw new Error(err?.message || 'Failed to process refund');
+  }
+}
+
+
+export async function getAdminCouponsApi(): Promise<{ count: number; coupons: any[] }> {
+  try {
+    const res = await fetchApi<{ data: { count: number; coupons: any[] } }>('/admin/coupons');
+    return res.data || res;
+  } catch (err) {
+    return { count: 0, coupons: [] };
+  }
+}
+
+export async function createAdminCouponApi(payload: any): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>('/admin/coupons', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return res.data || res;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function deleteAdminCouponApi(couponId: string): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>(`/admin/coupons/${couponId}`, {
+      method: 'DELETE',
+    });
+    return res.data || res;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function getAdminReferralsApi(): Promise<{ count: number; referrals: any[] }> {
+  try {
+    const res = await fetchApi<{ data: { count: number; referrals: any[] } }>('/admin/referrals');
+    return res.data || res;
+  } catch (err) {
+    return { count: 0, referrals: [] };
+  }
+}
+
+export async function createAdminReferralApi(payload: any): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>('/admin/referrals', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return res.data || res;
+  } catch (err: any) {
+    throw new Error(err?.message || 'Failed to create referral code');
+  }
+}

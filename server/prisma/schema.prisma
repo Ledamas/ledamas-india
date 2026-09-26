@@ -1,0 +1,403 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  MANAGER
+  INVENTORY_STAFF
+  MARKETING_TEAM
+  CUSTOMER_SUPPORT
+  CUSTOMER
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  ADVANCE_PAID
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  NEW
+  PROCESSING
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUND_REQUESTED
+  REFUNDED
+  RETURN_REQUESTED
+  CONFIRMED
+}
+
+model User {
+  id              String           @id @default(uuid())
+  email           String?          @unique
+  password        String?
+  name            String?
+  role            Role             @default(CUSTOMER)
+  phone           String?          @unique
+  phoneVerified   Boolean          @default(false)
+  referralCode    String?          @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  customerProfile CustomerProfile?
+  referralCodes   ReferralCode[]
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  slug        String    @unique
+  name        String
+  tagline     String
+  description String
+  heroImage   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model CustomCollection {
+  id          String    @id @default(uuid())
+  slug        String    @unique
+  name        String
+  tagline     String?
+  description String?
+  heroImage   String?
+  sortOrder   Int       @default(0)
+  seoTitle    String?
+  metaDesc    String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id                 String              @id @default(uuid())
+  slug               String              @unique
+  name               String
+  tagline            String
+  shortDescription   String?
+  description        String
+  price              Float
+  compareAtPrice     Float?
+  originalPrice      Float?
+  cacaoPercentage    Int?
+  weight             String
+  origin             String?
+  tastingNotes       String[]
+  ingredients        String[]
+  dietaryBadges      String[]
+  images             String[]
+  productImages      ProductImage[]
+  isFeatured         Boolean             @default(false)
+  isBestSeller       Boolean             @default(false)
+  isNewRelease       Boolean             @default(false)
+  rating             Float               @default(5.0)
+  reviewsCount       Int                 @default(0)
+  inStock            Boolean             @default(true)
+  scheduledLaunch    DateTime?
+  categoryId         String
+  category           Category            @relation(fields: [categoryId], references: [id])
+  collections        CustomCollection[]
+  variants           ProductVariant[]
+  orderItems         OrderItem[]
+  inventoryBatches   InventoryBatch[]
+  inventoryMovements InventoryMovement[]
+  seo                ProductSeo?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String?
+  caption   String?
+  sortOrder Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model ProductVariant {
+  id            String   @id @default(uuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name          String
+  weight        String
+  price         Float
+  originalPrice Float?
+  inStock       Boolean  @default(true)
+  variantType   String   @default("Milk") // Milk, Dark, White, Mini Bars
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([productId])
+}
+
+model Order {
+  id                    String        @id @default(uuid())
+  orderNumber           String        @unique
+  customerName          String
+  email                 String
+  phone                 String
+  street                String
+  apartment             String?
+  city                  String
+  state                 String
+  pincode               String
+  country               String        @default("India")
+  subtotal              Float
+  shippingFee           Float         @default(0)
+  discount              Float         @default(0)
+  total                 Float
+  orderTotal            Float         @default(0)
+  codAdvance            Float         @default(0)
+  codConfirmationCharge Float         @default(0)
+  codAmount             Float         @default(0)
+  couponCode            String?
+  referralCode          String?
+  referralOwnerId       String?
+  userId                String?
+  paymentStatus         PaymentStatus @default(PENDING)
+  orderStatus           OrderStatus   @default(NEW)
+  paymentMethod         String?
+  paymentId             String?
+  razorpayOrderId       String?
+  razorpaySignature     String?
+  razorpayRefundId      String?
+  refundAmount          Float?
+  refundStatus          String?
+  refundReason          String?
+  refundedAt            DateTime?
+  items                 OrderItem[]
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([orderNumber])
+  @@index([email])
+  @@index([couponCode])
+  @@index([referralCode])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  variantId   String?
+  productName String
+  variantName String?
+  price       Float
+  quantity    Int
+  image       String
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model InventoryBatch {
+  id             String   @id @default(uuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId      String?
+  batchNumber    String
+  officeStock    Int      @default(0)
+  warehouseStock Int      @default(0)
+  damagedStock   Int      @default(0)
+  expiryDate     DateTime
+  lowStockAlert  Int      @default(10)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([batchNumber])
+  @@index([productId])
+}
+
+model InventoryMovement {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  batchId     String?
+  changeType  String   // ADDITION, REDUCTION, DAMAGED, ADJUSTMENT, ORDER_RESERVED
+  quantity    Int
+  reason      String
+  staffId     String
+  staffName   String
+  createdAt   DateTime @default(now())
+
+  @@index([productId])
+}
+
+model CustomerProfile {
+  id            String    @id @default(uuid())
+  userId        String?   @unique
+  user          User?     @relation(fields: [userId], references: [id])
+  email         String    @unique
+  phone         String
+  fullName      String
+  isVIP         Boolean   @default(false)
+  lifetimeValue Float     @default(0)
+  totalOrders   Int       @default(0)
+  adminNotes    String?
+  lastOrderAt   DateTime?
+  visitors      Visitor[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model HomepageSection {
+  id          String   @id @default(uuid())
+  sectionKey  String   @unique // HERO, ANNOUNCEMENT_BAR, FEATURED_COLLECTION, PROMO_BANNER
+  contentJson Json
+  isEnabled   Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+}
+
+model Visitor {
+  id           String           @id @default(uuid())
+  visitorId    String           @unique
+  customerId   String?
+  customer     CustomerProfile? @relation(fields: [customerId], references: [id])
+  deviceType   String?
+  browser      String?
+  os           String?
+  referrer     String?
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  firstSeenAt  DateTime         @default(now())
+  lastActiveAt DateTime         @updatedAt
+  sessions     Session[]
+  events       TrackedEvent[]
+}
+
+model Session {
+  id          String         @id @default(uuid())
+  sessionId   String         @unique
+  visitorId   String
+  visitor     Visitor        @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  durationSec Int            @default(0)
+  pagesCount  Int            @default(1)
+  startedAt   DateTime       @default(now())
+  endedAt     DateTime?
+  events      TrackedEvent[]
+}
+
+model TrackedEvent {
+  id          String   @id @default(uuid())
+  eventId     String   @default(uuid())
+  visitorId   String
+  visitor     Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  sessionId   String?
+  session     Session? @relation(fields: [sessionId], references: [id])
+  eventType   String   // page_view, product_view, add_to_cart, checkout_started, purchase
+  path        String
+  productId   String?
+  productName String?
+  metadata    Json?
+  timestamp   DateTime @default(now())
+
+  @@index([visitorId])
+  @@index([eventType])
+  @@index([timestamp])
+}
+
+model Coupon {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  discountType  String   // PERCENTAGE, FIXED_AMOUNT, BOGO, FREE_SHIPPING
+  discountValue Float
+  minOrderValue Float?
+  maxDiscount   Float?
+  usageLimit    Int?
+  timesUsed     Int      @default(0)
+  startDate     DateTime
+  expiryDate    DateTime
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model ReferralCode {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  ownerUserId     String?
+  ownerUser       User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  ownerName       String
+  ownerPhone      String?
+  ownerEmail      String?
+  discountPercent Float    @default(20.0) // Configurable discount, up to 20%
+  timesUsed       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([code])
+  @@index([ownerUserId])
+}
+
+model ProductSeo {
+  id              String   @id @default(uuid())
+  productId       String   @unique
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  metaTitle       String?
+  metaDescription String?
+  urlSlug         String   @unique
+  keywords        String[]
+  schemaType      String   @default("Product")
+}
+
+model SystemAuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  adminEmail String
+  action     String   // PRODUCT_UPDATE, PRICE_CHANGE, ORDER_REFUND, HERO_CMS_UPDATE
+  entityType String   // Product, Order, Homepage, Coupon
+  entityId   String
+  oldValue   Json?
+  newValue   Json?
+  timestamp  DateTime @default(now())
+}
+
+model StaffAuditLog {
+  id        String   @id @default(uuid())
+  staffId   String
+  staffName String
+  role      Role
+  action    String
+  details   String
+  createdAt DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(uuid())
+  eventType   String
+  path        String
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  sessionId   String
+  metadata    Json?
+  timestamp   DateTime @default(now())
+
+  @@index([eventType])
+  @@index([sessionId])
+  @@index([timestamp])
+}

@@ -1,0 +1,236 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #FDFDFB;
+    --bg-surface: #FFFFFF;
+    --bg-soft: #F7F6F0;
+    
+    --text-dark: #2B2B2B;
+    --text-muted: #666666;
+    --text-light: #888888;
+    
+    --accent-teal: #2AD2C5;
+    --accent-teal-dark: #1EAEA3;
+    --accent-teal-soft: rgba(42, 210, 197, 0.12);
+    
+    --accent-gold: #CB9700;
+    --accent-gold-hover: #E5AC00;
+    --accent-gold-soft: rgba(203, 151, 0, 0.12);
+    
+    --border-subtle: rgba(42, 210, 197, 0.18);
+    --border-gold: rgba(203, 151, 0, 0.25);
+    
+    --font-serif: var(--font-cormorant), 'Times New Roman', serif;
+    --font-script: var(--font-script), 'Alex Brush', cursive, sans-serif;
+    --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  }
+}
+
+/* Custom Scrollbar for Heritage Aesthetics */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FDFDFB;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2AD2C5;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1EAEA3;
+}
+
+/* Selection Color */
+::selection {
+  background: #2AD2C5;
+  color: #FFFFFF;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-dark);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Centralized Luxury Typography Design System
+   - Cormorant Garamond (--font-serif): Display, luxury headings, brand moments
+   - Plus Jakarta Sans (--font-sans): Body text, navigation, buttons, prices, forms, UI
+*/
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-script {
+  font-family: var(--font-script);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Typography Hierarchy Utilities */
+.type-hero {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(2.25rem, 5.5vw, 4.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.type-page-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.875rem, 3.8vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.type-section-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.type-subheading {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+
+.type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: clamp(0.875rem, 1.1vw, 1rem);
+  line-height: 1.6;
+}
+
+.type-small {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.type-product-name {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  line-height: 1.25;
+}
+
+.type-product-price {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(0.9375rem, 1.2vw, 1.125rem);
+  letter-spacing: -0.01em;
+}
+
+.type-btn {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.type-nav {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.type-label {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.625rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.type-input {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.heading-editorial {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+  font-weight: 300;
+  line-height: 1.1;
+}
+
+/* Color Helper Classes */
+.text-teal {
+  color: #2AD2C5;
+}
+
+.text-gold {
+  color: #CB9700;
+}
+
+.bg-teal {
+  background-color: #2AD2C5;
+}
+
+.bg-gold {
+  background-color: #CB9700;
+}
+
+.border-teal {
+  border-color: #2AD2C5;
+}
+
+.border-gold {
+  border-color: #CB9700;
+}
+
+/* Luxury Card Glow Effect */
+.luxury-glow-hover {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.luxury-glow-hover:hover {
+  box-shadow: 0 12px 35px rgba(42, 210, 197, 0.12), 0 0 15px rgba(203, 151, 0, 0.15);
+  border-color: rgba(42, 210, 197, 0.4);
+  transform: translateY(-3px);
+}
+
+/* Smooth Image Hover Reveal */
+.img-zoom-container {
+  overflow: hidden;
+}
+
+.img-zoom-container img {
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.img-zoom-container:hover img {
+  transform: scale(1.06);
+}
+
+/* Glassmorphism Subtle Layer */
+.glass-panel {
+  background: rgba(253, 253, 251, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(42, 210, 197, 0.18);
+}
