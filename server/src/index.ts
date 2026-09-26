@@ -48,12 +48,25 @@ app.use(morgan('dev'));
 
 // API Routes Mounting
 app.use('/api/v1/health', healthRoutes);
+app.use('/health', healthRoutes);
+
 app.use('/api/v1/auth', authRoutes);
+app.use('/auth', authRoutes);
+
 app.use('/api/v1/products', productsRoutes);
+app.use('/products', productsRoutes);
+
 app.use('/api/v1/orders', ordersRoutes);
+app.use('/orders', ordersRoutes);
+
 app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/analytics', analyticsRoutes);
+
 app.use('/api/v1/admin', adminRoutes);
+app.use('/admin', adminRoutes);
+
 app.use('/api/v1/coupons', couponsRoutes);
+app.use('/coupons', couponsRoutes);
 
 // Root Route Welcome
 app.get('/', (_req: Request, res: Response) => {
