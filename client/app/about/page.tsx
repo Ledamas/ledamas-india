@@ -135,13 +135,13 @@ export default function AboutPage() {
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Dubai Artisan Craft Atmosphere Photograph */}
             <div className="lg:col-span-5 order-2 lg:order-1">
-              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-stone-200 shadow-lg group bg-stone-100">
+              <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full rounded-2xl overflow-hidden border border-stone-200 shadow-md group bg-[#FAF7F2]">
                 <Image
-                  src="/dubai-artisan-craft.png"
+                  src="/Discover product.png"
                   alt="Dubai Master Pastry Chef Crafting Kunafa & Pistachio Confectionery"
                   fill
                   sizes="(max-width: 1024px) 100vw, 45vw"
-                  className="object-cover object-center group-hover:scale-103 transition-transform duration-500"
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
             </div>

@@ -74,7 +74,7 @@ export function FeaturedCollection() {
   return (
     <section className="py-12 sm:py-16 bg-white border-t border-stone-200 relative overflow-hidden">
       <div className="max-w-[1480px] w-full mx-auto px-4 sm:px-6 lg:px-12 space-y-8">
-        
+
         {/* Section Header */}
         <div className="relative flex flex-col items-center justify-center border-b border-stone-200 pb-6">
           <h2 className="font-serif text-3xl sm:text-5xl text-[#1A1817] font-bold tracking-tight text-center">
@@ -104,11 +104,10 @@ export function FeaturedCollection() {
                   className="group flex flex-col items-center shrink-0 snap-center cursor-pointer transition-all focus:outline-none"
                 >
                   <div
-                    className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-26 md:h-26 rounded-full overflow-hidden border-2 transition-all duration-300 shadow-sm ${
-                      isActive
-                        ? 'border-[#1A1817] ring-4 ring-[#1A1817]/15 scale-105'
-                        : 'border-stone-200/90 group-hover:border-[#CB9700] group-hover:scale-105'
-                    }`}
+                    className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-26 md:h-26 rounded-full overflow-hidden border-2 transition-all duration-300 shadow-sm ${isActive
+                      ? 'border-[#1A1817] ring-4 ring-[#1A1817]/15 scale-105'
+                      : 'border-stone-200/90 group-hover:border-[#CB9700] group-hover:scale-105'
+                      }`}
                   >
                     <img
                       src={cat.image}
@@ -117,9 +116,8 @@ export function FeaturedCollection() {
                     />
                   </div>
                   <span
-                    className={`mt-2.5 text-[11px] sm:text-xs font-sans font-bold tracking-wider uppercase transition-colors text-center max-w-[100px] leading-tight ${
-                      isActive ? 'text-[#1A1817] font-extrabold' : 'text-[#5C4538] group-hover:text-[#1A1817]'
-                    }`}
+                    className={`mt-2.5 text-[11px] sm:text-xs font-sans font-bold tracking-wider uppercase transition-colors text-center max-w-[100px] leading-tight ${isActive ? 'text-[#1A1817] font-extrabold' : 'text-[#5C4538] group-hover:text-[#1A1817]'
+                      }`}
                   >
                     {cat.label}
                   </span>
@@ -144,7 +142,7 @@ export function FeaturedCollection() {
               if (activeTab === 'bestseller') badge = 'BEST SELLER';
               else if (activeTab === 'trending') badge = 'TRENDING';
               else if (activeTab === 'featured') badge = 'FEATURED';
-              
+
               return (
                 <ProductCard key={product.id} product={product} badgeText={badge} />
               );

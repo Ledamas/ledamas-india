@@ -2,7 +2,6 @@ import React from 'react';
 import { Header } from '@/components/layout/header';
 import { AnimatedHero } from '@/components/AnimatedHero/AnimatedHero';
 import { FeaturedCollection } from '@/components/home/featured-collection';
-import { CategoryExploreSection } from '@/components/home/category-explore-section';
 import { WhereWeAreAvailable } from '@/components/home/where-we-are-available';
 import { TestimonialsCarousel } from '@/components/home/testimonials-carousel';
 import { InstagramGallery } from '@/components/home/instagram-gallery';
@@ -26,10 +25,7 @@ export default function HomePage() {
         {/* 2. Featured Collection ("Best Sellers & Trending") */}
         <FeaturedCollection />
 
-        {/* 3. CarbonSmith-Style Category Sidebar Showcase */}
-        <CategoryExploreSection />
-
-        {/* 4. Where We're Available (Delivery Apps & Retail Network) */}
+        {/* 3. Where We're Available (Delivery Apps & Retail Network) */}
         <WhereWeAreAvailable />
 
         {/* 5. Testimonials & Instagram */}

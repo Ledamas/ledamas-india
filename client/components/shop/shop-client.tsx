@@ -135,23 +135,11 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
   };
 
   return (
-    <main className="flex-1 pt-44 sm:pt-48 md:pt-52 pb-20 bg-white">
-      <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12 space-y-8">
-
-        {/* Top Hero Banner (Clean Centered Heading - High Contrast & Sharp Legibility) */}
-        <div className="relative rounded-2xl bg-[#FAF6F0] border border-[#E5DDD0] p-8 sm:p-12 overflow-hidden shadow-xs">
-          <div className="text-center max-w-3xl mx-auto space-y-3 py-2 sm:py-4">
-            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#1A1817] font-medium tracking-tight">
-              Discover Our Collection
-            </h1>
-            <p className="font-sans text-sm sm:text-base text-[#3D3731] font-normal leading-relaxed max-w-2xl mx-auto">
-              Explore masterfully crafted Dubai chocolates for every occasion. From timeless classics to modern statements.
-            </p>
-          </div>
-        </div>
+    <main className="flex-1 pt-44 sm:pt-48 md:pt-56 pb-20 bg-white">
+      <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12 space-y-6">
 
         {/* Sticky Utility Toolbar Row (SORT BY Dropdown | Product Count | FILTERS Button) */}
-        <div className="sticky top-[84px] sm:top-[96px] z-30 bg-white border-y border-stone-300 py-4 px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+        <div className="sticky top-[148px] sm:top-[160px] md:top-[172px] z-30 bg-white border-y border-stone-300 py-4 px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 shadow-xs">
           
           {/* Left: SORT BY Dropdown + Item Count */}
           <div className="flex items-center space-x-6 relative">
@@ -198,13 +186,6 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
 
             <span className="text-xs font-sans text-[#1A1817] font-extrabold tracking-wider uppercase border-l-2 border-stone-300 pl-6 hidden sm:inline-block">
               {filteredProducts.length} PRODUCTS
-            </span>
-          </div>
-
-          {/* Center Heading (Hidden on mobile) */}
-          <div className="hidden lg:block text-center">
-            <span className="font-serif text-xl sm:text-2xl text-[#1A1817] font-medium tracking-tight">
-              Discover Our Collection
             </span>
           </div>
 
