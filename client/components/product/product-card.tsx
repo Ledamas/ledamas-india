@@ -109,14 +109,14 @@ export function ProductCard({ product, badgeText }: ProductCardProps) {
           </button>
         </div>
 
-        {/* Quick Add Overlay Bar on Hover */}
-        <div className="absolute inset-x-3 bottom-3 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+        {/* Quick Add Overlay Bar (Hover on Desktop, Always Visible on Mobile) */}
+        <div className="absolute inset-x-3 bottom-3 z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 transform translate-y-0 md:translate-y-2 md:group-hover:translate-y-0">
           <button
             onClick={(e) => {
               e.preventDefault();
               addItem(product);
             }}
-            className="w-full py-2.5 px-4 rounded-xs bg-[#232628] hover:bg-[#CB9700] text-white text-[11px] font-sans font-medium uppercase tracking-[0.2em] transition-colors shadow-md flex items-center justify-center space-x-1.5"
+            className="w-full py-2.5 px-4 rounded-xs bg-[#232628] hover:bg-[#CB9700] active:bg-[#CB9700] text-white text-[11px] font-sans font-medium uppercase tracking-[0.2em] transition-colors shadow-md flex items-center justify-center space-x-1.5"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>ADD TO CART</span>
@@ -125,7 +125,7 @@ export function ProductCard({ product, badgeText }: ProductCardProps) {
       </div>
 
       {/* CarbonSmith Centered Product Details below Image */}
-      <div className="pt-2.5 pb-1 px-1 flex flex-col items-center text-center space-y-0.5">
+      <div className="pt-2.5 pb-1 px-1 flex flex-col items-center text-center space-y-1">
         {/* Product Title */}
         <Link href={`/products/${product.slug}`} className="block">
           <h3 className="font-serif type-product-name font-normal text-stone-900 group-hover:text-[#CB9700] transition-colors leading-snug line-clamp-1">
@@ -149,6 +149,18 @@ export function ProductCard({ product, badgeText }: ProductCardProps) {
             </span>
           )}
         </div>
+
+        {/* Dedicated Mobile Quick Add Button */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            addItem(product);
+          }}
+          className="md:hidden mt-2 w-full py-2 px-3 rounded-xs bg-[#232628] hover:bg-[#CB9700] active:bg-[#CB9700] text-white text-[10px] font-sans font-semibold uppercase tracking-[0.15em] transition-colors shadow-xs flex items-center justify-center space-x-1.5"
+        >
+          <ShoppingBag className="w-3 h-3 text-[#CB9700]" />
+          <span>ADD TO CART</span>
+        </button>
       </div>
     </motion.div>
   );
