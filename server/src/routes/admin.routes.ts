@@ -802,12 +802,12 @@ router.post('/inventory/batch', async (req: Request, res: Response) => {
 // PATCH /api/v1/admin/inventory/:id - Adjust stock levels in DB
 router.patch('/inventory/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const batchId = req.params.id as string;
     const { officeStock, warehouseStock, damagedStock, location } = req.body;
 
     const updated = await withDbRetry(() =>
       prisma.inventoryBatch.update({
-        where: { id },
+        where: { id: batchId },
         data: {
           ...(officeStock !== undefined ? { officeStock: Number(officeStock) } : {}),
           ...(warehouseStock !== undefined ? { warehouseStock: Number(warehouseStock) } : {}),
@@ -817,11 +817,12 @@ router.patch('/inventory/:id', async (req: Request, res: Response) => {
       })
     );
 
+    const batch = updated as any;
     const formatted = {
-      id: updated.id,
-      batchNumber: updated.batchNumber,
-      productName: updated.product?.name || 'Live SKU',
-      category: updated.product?.subcategory || 'Kunafa Chocolate',
+      id: batch.id,
+      batchNumber: batch.batchNumber,
+      productName: batch.product?.name || 'Live SKU',
+      category: batch.product?.subcategory || 'Kunafa Chocolate',
       officeStock: updated.officeStock,
       warehouseStock: updated.warehouseStock,
       damagedStock: updated.damagedStock,
