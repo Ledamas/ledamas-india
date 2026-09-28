@@ -11,17 +11,7 @@ export interface GlobeMarker {
   type: 'visitor' | 'order';
 }
 
-const DEFAULT_MARKERS: GlobeMarker[] = [
-  { lat: 28.6139, lng: 77.2090, label: 'Delhi, India', count: 4, type: 'visitor' },
-  { lat: 19.0760, lng: 72.8777, label: 'Mumbai, India', count: 3, type: 'visitor' },
-  { lat: 25.3176, lng: 82.9739, label: 'Varanasi, India', count: 2, type: 'order' },
-  { lat: 12.9716, lng: 77.5946, label: 'Bangalore, India', count: 2, type: 'visitor' },
-  { lat: 25.2048, lng: 55.2708, label: 'Dubai, UAE', count: 2, type: 'order' },
-  { lat: 51.5074, lng: -0.1278, label: 'London, UK', count: 1, type: 'visitor' },
-  { lat: 40.7128, lng: -74.0060, label: 'New York, USA', count: 1, type: 'visitor' },
-];
-
-export const LiveGlobe3D: React.FC<{ markers?: GlobeMarker[] }> = ({ markers = DEFAULT_MARKERS }) => {
+export const LiveGlobe3D: React.FC<{ markers?: GlobeMarker[] }> = ({ markers = [] }) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,11 +36,11 @@ export const LiveGlobe3D: React.FC<{ markers?: GlobeMarker[] }> = ({ markers = D
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
-    // 4. Main Sphere Geometry with dotted/cyan glow shader look
+    // 4. Main Sphere Geometry
     const sphereRadius = 90;
     const sphereGeo = new THREE.SphereGeometry(sphereRadius, 64, 64);
     
-    // Create canvas texture for landmass / dots
+    // Create canvas texture for stylized landmass dots
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
     canvas.height = 512;
@@ -120,7 +110,7 @@ export const LiveGlobe3D: React.FC<{ markers?: GlobeMarker[] }> = ({ markers = D
       return new THREE.Vector3(x, y, z);
     };
 
-    // 7. Add Glowing Location Markers
+    // 7. Add Glowing Location Markers from REAL database data only
     markers.forEach((m) => {
       const pos = latLngToVector3(m.lat, m.lng, sphereRadius + 1.5);
 
@@ -213,7 +203,7 @@ export const LiveGlobe3D: React.FC<{ markers?: GlobeMarker[] }> = ({ markers = D
     <div className="relative w-full h-[550px] flex items-center justify-center overflow-hidden">
       <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
       
-      {/* Legend & Controls Overlay */}
+      {/* Legend Overlay */}
       <div className="absolute bottom-4 right-4 flex items-center space-x-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200 shadow-md text-xs font-bold text-slate-800">
         <div className="flex items-center space-x-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-pulse"></span>

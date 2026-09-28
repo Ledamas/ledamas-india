@@ -2,26 +2,26 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Phone, Mail, MapPin, Star, RotateCcw, Truck, ShieldCheck, Clock } from 'lucide-react';
+import { Phone, Mail, MapPin, Star, Lock, Truck, ShieldCheck, Clock } from 'lucide-react';
 
 export function Footer() {
   return (
     <>
-      {/* Professional High-Contrast Pre-Footer Trust & Service Guarantees Bar */}
-      <section className="bg-white border-t border-b border-[#E5E0D8] py-10 md:py-14 my-0 relative z-20 shadow-xs">
-        <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12">
+      {/* Professional High-Contrast Pre-Footer Trust & Service Guarantees Bar - Full Width Screen */}
+      <section className="w-full bg-white border-t border-b border-[#E5E0D8] py-10 md:py-14 my-0 relative z-20 shadow-xs">
+        <div className="w-full mx-auto px-4 sm:px-8 lg:px-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0 divide-y sm:divide-y-0 lg:divide-x divide-stone-300">
             
-            {/* 1. EASY RETURNS */}
+            {/* 1. 100% SECURED PAYMENTS */}
             <div className="flex flex-col items-center text-center px-4 pt-4 sm:pt-0">
               <div className="w-12 h-12 rounded-full border-2 border-[#A86B2B] bg-[#FFF9F2] text-[#8C5219] flex items-center justify-center mb-3 shadow-xs">
-                <RotateCcw className="w-5.5 h-5.5 stroke-[2.2]" />
+                <Lock className="w-5.5 h-5.5 stroke-[2.2]" />
               </div>
               <h3 className="text-xs sm:text-sm font-sans font-extrabold uppercase tracking-[0.18em] text-black">
-                EASY RETURNS
+                100% SECURED PAYMENTS
               </h3>
               <p className="text-xs font-sans text-[#4A4540] font-medium mt-1 max-w-[220px] leading-snug">
-                Hassle free pick-ups & refunds
+                All payment types accepted
               </p>
             </div>
 

@@ -107,6 +107,15 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
+    if (cleanPhoneDigits) {
+      const isBlocked = await (prisma as any).blockedUser.findFirst({
+        where: { userPhone: { contains: cleanPhoneDigits } },
+      });
+      if (isBlocked) {
+        return sendError(res, 'Account or phone number has been restricted from placing orders. Please contact customer support.', 403);
+      }
+    }
+
     const orderNumber = `LD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
     const baseOrderTotal = (subtotal || 0) + (shippingFee || 0) - (discount || 0) || total || 0;
     const codDetails = calculateCodDetails(baseOrderTotal, paymentMethod);

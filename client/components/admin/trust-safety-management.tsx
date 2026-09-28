@@ -1,20 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ShieldAlert,
   UserX,
   AlertTriangle,
-  CheckCircle2,
-  XCircle,
   Search,
-  Plus,
   Phone,
-  Mail,
-  Filter,
-  Lock,
-  RefreshCw,
   Ban,
+  RefreshCw,
 } from 'lucide-react';
 
 export interface UserReportItem {
@@ -40,91 +34,59 @@ export interface BlockedUserItem {
   ipAddress: string;
 }
 
-const INITIAL_REPORTS: UserReportItem[] = [
-  {
-    id: 'rep-101',
-    userName: 'Sameer Verma',
-    userPhone: '+91 98199 88776',
-    userEmail: 'sameer.v@example.com',
-    reportType: 'COD_ABUSE',
-    severity: 'HIGH',
-    description: 'Refused COD payment on delivery 3 consecutive times in Mumbai.',
-    reportedAt: '2026-09-17 14:30',
-    status: 'PENDING',
-  },
-  {
-    id: 'rep-102',
-    userName: 'Kunal Kapoor',
-    userPhone: '+91 97112 33445',
-    userEmail: 'kunal.k@example.com',
-    reportType: 'PAYMENT_FRAUD',
-    severity: 'HIGH',
-    description: 'Multiple failed UPI transaction retries from flagged IP range.',
-    reportedAt: '2026-09-17 11:15',
-    status: 'PENDING',
-  },
-  {
-    id: 'rep-103',
-    userName: 'Neha Gupta',
-    userPhone: '+91 98200 44556',
-    userEmail: 'neha.g@example.com',
-    reportType: 'SPAM_REVIEWS',
-    severity: 'LOW',
-    description: 'Posted repetitive promotional link comments on product page.',
-    reportedAt: '2026-09-16 18:45',
-    status: 'RESOLVED',
-  },
-  {
-    id: 'rep-104',
-    userName: 'Rajesh Singhal',
-    userPhone: '+91 99300 77889',
-    userEmail: 'rajesh.s@example.com',
-    reportType: 'SUSPICIOUS_OTP',
-    severity: 'MEDIUM',
-    description: 'Exceeded 15 OTP login requests in 5 minutes.',
-    reportedAt: '2026-09-15 09:20',
-    status: 'DISMISSED',
-  },
-];
-
-const INITIAL_BLOCKED: BlockedUserItem[] = [
-  {
-    id: 'blk-1',
-    userName: 'Amitabh Sen',
-    userPhone: '+91 98311 00998',
-    userEmail: 'amitabh.sen@example.com',
-    blockedReason: 'Stolen card authorization chargeback attempt.',
-    blockedDate: '2026-09-10',
-    blockedBy: 'Super Admin',
-    ipAddress: '103.22.45.18',
-  },
-  {
-    id: 'blk-2',
-    userName: 'Tarun Saxena',
-    userPhone: '+91 99011 44332',
-    userEmail: 'tarun.s@example.com',
-    blockedReason: 'Fake address creation for bulk trial orders.',
-    blockedDate: '2026-09-08',
-    blockedBy: 'Super Admin',
-    ipAddress: '49.207.12.91',
-  },
-];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export const TrustSafetyManagement: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'reports' | 'blocklist'>('reports');
-  const [reports, setReports] = useState<UserReportItem[]>(INITIAL_REPORTS);
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUserItem[]>(INITIAL_BLOCKED);
+  const [reports, setReports] = useState<UserReportItem[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUserItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
 
   // Modal State for Manual Block
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [blockForm, setBlockForm] = useState({
     userName: '',
     userPhone: '',
     userEmail: '',
     blockedReason: '',
   });
+
+  const fetchSecurityData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [reportsRes, blockedRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/v1/admin/security/reports`),
+        fetch(`${API_BASE_URL}/api/v1/admin/security/blocklist`),
+      ]);
+
+      if (reportsRes.ok) {
+        const repData = await reportsRes.json();
+        setReports(repData.data?.reports || []);
+      } else {
+        setReports([]);
+      }
+
+      if (blockedRes.ok) {
+        const blkData = await blockedRes.json();
+        setBlockedUsers(blkData.data?.blockedUsers || []);
+      } else {
+        setBlockedUsers([]);
+      }
+    } catch (err) {
+      console.error('Failed to load security data:', err);
+      setReports([]);
+      setBlockedUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSecurityData();
+  }, [fetchSecurityData]);
 
   // Filtered reports
   const filteredReports = reports.filter((r) => {
@@ -146,55 +108,98 @@ export const TrustSafetyManagement: React.FC = () => {
       b.blockedReason.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleResolveReport = (id: string) => {
-    setReports(reports.map((r) => (r.id === id ? { ...r, status: 'RESOLVED' } : r)));
-  };
-
-  const handleDismissReport = (id: string) => {
-    setReports(reports.map((r) => (r.id === id ? { ...r, status: 'DISMISSED' } : r)));
-  };
-
-  const handleBlockUserFromReport = (report: UserReportItem) => {
-    if (window.confirm(`Are you sure you want to block user ${report.userName} (${report.userPhone})?`)) {
-      const newBlocked: BlockedUserItem = {
-        id: `blk-${Date.now()}`,
-        userName: report.userName,
-        userPhone: report.userPhone,
-        userEmail: report.userEmail,
-        blockedReason: `Blocked from report #${report.id}: ${report.description}`,
-        blockedDate: new Date().toISOString().split('T')[0],
-        blockedBy: 'Super Admin',
-        ipAddress: '103.45.12.89',
-      };
-      setBlockedUsers([newBlocked, ...blockedUsers]);
-      setReports(reports.map((r) => (r.id === report.id ? { ...r, status: 'RESOLVED' } : r)));
+  const handleResolveReport = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/reports/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'RESOLVED' }),
+      });
+      if (res.ok) {
+        setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status: 'RESOLVED' } : r)));
+      }
+    } catch (err) {
+      console.error('Failed to resolve report:', err);
     }
   };
 
-  const handleUnblockUser = (id: string, name: string) => {
-    if (window.confirm(`Unblock user ${name} and restore site access?`)) {
-      setBlockedUsers(blockedUsers.filter((b) => b.id !== id));
+  const handleDismissReport = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/reports/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'DISMISSED' }),
+      });
+      if (res.ok) {
+        setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status: 'DISMISSED' } : r)));
+      }
+    } catch (err) {
+      console.error('Failed to dismiss report:', err);
     }
   };
 
-  const handleManualBlockSubmit = (e: React.FormEvent) => {
+  const handleBlockUserFromReport = async (report: UserReportItem) => {
+    if (!window.confirm(`Are you sure you want to block user ${report.userName} (${report.userPhone})?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/blocklist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userName: report.userName,
+          userPhone: report.userPhone,
+          userEmail: report.userEmail,
+          blockedReason: `Blocked from report: ${report.description}`,
+          reportId: report.id,
+        }),
+      });
+
+      if (res.ok) {
+        await fetchSecurityData();
+      }
+    } catch (err) {
+      console.error('Failed to block user from report:', err);
+    }
+  };
+
+  const handleUnblockUser = async (id: string, name: string) => {
+    if (!window.confirm(`Unblock user ${name} and restore site access?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/blocklist/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setBlockedUsers((prev) => prev.filter((b) => b.id !== id));
+      }
+    } catch (err) {
+      console.error('Failed to unblock user:', err);
+    }
+  };
+
+  const handleManualBlockSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!blockForm.userPhone && !blockForm.userName) return;
+    if (!blockForm.userPhone) return;
 
-    const newBlocked: BlockedUserItem = {
-      id: `blk-${Date.now()}`,
-      userName: blockForm.userName || 'Unknown Patron',
-      userPhone: blockForm.userPhone,
-      userEmail: blockForm.userEmail || 'N/A',
-      blockedReason: blockForm.blockedReason || 'Manual Super Admin block.',
-      blockedDate: new Date().toISOString().split('T')[0],
-      blockedBy: 'Super Admin',
-      ipAddress: '182.73.11.04',
-    };
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/blocklist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blockForm),
+      });
 
-    setBlockedUsers([newBlocked, ...blockedUsers]);
-    setBlockForm({ userName: '', userPhone: '', userEmail: '', blockedReason: '' });
-    setIsBlockModalOpen(false);
+      if (res.ok) {
+        setBlockForm({ userName: '', userPhone: '', userEmail: '', blockedReason: '' });
+        setIsBlockModalOpen(false);
+        await fetchSecurityData();
+      }
+    } catch (err) {
+      console.error('Failed to block user manually:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -212,6 +217,16 @@ export const TrustSafetyManagement: React.FC = () => {
 
         <div className="flex items-center space-x-3">
           <button
+            onClick={fetchSecurityData}
+            disabled={isLoading}
+            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-sans text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+            title="Refresh Security Data"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+
+          <button
             onClick={() => setIsBlockModalOpen(true)}
             className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-black hover:bg-stone-800 text-white font-sans text-xs font-bold shadow-md cursor-pointer transition-all"
           >
@@ -222,7 +237,7 @@ export const TrustSafetyManagement: React.FC = () => {
       </div>
 
       {/* Sub-Tabs Switcher */}
-      <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-2">
         <div className="flex space-x-2">
           <button
             onClick={() => setActiveSubTab('reports')}
@@ -294,92 +309,108 @@ export const TrustSafetyManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-200 text-xs font-sans">
-                  {filteredReports.map((report) => (
-                    <tr key={report.id} className="hover:bg-stone-50 transition-colors">
-                      <td className="py-4 px-4 max-w-xs">
-                        <span className="font-mono text-[10px] font-extrabold bg-stone-200 text-black px-2 py-0.5 rounded mr-2">
-                          {report.reportType}
-                        </span>
-                        <p className="font-semibold text-black mt-1 text-xs">{report.description}</p>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <p className="font-bold text-black font-serif text-sm">{report.userName}</p>
-                        <p className="text-black font-mono font-extrabold flex items-center gap-1 text-xs mt-0.5">
-                          <Phone className="w-3 h-3 text-[#CB9700]" /> {report.userPhone}
-                        </p>
-                        <p className="text-stone-600 font-medium text-[11px]">{report.userEmail}</p>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-extrabold uppercase ${
-                            report.severity === 'HIGH'
-                              ? 'bg-rose-100 text-rose-900 border border-rose-300'
-                              : report.severity === 'MEDIUM'
-                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                              : 'bg-stone-100 text-stone-800 border border-stone-300'
-                          }`}
-                        >
-                          {report.severity}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-4 font-mono font-bold text-stone-700">
-                        {report.reportedAt}
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-extrabold ${
-                            report.status === 'PENDING'
-                              ? 'bg-amber-50 text-amber-900 border border-amber-300'
-                              : report.status === 'RESOLVED'
-                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                              : 'bg-stone-200 text-stone-700'
-                          }`}
-                        >
-                          {report.status}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          {report.status === 'PENDING' && (
-                            <>
-                              <button
-                                onClick={() => handleBlockUserFromReport(report)}
-                                className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs flex items-center gap-1"
-                                title="Block User & Phone Number"
-                              >
-                                <UserX className="w-3.5 h-3.5" />
-                                <span>Block User</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleResolveReport(report.id)}
-                                className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer"
-                                title="Mark Resolved"
-                              >
-                                Resolve
-                              </button>
-
-                              <button
-                                onClick={() => handleDismissReport(report.id)}
-                                className="px-2 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-colors"
-                              >
-                                Dismiss
-                              </button>
-                            </>
-                          )}
-
-                          {report.status !== 'PENDING' && (
-                            <span className="text-[11px] font-mono text-stone-500 italic">No action needed</span>
-                          )}
-                        </div>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-stone-500 font-medium">
+                        Loading database security reports...
                       </td>
                     </tr>
-                  ))}
+                  ) : filteredReports.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center">
+                        <ShieldAlert className="w-10 h-10 mx-auto text-stone-300 mb-2" />
+                        <p className="font-serif font-bold text-stone-800 text-base">No Flagged User Reports</p>
+                        <p className="text-xs text-stone-500 mt-1">There are currently no security or fraud reports in the database.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredReports.map((report) => (
+                      <tr key={report.id} className="hover:bg-stone-50 transition-colors">
+                        <td className="py-4 px-4 max-w-xs">
+                          <span className="font-mono text-[10px] font-extrabold bg-stone-200 text-black px-2 py-0.5 rounded mr-2">
+                            {report.reportType}
+                          </span>
+                          <p className="font-semibold text-black mt-1 text-xs">{report.description}</p>
+                        </td>
+
+                        <td className="py-4 px-4">
+                          <p className="font-bold text-black font-serif text-sm">{report.userName}</p>
+                          <p className="text-black font-mono font-extrabold flex items-center gap-1 text-xs mt-0.5">
+                            <Phone className="w-3 h-3 text-[#CB9700]" /> {report.userPhone}
+                          </p>
+                          <p className="text-stone-600 font-medium text-[11px]">{report.userEmail}</p>
+                        </td>
+
+                        <td className="py-4 px-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-extrabold uppercase ${
+                              report.severity === 'HIGH'
+                                ? 'bg-rose-100 text-rose-900 border border-rose-300'
+                                : report.severity === 'MEDIUM'
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : 'bg-stone-100 text-stone-800 border border-stone-300'
+                            }`}
+                          >
+                            {report.severity}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-4 font-mono font-bold text-stone-700">
+                          {report.reportedAt}
+                        </td>
+
+                        <td className="py-4 px-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-extrabold ${
+                              report.status === 'PENDING'
+                                ? 'bg-amber-50 text-amber-900 border border-amber-300'
+                                : report.status === 'RESOLVED'
+                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                : 'bg-stone-200 text-stone-700'
+                            }`}
+                          >
+                            {report.status}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            {report.status === 'PENDING' && (
+                              <>
+                                <button
+                                  onClick={() => handleBlockUserFromReport(report)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+                                  title="Block User & Phone Number"
+                                >
+                                  <UserX className="w-3.5 h-3.5" />
+                                  <span>Block User</span>
+                                </button>
+
+                                <button
+                                  onClick={() => handleResolveReport(report.id)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                                  title="Mark Resolved"
+                                >
+                                  Resolve
+                                </button>
+
+                                <button
+                                  onClick={() => handleDismissReport(report.id)}
+                                  className="px-2 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-colors cursor-pointer"
+                                >
+                                  Dismiss
+                                </button>
+                              </>
+                            )}
+
+                            {report.status !== 'PENDING' && (
+                              <span className="text-[11px] font-mono text-stone-500 italic">No action needed</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -404,51 +435,67 @@ export const TrustSafetyManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-200 text-xs font-sans">
-                  {filteredBlocked.map((blocked) => (
-                    <tr key={blocked.id} className="hover:bg-stone-50 transition-colors">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-9 h-9 rounded-full bg-rose-100 text-rose-900 border border-rose-300 flex items-center justify-center font-serif font-bold text-sm">
-                            {blocked.userName.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-bold text-black font-serif text-sm">{blocked.userName}</p>
-                            <span className="text-[10px] font-mono text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                              Banned Account
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4 font-mono">
-                        <p className="text-black font-extrabold flex items-center gap-1.5 text-xs bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-flex">
-                          <Phone className="w-3.5 h-3.5 text-black" /> {blocked.userPhone}
-                        </p>
-                        <p className="text-stone-700 font-semibold mt-1 text-[11px]">{blocked.userEmail}</p>
-                      </td>
-
-                      <td className="py-4 px-4 text-stone-900 font-semibold max-w-xs">
-                        {blocked.blockedReason}
-                      </td>
-
-                      <td className="py-4 px-4 font-mono font-bold text-stone-700">
-                        {blocked.ipAddress}
-                      </td>
-
-                      <td className="py-4 px-4 font-mono font-bold text-stone-700">
-                        {blocked.blockedDate}
-                      </td>
-
-                      <td className="py-4 px-4 text-right">
-                        <button
-                          onClick={() => handleUnblockUser(blocked.id, blocked.userName)}
-                          className="px-3 py-1.5 rounded-lg bg-black hover:bg-stone-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
-                        >
-                          Unblock Customer
-                        </button>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-stone-500 font-medium">
+                        Loading database block list...
                       </td>
                     </tr>
-                  ))}
+                  ) : filteredBlocked.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center">
+                        <Ban className="w-10 h-10 mx-auto text-stone-300 mb-2" />
+                        <p className="font-serif font-bold text-stone-800 text-base">No Blocked Customers</p>
+                        <p className="text-xs text-stone-500 mt-1">No phone numbers or customer accounts are currently blocked in the database.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredBlocked.map((blocked) => (
+                      <tr key={blocked.id} className="hover:bg-stone-50 transition-colors">
+                        <td className="py-4 px-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-9 h-9 rounded-full bg-rose-100 text-rose-900 border border-rose-300 flex items-center justify-center font-serif font-bold text-sm">
+                              {blocked.userName.charAt(0) || 'U'}
+                            </div>
+                            <div>
+                              <p className="font-bold text-black font-serif text-sm">{blocked.userName}</p>
+                              <span className="text-[10px] font-mono text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                Banned Account
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-4 font-mono">
+                          <p className="text-black font-extrabold flex items-center gap-1.5 text-xs bg-amber-50 px-2 py-0.5 rounded border border-amber-200 inline-flex">
+                            <Phone className="w-3.5 h-3.5 text-black" /> {blocked.userPhone}
+                          </p>
+                          <p className="text-stone-700 font-semibold mt-1 text-[11px]">{blocked.userEmail}</p>
+                        </td>
+
+                        <td className="py-4 px-4 text-stone-900 font-semibold max-w-xs">
+                          {blocked.blockedReason}
+                        </td>
+
+                        <td className="py-4 px-4 font-mono font-bold text-stone-700">
+                          {blocked.ipAddress}
+                        </td>
+
+                        <td className="py-4 px-4 font-mono font-bold text-stone-700">
+                          {blocked.blockedDate}
+                        </td>
+
+                        <td className="py-4 px-4 text-right">
+                          <button
+                            onClick={() => handleUnblockUser(blocked.id, blocked.userName)}
+                            className="px-3 py-1.5 rounded-lg bg-black hover:bg-stone-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
+                          >
+                            Unblock Customer
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -528,15 +575,16 @@ export const TrustSafetyManagement: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsBlockModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-stone-700 hover:text-black"
+                  className="px-4 py-2 text-xs font-bold text-stone-700 hover:text-black cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md disabled:opacity-50 cursor-pointer"
                 >
-                  Block Account
+                  {isSubmitting ? 'Blocking...' : 'Block Account'}
                 </button>
               </div>
             </form>

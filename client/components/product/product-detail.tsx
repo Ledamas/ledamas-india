@@ -30,27 +30,28 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
 
   const isInWishlist = isMounted && isInWishlistRaw;
 
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | undefined>(
-    product.variants && product.variants.length > 0 ? product.variants[0] : undefined
-  );
-  const [selectedImage, setSelectedImage] = useState<string>(product.images[0] || '');
+  const [selectedImage, setSelectedImage] = useState<string>(product.images?.[0] || '');
   const [quantity, setQuantity] = useState<number>(1);
   const [isAdded, setIsAdded] = useState<boolean>(false);
   const [showSpecsAccordion, setShowSpecsAccordion] = useState<boolean>(false);
 
-  const currentPrice = selectedVariant ? selectedVariant.price : product.price;
-  const currentCompareAt = selectedVariant ? selectedVariant.compareAtPrice || selectedVariant.originalPrice : product.compareAtPrice || product.originalPrice;
+  const currentPrice = product.price;
+  const currentCompareAt = product.compareAtPrice || product.originalPrice;
 
   const handleAddToCart = () => {
-    addItem(product, selectedVariant, quantity);
+    addItem(product, undefined, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
-    addItem(product, selectedVariant, quantity);
+    addItem(product, undefined, quantity);
     openCart();
   };
+
+  const categoryName = typeof product.category === 'object' && product.category !== null
+    ? (product.category as any).name
+    : String(product.category || (product as any).categoryName || 'Kunafa Chocolate');
 
   const productJsonLd = generateProductJsonLd(product);
 
@@ -85,11 +86,6 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
                 sizes="(max-width: 1024px) 100vw, 55vw"
                 className="object-contain object-center transition-transform duration-500 hover:scale-105"
               />
-              {product.cacaoPercentage && (
-                <div className="absolute top-4 left-4 bg-stone-900 text-white text-[10px] font-sans uppercase font-bold tracking-[0.2em] px-3 py-1">
-                  {product.cacaoPercentage}% CACAO
-                </div>
-              )}
             </div>
 
             {/* Thumbnail Selection Bar */}
@@ -141,30 +137,6 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
               )}
             </div>
 
-            {/* Product Variants (If available) */}
-            {product.variants && product.variants.length > 0 && (
-              <div className="space-y-2 pt-2">
-                <label className="block text-[10px] font-sans uppercase tracking-[0.2em] text-stone-500 font-semibold">
-                  SELECT VARIANT
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {product.variants.map((variant) => (
-                    <button
-                      key={variant.id}
-                      onClick={() => setSelectedVariant(variant)}
-                      className={`px-3 py-2.5 text-left border transition-all text-xs ${selectedVariant?.id === variant.id
-                          ? 'border-stone-900 bg-stone-900 text-white font-medium'
-                          : 'border-stone-200 bg-white text-stone-700 hover:border-stone-400'
-                        }`}
-                    >
-                      <div className="text-xs font-semibold">{variant.name}</div>
-                      <div className="text-[11px] opacity-80">₹ {variant.price.toLocaleString('en-IN')}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* CarbonSmith Stacked Action Buttons */}
             <div className="space-y-3 pt-2">
               {/* 1. Primary Full Width "Add to Cart" Button */}
@@ -208,7 +180,7 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
                       name: product.name,
                       price: currentPrice,
                       image: selectedImage || product.images[0],
-                      category: product.category,
+                      category: categoryName,
                       inStock: product.inStock,
                     })
                   }
@@ -256,8 +228,8 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
 
               {showSpecsAccordion && (
                 <div className="py-4 text-xs text-stone-600 space-y-2 border-t border-stone-100 leading-relaxed">
-                  <p><strong className="text-stone-900 font-medium">Brand:</strong> {product.brand}</p>
-                  <p><strong className="text-stone-900 font-medium">Category:</strong> {product.category}</p>
+                  <p><strong className="text-stone-900 font-medium">Brand:</strong> {product.brand || 'LE DAMAS'}</p>
+                  <p><strong className="text-stone-900 font-medium">Category:</strong> {categoryName}</p>
                   {product.origin && (
                     <p><strong className="text-stone-900 font-medium">Origin:</strong> {product.origin}</p>
                   )}
@@ -296,7 +268,7 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
         <section className="mt-20 pt-10 border-t border-stone-200">
           <div className="max-w-3xl">
             <h2 className="text-lg font-serif text-stone-900 font-normal">
-              Explore More {product.category} & Handcrafted Dubai Chocolates
+              Explore More {categoryName} & Handcrafted Dubai Chocolates
             </h2>
             <p className="mt-2 text-xs text-stone-500 leading-relaxed font-light">
               Each LE DAMAS confection is handcrafted in small artisanal batches. Discover our full range of{' '}

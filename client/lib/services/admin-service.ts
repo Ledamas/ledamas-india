@@ -134,3 +134,79 @@ export async function createAdminReferralApi(payload: any): Promise<any> {
     throw new Error(err?.message || 'Failed to create referral code');
   }
 }
+
+export interface LiveViewAnalyticsData {
+  visitorsRightNow: number;
+  totalSales: number;
+  sessionsCount: number;
+  sessionsChangePct: string;
+  ordersCount: number;
+  customerBehavior: {
+    activeCarts: number;
+    checkingOut: number;
+    purchased: number;
+  };
+  sessionsByLocation: Array<{
+    country: string;
+    state: string;
+    city: string;
+    count: number;
+  }>;
+  newVsReturning: {
+    new: number;
+    returning: number;
+  };
+  totalSalesByProduct: Array<{
+    name: string;
+    totalRevenue: number;
+    quantitySold: number;
+    image?: string;
+  }>;
+  liveAuditStream: Array<any>;
+  mapPoints: Array<any>;
+  timestamp: string;
+}
+
+export async function getLiveViewAnalyticsApi(range: string = '30d'): Promise<LiveViewAnalyticsData | null> {
+  try {
+    const res = await fetchApi<{ data: LiveViewAnalyticsData }>(`/analytics/live-view?range=${range}`);
+    return res.data || res;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function getAdminInventoryApi(): Promise<{ count: number; inventory: any[] }> {
+  try {
+    const res = await fetchApi<{ data: { count: number; inventory: any[] } }>('/admin/inventory');
+    return res.data || res;
+  } catch (err) {
+    return { count: 0, inventory: [] };
+  }
+}
+
+export async function createAdminInventoryBatchApi(payload: any): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>('/admin/inventory/batch', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return res.data || res;
+  } catch (err: any) {
+    throw new Error(err?.message || 'Failed to create inventory batch');
+  }
+}
+
+export async function updateAdminInventoryStockApi(id: string, payload: any): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>(`/admin/inventory/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    return res.data || res;
+  } catch (err: any) {
+    throw new Error(err?.message || 'Failed to update stock level');
+  }
+}
+
+

@@ -96,6 +96,8 @@ model Product {
   tastingNotes       String[]
   ingredients        String[]
   dietaryBadges      String[]
+  features           String[]
+  tags               String[]
   images             String[]
   productImages      ProductImage[]
   isFeatured         Boolean             @default(false)
@@ -104,6 +106,11 @@ model Product {
   rating             Float               @default(5.0)
   reviewsCount       Int                 @default(0)
   inStock            Boolean             @default(true)
+  stockQuantity      Int                 @default(100)
+  skuCode            String?             @unique
+  status             String              @default("Active")
+  displayOrder       Int                 @default(0)
+  subcategory        String?
   scheduledLaunch    DateTime?
   categoryId         String
   category           Category            @relation(fields: [categoryId], references: [id])
@@ -294,11 +301,30 @@ model Session {
   sessionId   String         @unique
   visitorId   String
   visitor     Visitor        @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  ipHash      String?
+  country     String         @default("Unknown")
+  state       String         @default("Unknown")
+  city        String         @default("Unknown")
+  lat         Float          @default(0)
+  lng         Float          @default(0)
+  deviceType  String         @default("Desktop")
+  browser     String         @default("Unknown")
+  os          String         @default("Unknown")
+  referrer    String?
+  utmSource   String?
+  currentPage String         @default("/")
+  status      String         @default("VIEWING") // VIEWING, IN_CART, CHECKOUT, PURCHASED
+  isBot       Boolean        @default(false)
   durationSec Int            @default(0)
   pagesCount  Int            @default(1)
   startedAt   DateTime       @default(now())
+  lastSeenAt  DateTime       @default(now()) @updatedAt
   endedAt     DateTime?
   events      TrackedEvent[]
+
+  @@index([lastSeenAt])
+  @@index([visitorId])
+  @@index([sessionId])
 }
 
 model TrackedEvent {
@@ -353,14 +379,18 @@ model ReferralCode {
 }
 
 model ProductSeo {
-  id              String   @id @default(uuid())
-  productId       String   @unique
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  metaTitle       String?
-  metaDescription String?
-  urlSlug         String   @unique
-  keywords        String[]
-  schemaType      String   @default("Product")
+  id                   String   @id @default(uuid())
+  productId            String   @unique
+  product              Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  metaTitle            String?
+  metaDescription      String?
+  urlSlug              String?
+  keywords             String[]
+  canonicalUrl         String?
+  openGraphTitle       String?
+  openGraphDescription String?
+  openGraphImage       String?
+  schemaType           String   @default("Product")
 }
 
 model SystemAuditLog {
@@ -401,3 +431,32 @@ model AnalyticsEvent {
   @@index([sessionId])
   @@index([timestamp])
 }
+
+model UserReport {
+  id          String   @id @default(uuid())
+  userName    String
+  userPhone   String
+  userEmail   String
+  reportType  String   // PAYMENT_FRAUD, COD_ABUSE, SPAM_REVIEWS, SUSPICIOUS_OTP
+  severity    String   // HIGH, MEDIUM, LOW
+  description String
+  reportedAt  DateTime @default(now())
+  status      String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+
+  @@index([userPhone])
+  @@index([status])
+}
+
+model BlockedUser {
+  id            String   @id @default(uuid())
+  userName      String
+  userPhone     String   @unique
+  userEmail     String?
+  blockedReason String
+  blockedDate   DateTime @default(now())
+  blockedBy     String   @default("Super Admin")
+  ipAddress     String?
+
+  @@index([userPhone])
+}
+

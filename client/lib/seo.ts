@@ -77,17 +77,20 @@ export function constructMetadata({
   };
 }
 
-export function generateProductMetadata(product: Product): Metadata {
-  const title = product.seoTitle || `${product.name} | LE DAMAS Luxury Chocolates`;
-  const description = product.metaDescription || product.shortDescription || product.description;
-  const canonicalUrl = `${SITE_URL}/products/${product.slug}`;
-  const image = product.images[0] || `${SITE_URL}/images/og-default.jpg`;
-  const keywords = [
-    product.primaryKeyword || product.name.toLowerCase(),
-    ...(product.secondaryKeywords || []),
-    'LE DAMAS',
-    'luxury chocolate',
-  ];
+export function generateProductMetadata(product: any): Metadata {
+  const seo = product?.seo || {};
+  const title = seo.metaTitle || product.seoTitle || `${product.name} | LE DAMAS`;
+  const description = seo.metaDescription || product.metaDescription || product.shortDescription || product.description;
+  const canonicalUrl = seo.canonicalUrl || `${SITE_URL}/products/${product.slug}`;
+  const image = seo.openGraphImage || product.images?.[0] || `${SITE_URL}/images/og-default.jpg`;
+  const keywords = (Array.isArray(seo.keywords) && seo.keywords.length > 0)
+    ? seo.keywords
+    : [
+        product.primaryKeyword || product.name?.toLowerCase(),
+        ...(product.secondaryKeywords || []),
+        'LE DAMAS',
+        'luxury chocolate',
+      ].filter(Boolean);
 
   return constructMetadata({
     title,

@@ -29,7 +29,7 @@ export function CategoryExploreSection() {
       id: 'dark-chocolate',
       name: 'Dark Chocolate',
       slug: 'dark-chocolate',
-      filterFn: (p) => p.categorySlug === 'dark-chocolate' || Boolean(p.cacaoPercentage) || p.slug.includes('dark'),
+      filterFn: (p) => p.categorySlug === 'dark-chocolate' || p.slug.includes('dark'),
     },
     {
       id: 'milk-chocolate',

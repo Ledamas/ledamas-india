@@ -74,6 +74,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { StorefrontTracker } from '../components/analytics/storefront-tracker';
+import { CookieConsentBanner } from '../components/ui/cookie-consent';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -90,7 +93,9 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <ReferralTracker />
             </Suspense>
+            <StorefrontTracker />
             {children}
+            <CookieConsentBanner />
             <StickyOrderCta />
           </CartProvider>
         </AuthProvider>

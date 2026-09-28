@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getAllProducts, getProductBySlug, getRelatedProducts } from '../../../lib/products';
+import { getAllProducts, getRelatedProducts } from '../../../lib/products';
+import { getProductBySlugFromDb } from '../../../lib/services/product-service';
 import { generateProductMetadata } from '../../../lib/seo';
 import { Header } from '../../../components/layout/header';
 import { Footer } from '../../../components/layout/footer';
@@ -20,7 +21,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const resolvedParams = await params;
-  const product = getProductBySlug(resolvedParams.slug);
+  const product = await getProductBySlugFromDb(resolvedParams.slug);
 
   if (!product) {
     return {
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const resolvedParams = await params;
-  const product = getProductBySlug(resolvedParams.slug);
+  const product = await getProductBySlugFromDb(resolvedParams.slug);
 
   if (!product) {
     notFound();
