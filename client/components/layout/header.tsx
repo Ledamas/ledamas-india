@@ -748,25 +748,55 @@ export function Header() {
               <div className="pt-6 border-t border-white/10 space-y-3">
                 {isAuthenticated ? (
                   <div className="space-y-2">
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-[#CB9700] text-black font-bold text-xs flex items-center justify-center uppercase">
-                        {user?.name ? user.name.charAt(0) : 'L'}
-                      </div>
-                      <div className="overflow-hidden text-left">
-                        <div className="text-xs font-semibold text-white truncate">
-                          {user?.name || 'Luxury Connoisseur'}
+                    {/* Clickable Profile Card */}
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-3.5 rounded-xl bg-gradient-to-r from-white/10 to-white/5 hover:from-[#CB9700]/20 hover:to-[#CB9700]/10 border border-[#CB9700]/40 transition-all flex items-center justify-between group shadow-sm cursor-pointer"
+                    >
+                      <div className="flex items-center space-x-3 overflow-hidden">
+                        <div className="w-9 h-9 rounded-full bg-[#CB9700] text-black font-bold text-sm flex items-center justify-center uppercase shrink-0 shadow-md">
+                          {user?.name ? user.name.charAt(0) : 'L'}
                         </div>
-                        <div className="text-[10px] text-stone-400 truncate">
-                          {user?.email || (user?.phone ? `+91 ${user.phone}` : '')}
+                        <div className="overflow-hidden text-left">
+                          <div className="text-xs font-bold text-white group-hover:text-[#CB9700] transition-colors truncate">
+                            {user?.name || 'Luxury Connoisseur'}
+                          </div>
+                          <div className="text-[10px] text-stone-400 truncate">
+                            {user?.email || (user?.phone ? `+91 ${user.phone.replace(/\D/g, '').slice(-10)}` : 'View Profile & Orders')}
+                          </div>
                         </div>
                       </div>
+                      <ChevronRight className="w-4 h-4 text-[#CB9700] group-hover:translate-x-1 transition-transform shrink-0" />
+                    </Link>
+
+                    {/* Quick Access Buttons: My Orders & My Account */}
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <Link
+                        href="/profile/orders"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="py-2.5 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-stone-200 hover:text-white font-sans text-xs font-medium transition-all flex items-center justify-center space-x-1.5"
+                      >
+                        <Package className="w-3.5 h-3.5 text-[#CB9700]" />
+                        <span>My Orders</span>
+                      </Link>
+
+                      <Link
+                        href="/profile"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="py-2.5 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-stone-200 hover:text-white font-sans text-xs font-medium transition-all flex items-center justify-center space-x-1.5"
+                      >
+                        <User className="w-3.5 h-3.5 text-[#CB9700]" />
+                        <span>My Account</span>
+                      </Link>
                     </div>
+
                     <button
                       onClick={() => {
                         setMobileMenuOpen(false);
                         logout();
                       }}
-                      className="w-full py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-sans text-xs uppercase tracking-widest font-semibold transition-all flex items-center justify-center space-x-2 border border-rose-500/20"
+                      className="w-full py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-sans text-xs uppercase tracking-widest font-semibold transition-all flex items-center justify-center space-x-2 border border-rose-500/20 cursor-pointer mt-1"
                     >
                       <LogOut className="w-4 h-4 text-rose-400" />
                       <span>Sign Out</span>

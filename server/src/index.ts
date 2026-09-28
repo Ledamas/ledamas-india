@@ -12,11 +12,20 @@ import authRoutes from './routes/auth.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import couponsRoutes from './routes/coupons.routes.js';
 import { sendError } from './utils/response.js';
+import {
+  globalRateLimiter,
+  authRateLimiter,
+  adminLoginRateLimiter,
+  couponRateLimiter,
+} from './middleware/rate-limit.middleware.js';
 
 dotenv.config();
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
+
+// Trust first proxy for accurate client IP rate limiting behind reverse proxies
+app.set('trust proxy', 1);
 
 // Security & Middleware Stack
 app.use(helmet());
@@ -46,12 +55,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// API Routes Mounting
+// Global Rate Limiter: Apply to all incoming routes to prevent server flooding
+app.use(globalRateLimiter);
+
+// API Routes Mounting with Targeted Security Rate Limiters
 app.use('/api/v1/health', healthRoutes);
 app.use('/health', healthRoutes);
 
-app.use('/api/v1/auth', authRoutes);
-app.use('/auth', authRoutes);
+// Auth & OTP Routes (Protected against OTP spam & brute force)
+app.use('/api/v1/auth', authRateLimiter, authRoutes);
+app.use('/auth', authRateLimiter, authRoutes);
 
 app.use('/api/v1/products', productsRoutes);
 app.use('/products', productsRoutes);
@@ -62,11 +75,13 @@ app.use('/orders', ordersRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/analytics', analyticsRoutes);
 
+// Admin Routes (Contains rate-limited POST /login)
 app.use('/api/v1/admin', adminRoutes);
 app.use('/admin', adminRoutes);
 
-app.use('/api/v1/coupons', couponsRoutes);
-app.use('/coupons', couponsRoutes);
+// Coupon & Referral Routes (Protected against coupon enumeration)
+app.use('/api/v1/coupons', couponRateLimiter, couponsRoutes);
+app.use('/coupons', couponRateLimiter, couponsRoutes);
 
 // Root Route Welcome
 app.get('/', (_req: Request, res: Response) => {

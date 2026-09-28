@@ -81,10 +81,30 @@ router.post('/', async (req: Request, res: Response) => {
       paymentMethod = 'RAZORPAY',
       couponCode = null,
       referralCode = null,
+      userId: bodyUserId = null,
     } = req.body;
 
     if (!customerName || !email || !items || !Array.isArray(items) || items.length === 0) {
       return sendError(res, 'Invalid order details. Name, email, and items are required.', 400);
+    }
+
+    // Auto-resolve associated userId from existing registered user records by email or phone
+    let associatedUserId = bodyUserId || (req as any).user?.userId || null;
+    const cleanPhoneDigits = (phone || '').replace(/\D/g, '').slice(-10);
+
+    if (!associatedUserId) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: email.trim(), mode: 'insensitive' } },
+            ...(cleanPhoneDigits ? [{ phone: { contains: cleanPhoneDigits } }] : []),
+          ],
+        },
+        select: { id: true },
+      });
+      if (existingUser) {
+        associatedUserId = existingUser.id;
+      }
     }
 
     const orderNumber = `LD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
@@ -99,7 +119,7 @@ router.post('/', async (req: Request, res: Response) => {
       data: {
         orderNumber,
         customerName,
-        email,
+        email: email.trim().toLowerCase(),
         phone,
         street,
         apartment,
@@ -115,6 +135,7 @@ router.post('/', async (req: Request, res: Response) => {
         paymentMethod,
         paymentStatus: PaymentStatus.PENDING,
         orderStatus: OrderStatus.NEW,
+        userId: associatedUserId,
         items: {
           create: resolvedItems,
         },
@@ -123,6 +144,32 @@ router.post('/', async (req: Request, res: Response) => {
         items: true,
       },
     });
+
+    // Sync Customer Profile & Saved Address in Database
+    try {
+      await prisma.customerProfile.upsert({
+        where: { email: email.trim().toLowerCase() },
+        update: {
+          phone: phone || undefined,
+          fullName: customerName,
+          totalOrders: { increment: 1 },
+          lifetimeValue: { increment: codDetails.totalCustomerPays },
+          lastOrderAt: new Date(),
+          userId: associatedUserId || undefined,
+        },
+        create: {
+          email: email.trim().toLowerCase(),
+          phone: phone || '',
+          fullName: customerName,
+          totalOrders: 1,
+          lifetimeValue: codDetails.totalCustomerPays,
+          lastOrderAt: new Date(),
+          userId: associatedUserId || null,
+        },
+      });
+    } catch (profileErr) {
+      console.warn('[CUSTOMER PROFILE SYNC NOTICE]', profileErr);
+    }
 
     if (cleanCouponCode) {
       await prisma.coupon.updateMany({

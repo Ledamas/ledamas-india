@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminSidebar, AdminTab } from '@/components/admin/admin-sidebar';
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
 import { LiveVisitorTracker } from '@/components/admin/live-visitor-tracker';
@@ -14,19 +14,47 @@ import { SeoManagement } from '@/components/admin/seo-management';
 import { WhatsappNotifications } from '@/components/admin/whatsapp-notifications';
 import { TrustSafetyManagement } from '@/components/admin/trust-safety-management';
 import { StoreSettingsManagement } from '@/components/admin/store-settings-management';
+import { AdminLockScreen } from '@/components/admin/admin-lock-screen';
 import {
   Bell,
   ChevronDown,
   HelpCircle,
   ShieldCheck,
   ExternalLink,
+  Lock,
 } from 'lucide-react';
 
 export default function AdminPage() {
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState<AdminTab>('analytics');
   const [currentRole, setCurrentRole] = useState<string>('SUPER_ADMIN');
   const [showNotifications, setShowNotifications] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState('GENECIA GLOBAL DELIGHTS PRIVATE LIMITED');
+
+  // Verify Admin Session on Mount
+  useEffect(() => {
+    try {
+      const localToken = localStorage.getItem('ledamas_admin_session');
+      const sessionToken = sessionStorage.getItem('ledamas_admin_session');
+
+      if (localToken || sessionToken) {
+        setIsUnlocked(true);
+      }
+    } catch (e) {
+    } finally {
+      setCheckingAuth(false);
+    }
+  }, []);
+
+  const handleLockAdmin = () => {
+    try {
+      localStorage.removeItem('ledamas_admin_session');
+      localStorage.removeItem('ledamas_admin_auth_time');
+      sessionStorage.removeItem('ledamas_admin_session');
+    } catch (e) {}
+    setIsUnlocked(false);
+  };
 
   const notificationsList = [
     { title: 'New High-Value Order #LD-9482', time: '2 mins ago', unread: true },
@@ -34,6 +62,19 @@ export default function AdminPage() {
     { title: 'New VIP Customer Tagged: Ananya Sharma', time: '1 hour ago', unread: false },
     { title: 'WhatsApp Webhook Synchronized', time: '3 hours ago', unread: false },
   ];
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-[#0E0C0B] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#CB9700] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Password Lock Gatekeeper Protection Screen
+  if (!isUnlocked) {
+    return <AdminLockScreen onUnlock={() => setIsUnlocked(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-slate-800 flex font-sans selection:bg-amber-500 selection:text-white">
@@ -68,7 +109,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Right: Quick actions, Help, Notifications, User Profile */}
+          {/* Right: Quick actions, Help, Notifications, Lock Admin */}
           <div className="flex items-center space-x-4">
             {/* View Live Store */}
             <a
@@ -80,6 +121,16 @@ export default function AdminPage() {
               <span>View Storefront</span>
               <ExternalLink className="w-3 h-3 text-amber-600 ml-0.5" />
             </a>
+
+            {/* Lock Admin Panel Security Button */}
+            <button
+              onClick={handleLockAdmin}
+              className="flex items-center space-x-1.5 text-xs font-semibold text-rose-700 hover:text-rose-900 px-3 py-1.5 rounded-md border border-rose-200 bg-rose-50 hover:bg-rose-100 transition-all cursor-pointer shadow-2xs"
+              title="Lock admin session"
+            >
+              <Lock className="w-3.5 h-3.5 text-rose-600" />
+              <span>Lock Panel</span>
+            </button>
 
             {/* Notification Bell */}
             <div className="relative">
@@ -151,4 +202,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

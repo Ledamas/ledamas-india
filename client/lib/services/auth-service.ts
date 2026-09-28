@@ -8,6 +8,13 @@ export interface UserSession {
   role: string;
   phoneVerified: boolean;
   createdAt: string;
+  savedAddress?: {
+    street?: string;
+    apartment?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+  } | null;
 }
 
 export interface VerifyOtpResponse {

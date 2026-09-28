@@ -330,7 +330,7 @@ export function Footer() {
             <div className="flex items-center space-x-2">
               {/* Instagram */}
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/ledamasindia.official/"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Instagram"

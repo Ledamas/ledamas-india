@@ -22,7 +22,7 @@ export const StoreSettingsManagement: React.FC = () => {
   const [currency, setCurrency] = useState('INR (₹)');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(2499);
   const [gstRate, setGstRate] = useState(18);
-  const [instagramUrl, setInstagramUrl] = useState('https://instagram.com/ledamas_official');
+  const [instagramUrl, setInstagramUrl] = useState('https://www.instagram.com/ledamasindia.official/');
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();

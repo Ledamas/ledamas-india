@@ -122,8 +122,8 @@ export function ContactPage() {
                   <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#CB9700] block mb-0.5">
                     INSTAGRAM
                   </span>
-                  <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-sm font-semibold text-stone-900 hover:text-[#CB9700] transition-colors">
-                    @ledamaschocolate
+                  <a href="https://www.instagram.com/ledamasindia.official/" target="_blank" rel="noreferrer" className="text-sm font-semibold text-stone-900 hover:text-[#CB9700] transition-colors">
+                    @ledamasindia.official
                   </a>
                 </div>
               </div>

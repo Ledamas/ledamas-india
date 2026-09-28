@@ -67,16 +67,22 @@ export default function CheckoutPage() {
     } catch (e) {}
   }, []);
 
-  // Pre-fill user data upon authentication
+  // Pre-fill user data & saved shipping address upon authentication
   useEffect(() => {
     if (user) {
       const nameParts = (user.name || '').split(' ');
+      const saved = user.savedAddress;
       setForm((prev) => ({
         ...prev,
         email: prev.email || user.email || '',
-        phone: prev.phone || user.phone?.replace('google_', '') || '',
+        phone: prev.phone || (user.phone && !user.phone.startsWith('google_') ? user.phone.replace(/\D/g, '').slice(-10) : ''),
         firstName: prev.firstName || nameParts[0] || '',
         lastName: prev.lastName || nameParts.slice(1).join(' ') || '',
+        address: prev.address || saved?.street || '',
+        apartment: prev.apartment || saved?.apartment || '',
+        city: prev.city || saved?.city || '',
+        state: prev.state || saved?.state || 'Maharashtra',
+        pincode: prev.pincode || saved?.pincode || '',
       }));
     }
   }, [user]);

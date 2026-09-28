@@ -30,6 +30,7 @@ const scriptFont = Alex_Brush({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://ledamas.in'),
   title: 'LE DAMAS — Delicious Since 1951 | Heritage Middle Eastern & Luxury Chocolates',
   description: 'Discover LE DAMAS — Delicious Since 1951. Artisan Middle Eastern chocolates, Kunafa pistachio chocolates, speculoos cremes, and luxury confectionery.',
   keywords: [

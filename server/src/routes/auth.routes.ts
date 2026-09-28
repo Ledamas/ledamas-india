@@ -330,6 +330,33 @@ router.post('/google', async (req: Request, res: Response) => {
       return sendError(res, 'Failed to initialize Google user session.', 500);
     }
 
+    // Auto-link any past orders matching email or phone to this user account
+    if (user && user.id) {
+      try {
+        const cleanPhoneDigits = (user.phone || '').replace(/\D/g, '').slice(-10);
+        await prisma.order.updateMany({
+          where: {
+            OR: [
+              ...(user.email ? [{ email: { equals: user.email.trim(), mode: 'insensitive' as const } }] : []),
+              ...(cleanPhoneDigits ? [{ phone: { contains: cleanPhoneDigits } }] : []),
+            ],
+          },
+          data: {
+            userId: user.id,
+          },
+        });
+      } catch (linkErr) {
+        console.warn('[GOOGLE AUTO-LINK ORDERS NOTICE]', linkErr);
+      }
+    }
+
+    // Fetch latest saved shipping address for user profile
+    const latestOrder = await prisma.order.findFirst({
+      where: { OR: [{ userId: user.id }, ...(user.email ? [{ email: user.email }] : [])] },
+      orderBy: { createdAt: 'desc' },
+      select: { street: true, apartment: true, city: true, state: true, pincode: true },
+    });
+
     // Generate JWT Session Token (30-day sliding expiry)
     const token = generateSessionToken({
       userId: user.id,
@@ -352,6 +379,7 @@ router.post('/google', async (req: Request, res: Response) => {
           role: user.role,
           phoneVerified: user.phoneVerified,
           createdAt: user.createdAt,
+          savedAddress: latestOrder || null,
         },
       },
       'Google authentication successful. Secure HttpOnly session initiated.'
@@ -406,7 +434,27 @@ router.get('/me', async (req: Request, res: Response) => {
       return sendError(res, 'User session not found in database.', 404);
     }
 
-    return sendSuccess(res, user, 'Active user session validated & renewed silently.');
+    // Fetch latest saved shipping address for pre-filling checkout across devices
+    const latestOrder = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { userId: user.id },
+          ...(user.email ? [{ email: user.email }] : []),
+          ...(user.phone ? [{ phone: { contains: user.phone.replace(/\D/g, '').slice(-10) } }] : []),
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { street: true, apartment: true, city: true, state: true, pincode: true },
+    });
+
+    return sendSuccess(
+      res,
+      {
+        ...user,
+        savedAddress: latestOrder || null,
+      },
+      'Active user session validated & renewed silently.'
+    );
   } catch (error: unknown) {
     clearAuthCookie(res);
     return sendError(res, 'Invalid or expired authentication session.', 401);

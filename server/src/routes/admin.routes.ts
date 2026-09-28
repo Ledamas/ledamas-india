@@ -5,8 +5,35 @@ import { getRazorpayInstance } from '../utils/razorpay.js';
 import { sendOrderStatusSms } from '../utils/message-central.js';
 import { broadcastOrderEvent } from '../utils/realtime.js';
 import { PaymentStatus, OrderStatus } from '@prisma/client';
+import { adminLoginRateLimiter } from '../middleware/rate-limit.middleware.js';
 
 const router = Router();
+
+// POST /api/v1/admin/login - Authenticate admin credentials with server-side rate limiting
+router.post('/login', adminLoginRateLimiter, (req: Request, res: Response) => {
+  try {
+    const { adminId, password } = req.body;
+    const requiredId = process.env.ADMIN_ID || 'akkui@leamas.umm';
+    const requiredPass = process.env.ADMIN_PASSWORD || 'Genicia@global!@#$';
+
+    if (!adminId || !password) {
+      return sendError(res, 'Admin ID and Password are required.', 400);
+    }
+
+    const isIdValid = String(adminId).trim().toLowerCase() === requiredId.toLowerCase();
+    const isPassValid = String(password).trim() === requiredPass;
+
+    if (isIdValid && isPassValid) {
+      const token = `admin_auth_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      return sendSuccess(res, { token, adminId: requiredId }, 'Admin authentication successful.');
+    }
+
+    return sendError(res, 'Invalid Admin ID or Password credentials.', 401);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Admin login failed';
+    return sendError(res, message, 500);
+  }
+});
 
 // GET /api/v1/admin/users - Fetch all signed-up users from PostgreSQL database
 router.get('/users', async (_req: Request, res: Response) => {
