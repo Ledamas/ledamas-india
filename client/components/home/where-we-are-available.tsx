@@ -19,7 +19,7 @@ const PARTNERS: Partner[] = [
   {
     id: 'swiggy-instamart',
     name: 'Swiggy Instamart',
-    logo: '/Swiggy instamart.jpg'
+    logo: '/Swiggy-instamart.jpg'
   },
   {
     id: 'sodhi',
@@ -29,17 +29,17 @@ const PARTNERS: Partner[] = [
   {
     id: 'nature-basket',
     name: "Nature's Basket",
-    logo: '/nature basket.jpg'
+    logo: '/nature-basket.jpg'
   },
   {
     id: 'modern-bazar',
     name: 'Modern Bazaar',
-    logo: '/modern bazar.png'
+    logo: '/modern-bazar.png'
   },
   {
     id: 'relay-airport',
     name: 'Relay',
-    logo: '/relay airport.png'
+    logo: '/relay-airport.png'
   },
   {
     id: 'crossword',

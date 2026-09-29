@@ -8,25 +8,25 @@ export function InstagramGallery() {
   const galleryItems = [
     {
       id: 1,
-      image: '/Kunafa and Pistachio Creme 1.png',
+      image: '/Kunafa-and-Pistachio-Creme-1.png',
       title: 'Kunafa & Pistachio Crème Jars',
       likes: '1.4k',
     },
     {
       id: 2,
-      image: '/Kunafa Pistachio Dark Chocolate 1.png',
+      image: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
       title: 'Kunafa Dark Chocolate Bar',
       likes: '2.1k',
     },
     {
       id: 3,
-      image: '/Le Bubu 1.png',
+      image: '/Le-Bubu-1.png',
       title: 'Lebubu Milk Chocolate Signature',
       likes: '3.8k',
     },
     {
       id: 4,
-      image: '/Crispy Speculoos Creme Milk Chocolate 1.png',
+      image: '/Crispy-Speculoos-Creme-Milk-Chocolate-1.png',
       title: 'Crispy Speculoos Milk Chocolate',
       likes: '1.9k',
     },

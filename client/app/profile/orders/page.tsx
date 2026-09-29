@@ -210,18 +210,18 @@ export default function UserOrdersPage() {
     }
     const nameLower = (productName || '').toLowerCase();
     if (nameLower.includes('mini')) {
-      if (nameLower.includes('dark')) return '/Kunafa Pistachio Dark Chocolate – Mini Bar 35gm 1.png';
-      if (nameLower.includes('milk')) return '/Kunafa Pistachio Milk Chocolate – Mini Bar 35gm 1.png';
-      if (nameLower.includes('speculoos')) return '/Crispy Speculoos Creme Milk Chocolate – Mini Bar 35gm 1.png';
-      if (nameLower.includes('hazelnut')) return '/Hazelnut Creme Milk Chocolate – Mini Bar 35gm 1.png';
-      return '/Kunafa Pistachio Dark Chocolate – Mini Bar 35gm 1.png';
+      if (nameLower.includes('dark')) return '/Kunafa-Pistachio-Dark-Chocolate---Mini-Bar-35gm-1.png';
+      if (nameLower.includes('milk')) return '/Kunafa-Pistachio-Milk-Chocolate---Mini-Bar-35gm-1.png';
+      if (nameLower.includes('speculoos')) return '/Crispy-Speculoos-Creme-Milk-Chocolate---Mini-Bar-35gm-1.png';
+      if (nameLower.includes('hazelnut')) return '/Hazelnut-Creme-Milk-Chocolate---Mini-Bar-35gm-1.png';
+      return '/Kunafa-Pistachio-Dark-Chocolate---Mini-Bar-35gm-1.png';
     }
-    if (nameLower.includes('dark')) return '/Kunafa Pistachio Dark Chocolate 1.png';
-    if (nameLower.includes('milk')) return '/Kunafa Pistachio Milk Chocolate 1.png';
-    if (nameLower.includes('speculoos')) return '/Crispy Speculoos Creme Milk Chocolate 1.png';
-    if (nameLower.includes('hazelnut') || nameLower.includes('white')) return '/White Chocolate Hazelnut Creme 1.png';
-    if (nameLower.includes('bubu')) return '/Le Bubu 1.png';
-    return '/Kunafa Pistachio Dark Chocolate 1.png';
+    if (nameLower.includes('dark')) return '/Kunafa-Pistachio-Dark-Chocolate-1.png';
+    if (nameLower.includes('milk')) return '/Kunafa-Pistachio-Milk-Chocolate-1.png';
+    if (nameLower.includes('speculoos')) return '/Crispy-Speculoos-Creme-Milk-Chocolate-1.png';
+    if (nameLower.includes('hazelnut') || nameLower.includes('white')) return '/White-Chocolate-Hazelnut-Creme-1.png';
+    if (nameLower.includes('bubu')) return '/Le-Bubu-1.png';
+    return '/Kunafa-Pistachio-Dark-Chocolate-1.png';
   };
 
 
@@ -451,7 +451,7 @@ export default function UserOrdersPage() {
                           variantName: '250g Box',
                           price: order.total || order.subtotal || 499,
                           quantity: 1,
-                          image: '/Kunafa Pistachio Dark Chocolate 1.png',
+                          image: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
                         },
                       ]
                   ).map((item, idx) => {
@@ -652,7 +652,7 @@ export default function UserOrdersPage() {
                         variantName: '250g Box',
                         price: selectedOrder.total || selectedOrder.subtotal || 499,
                         quantity: 1,
-                        image: '/Kunafa Pistachio Dark Chocolate 1.png',
+                        image: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
                       },
                     ]
                 ).map((item, idx) => {

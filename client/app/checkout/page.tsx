@@ -196,7 +196,7 @@ export default function CheckoutPage() {
             variantName: item.variant?.name || item.variant?.weight,
             price: item.variant ? item.variant.price : item.product.price,
             quantity: item.quantity,
-            image: item.product.images?.[0] || '/Kunafa Pistachio Dark Chocolate 1.png',
+            image: item.product.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png',
           })),
           subtotal: totalPrice,
           discount: discountAmount,
@@ -694,7 +694,7 @@ export default function CheckoutPage() {
                   <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
                     {items.map((item) => {
                       const itemPrice = item.variant ? item.variant.price : item.product.price;
-                      const itemImage = item.product.images?.[0] || '/Kunafa Pistachio Dark Chocolate 1.png';
+                      const itemImage = item.product.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png';
                       const variantName = item.variant?.name || item.variant?.weight;
                       return (
                         <div

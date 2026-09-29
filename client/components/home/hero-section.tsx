@@ -17,27 +17,27 @@ export function HeroSection({
   // Collection of all signature product photos for animated background
   const collectionImages = [
     {
-      src: '/Kunafa Pistachio Dark Chocolate 1.png',
+      src: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
       name: 'Kunafa Pistachio Dark Bar',
     },
     {
-      src: '/Kunafa Pistachio Milk Chocolate 1.png',
+      src: '/Kunafa-Pistachio-Milk-Chocolate-1.png',
       name: 'Kunafa Pistachio Milk Bar',
     },
     {
-      src: '/Le Bubu 2.png',
+      src: '/Le-Bubu-2.png',
       name: 'Le Bubu Signature Edition',
     },
     {
-      src: '/Crispy Speculoos Creme Milk Chocolate 1.png',
+      src: '/Crispy-Speculoos-Creme-Milk-Chocolate-1.png',
       name: 'Crispy Speculoos Milk Chocolate',
     },
     {
-      src: '/White Chocolate Hazelnut Creme 1.png',
+      src: '/White-Chocolate-Hazelnut-Creme-1.png',
       name: 'Belgian White Hazelnut Bar',
     },
     {
-      src: '/Kunafa and Pistachio Creme 1.png',
+      src: '/Kunafa-and-Pistachio-Creme-1.png',
       name: 'Artisanal Pistachio Spread',
     },
   ];

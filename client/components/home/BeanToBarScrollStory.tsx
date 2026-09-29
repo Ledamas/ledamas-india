@@ -23,7 +23,7 @@ const STEPS: StoryStep[] = [
     duration: 'Selected at Peak Ripeness',
     description: 'We source rare Criollo cacao pods from sustainable Venezuelan estates. Hand-picked, fermented under banana leaves, and sun-dried for rich floral undertones.',
     highlight: 'Pure Single Origin',
-    image: '/Kunafa Pistachio Dark Chocolate 1.png',
+    image: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
   },
   {
     id: 2,
@@ -32,7 +32,7 @@ const STEPS: StoryStep[] = [
     duration: 'Roasted in Pure Ghee',
     description: 'Traditional Middle Eastern kataifi pastry threads are finely shredded and slow roasted in clarified ghee until crisp and golden brown.',
     highlight: 'Hand-Roasted Crunch',
-    image: '/Kunafa Pistachio Milk Chocolate 1.png',
+    image: '/Kunafa-Pistachio-Milk-Chocolate-1.png',
   },
   {
     id: 3,
@@ -41,7 +41,7 @@ const STEPS: StoryStep[] = [
     duration: '100% Antep Pistachio Paste',
     description: 'Freshly harvested pistachios are stone-ground into a silky crème, blended with a hint of sea salt and tahini for unmatched creaminess.',
     highlight: 'No Added Palm Oil',
-    image: '/Kunafa and Pistachio Creme 1.png',
+    image: '/Kunafa-and-Pistachio-Creme-1.png',
   },
   {
     id: 4,
@@ -50,7 +50,7 @@ const STEPS: StoryStep[] = [
     duration: '3 Days Continuous Process',
     description: 'Most brands conch for 6 hours. We conch our cacao for 72 continuous hours on granite rollers to eliminate astringency and achieve velvet texture.',
     highlight: 'Ultra-Fine Micron Texture',
-    image: '/White Chocolate Hazelnut Creme 1.png',
+    image: '/White-Chocolate-Hazelnut-Creme-1.png',
   },
   {
     id: 5,
@@ -59,7 +59,7 @@ const STEPS: StoryStep[] = [
     duration: 'Insulated Cold-Chain Delivery',
     description: 'Each bar is inspected for gloss, poured into precision molds, and wrapped in gold foil within 72 hours to seal in fresh aroma.',
     highlight: 'Freshness Guaranteed',
-    image: '/Crispy Speculoos Creme Milk Chocolate 1.png',
+    image: '/Crispy-Speculoos-Creme-Milk-Chocolate-1.png',
   },
 ];
 

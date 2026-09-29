@@ -26,7 +26,7 @@ export function ProductCard({ product, badgeText }: ProductCardProps) {
 
   const isInWishlist = isMounted && isInWishlistRaw;
 
-  const primaryImage = product.images?.[0] || '/Kunafa Pistachio Dark Chocolate 1.png';
+  const primaryImage = product.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png';
   const secondaryImage = product.images?.[1] || primaryImage;
   const hasSecondaryImage = product.images && product.images.length > 1;
 

@@ -39,42 +39,42 @@ export function FeaturedCollection() {
     {
       id: 'all',
       label: 'ALL PRODUCTS',
-      image: '/Discover product.png',
+      image: '/discover-product.png',
     },
     {
       id: 'dark-chocolate',
       label: 'DARK CHOCOLATE',
-      image: '/Kunafa Pistachio Dark Chocolate 2.png',
+      image: '/Kunafa-Pistachio-Dark-Chocolate-2.png',
     },
     {
       id: 'milk-chocolate',
       label: 'MILK CHOCOLATE',
-      image: '/Hazelnut Creme Milk Chocolate 1.png',
+      image: '/Hazelnut-Creme-Milk-Chocolate-1.png',
     },
     {
       id: 'speculoos',
       label: 'SPECULOOS',
-      image: '/Speculoos Creme and Kunafa 1.png',
+      image: '/Speculoos-Creme-and-Kunafa-1.png',
     },
     {
       id: 'lebubu',
       label: 'LEBUBU',
-      image: '/Le Bubu 1.png',
+      image: '/Le-Bubu-1.png',
     },
     {
       id: 'mini-bar',
       label: 'MINI BAR',
-      image: '/Kunafa Pistachio Dark Chocolate – Mini Bar 35gm 1.png',
+      image: '/Kunafa-Pistachio-Dark-Chocolate---Mini-Bar-35gm-1.png',
     },
     {
       id: 'kunafa-creme',
       label: 'KUNAFA & PISTACHIO CREME',
-      image: '/Kunafa and Pistachio Creme 1.png',
+      image: '/Kunafa-and-Pistachio-Creme-1.png',
     },
     {
       id: 'kunafa-pistachio',
       label: 'KUNAFA PISTACHIO',
-      image: '/Kunafa Pistachio Dark Chocolate 1.png',
+      image: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
     },
   ];
 

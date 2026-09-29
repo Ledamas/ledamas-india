@@ -69,7 +69,7 @@ const TESTIMONIALS: Testimonial[] = [
     rating: 5,
     quote:
       'Ordered the mini 35g bars as corporate luxury gifts. The packaging, gold foil wrapping, and taste exceeded all expectations. Extremely fast delivery and professional service!',
-    purchasedProduct: 'Kunafa Pistachio Milk Chocolate – Mini Bar 35gm',
+    purchasedProduct: 'Kunafa Pistachio Milk Chocolate - Mini Bar 35gm',
   },
   {
     id: 6,

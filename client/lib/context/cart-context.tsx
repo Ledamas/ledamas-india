@@ -82,7 +82,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         ? productInput.images
         : 'image' in productInput && typeof productInput.image === 'string'
           ? [productInput.image]
-          : ['/Kunafa Pistachio Dark Chocolate 1.png'];
+          : ['/Kunafa-Pistachio-Dark-Chocolate-1.png'];
 
     const product: Product =
       'slug' in productInput && productInput.slug

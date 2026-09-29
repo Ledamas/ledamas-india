@@ -11,7 +11,7 @@ const TEXTURES = [
     title: '72-Hour Conched Sheen',
     subtitle: 'Mirror-Like Cocoa Butter Gloss',
     description: 'Slow granite conching aligns cocoa butter crystals perfectly, producing an ultra-smooth sheen that melts instantly at body temperature.',
-    image: '/Kunafa Pistachio Dark Chocolate 1.png',
+    image: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
     stat: '0.01mm Texture',
   },
   {
@@ -19,7 +19,7 @@ const TEXTURES = [
     title: 'Ghee-Roasted Kataifi Layers',
     subtitle: 'Golden Shredded Pastry Threads',
     description: 'Every bar contains thousands of microscopic crispy pastry strands, toasted in clarified ghee to maintain crispness inside velvety chocolate.',
-    image: '/Kunafa Pistachio Milk Chocolate 2.png',
+    image: '/Kunafa-Pistachio-Milk-Chocolate-2.png',
     stat: '100% Ghee Toasted',
   },
   {
@@ -27,7 +27,7 @@ const TEXTURES = [
     title: 'Pistachio Crème Melt',
     subtitle: 'Pure Antep Nut Paste',
     description: 'Dense pistachio ganache whipped into a silky texture that delivers an instant burst of roasted nutty flavor without artificial emulsifiers.',
-    image: '/Kunafa and Pistachio Creme 1.png',
+    image: '/Kunafa-and-Pistachio-Creme-1.png',
     stat: 'Zero Palm Oil',
   },
 ];

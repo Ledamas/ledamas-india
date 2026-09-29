@@ -111,7 +111,7 @@ export const ProductManagement: React.FC = () => {
     isFeatured: false,
     isBestSeller: false,
     isNewRelease: false,
-    mainImage: '/Kunafa Pistachio Dark Chocolate 1.png',
+    mainImage: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
     galleryImages: [],
     metaTitle: '',
     metaDescription: '',
@@ -195,7 +195,7 @@ export const ProductManagement: React.FC = () => {
       isFeatured: false,
       isBestSeller: false,
       isNewRelease: false,
-      mainImage: '/Kunafa Pistachio Dark Chocolate 1.png',
+      mainImage: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
       galleryImages: [],
       metaTitle: '',
       metaDescription: '',
@@ -233,7 +233,7 @@ export const ProductManagement: React.FC = () => {
       isFeatured: prod.isFeatured ?? false,
       isBestSeller: prod.isBestSeller ?? false,
       isNewRelease: prod.isNewRelease ?? false,
-      mainImage: prod.images?.[0] || '/Kunafa Pistachio Dark Chocolate 1.png',
+      mainImage: prod.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png',
       galleryImages: prod.images?.slice(1) || [],
       metaTitle: prod.seo?.metaTitle || `${prod.name} | LE DAMAS`,
       metaDescription: prod.seo?.metaDescription || prod.shortDescription || prod.description,
@@ -288,7 +288,7 @@ export const ProductManagement: React.FC = () => {
       features: formData.featuresInput.split(',').map((s) => s.trim()).filter(Boolean),
       ingredients: formData.ingredientsInput.split(',').map((s) => s.trim()).filter(Boolean),
       tags: formData.tagsInput.split(',').map((s) => s.trim()).filter(Boolean),
-      images: imagesList.length > 0 ? imagesList : ['/Kunafa Pistachio Dark Chocolate 1.png'],
+      images: imagesList.length > 0 ? imagesList : ['/Kunafa-Pistachio-Dark-Chocolate-1.png'],
       seo: {
         metaTitle: formData.metaTitle || `${formData.name} | LE DAMAS`,
         metaDescription: formData.metaDescription || formData.shortDescription || formData.description,
@@ -539,7 +539,7 @@ export const ProductManagement: React.FC = () => {
                     <tr key={prod.id} className="hover:bg-slate-50 transition-colors">
                       <td className="py-3 px-4">
                         <img
-                          src={prod.images?.[0] || '/Kunafa Pistachio Dark Chocolate 1.png'}
+                          src={prod.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png'}
                           alt={prod.name}
                           className="w-12 h-12 rounded-lg border border-slate-200 object-cover bg-stone-50"
                         />
@@ -892,7 +892,7 @@ export const ProductManagement: React.FC = () => {
                         type="text"
                         value={formData.mainImage}
                         onChange={(e) => setFormData({ ...formData, mainImage: e.target.value })}
-                        placeholder="/Kunafa Pistachio Dark Chocolate 1.png"
+                        placeholder="/Kunafa-Pistachio-Dark-Chocolate-1.png"
                         className="flex-1 px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-slate-800"
                       />
                       <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold cursor-pointer flex items-center space-x-1.5 border border-slate-300">
@@ -1014,7 +1014,7 @@ export const ProductManagement: React.FC = () => {
                         type="text"
                         value={formData.openGraphImage}
                         onChange={(e) => setFormData({ ...formData, openGraphImage: e.target.value })}
-                        placeholder="/Kunafa Pistachio Dark Chocolate 1.png"
+                        placeholder="/Kunafa-Pistachio-Dark-Chocolate-1.png"
                         className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-slate-800"
                       />
                     </div>

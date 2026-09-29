@@ -137,7 +137,7 @@ export default function AboutPage() {
             <div className="lg:col-span-5 order-2 lg:order-1">
               <div className="relative aspect-[4/3] sm:aspect-[16/10] w-full rounded-2xl overflow-hidden border border-stone-200 shadow-md group bg-[#FAF7F2]">
                 <Image
-                  src="/Discover product.png"
+                  src="/discover-product.png"
                   alt="Dubai Master Pastry Chef Crafting Kunafa & Pistachio Confectionery"
                   fill
                   sizes="(max-width: 1024px) 100vw, 45vw"

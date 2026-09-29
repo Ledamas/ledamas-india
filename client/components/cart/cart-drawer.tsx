@@ -80,7 +80,7 @@ export function CartDrawer() {
               ) : (
                 items.map((item) => {
                   const unitPrice = item.variant ? item.variant.price : item.product.price;
-                  const itemImage = item.product.images?.[0] || '/Kunafa Pistachio Dark Chocolate 1.png';
+                  const itemImage = item.product.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png';
                   return (
                     <div
                       key={item.id}
