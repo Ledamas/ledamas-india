@@ -4,6 +4,7 @@ import { Collection, Product } from '../../lib/types';
 import { ProductCard } from '../product/product-card';
 import { JsonLd } from '../seo/json-ld';
 import { generateCollectionJsonLd } from '../../lib/structured-data';
+import { PromoBanner } from '../ui/promo-banner';
 
 interface CollectionGridProps {
   collection: Collection;
@@ -17,6 +18,9 @@ export function CollectionGrid({ collection, products, allCollections }: Collect
   return (
     <div className="min-h-screen bg-white text-stone-900 pt-44 sm:pt-48 md:pt-52 pb-20">
       <JsonLd data={collectionJsonLd} />
+
+      {/* Promotional Banner */}
+      <PromoBanner />
 
       <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12">
 

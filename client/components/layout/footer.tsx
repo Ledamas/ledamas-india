@@ -10,59 +10,60 @@ export function Footer() {
       {/* Professional High-Contrast Pre-Footer Trust & Service Guarantees Bar - Full Width Screen */}
       <section className="w-full bg-white border-t border-b border-[#E5E0D8] py-10 md:py-14 my-0 relative z-20 shadow-xs">
         <div className="w-full mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0 divide-y sm:divide-y-0 lg:divide-x divide-stone-300">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-4 lg:gap-0 divide-x-0 lg:divide-x divide-stone-200">
             
             {/* 1. 100% SECURED PAYMENTS */}
-            <div className="flex flex-col items-center text-center px-4 pt-4 sm:pt-0">
+            <div className="flex flex-col items-center text-center px-2">
               <div className="w-12 h-12 rounded-full border-2 border-[#A86B2B] bg-[#FFF9F2] text-[#8C5219] flex items-center justify-center mb-3 shadow-xs">
                 <Lock className="w-5.5 h-5.5 stroke-[2.2]" />
               </div>
-              <h3 className="text-xs sm:text-sm font-sans font-extrabold uppercase tracking-[0.18em] text-black">
+              <h3 className="text-[10px] sm:text-xs font-sans font-extrabold uppercase tracking-widest text-[#222]">
                 100% SECURED PAYMENTS
               </h3>
-              <p className="text-xs font-sans text-[#4A4540] font-medium mt-1 max-w-[220px] leading-snug">
+              <p className="text-[11px] sm:text-xs font-sans text-stone-500 font-medium mt-1.5 max-w-[160px] sm:max-w-[220px] leading-snug">
                 All payment types accepted
               </p>
             </div>
 
             {/* 2. FREE SHIPPING */}
-            <div className="flex flex-col items-center text-center px-4 pt-6 sm:pt-0">
+            <div className="flex flex-col items-center text-center px-2">
               <div className="w-12 h-12 rounded-full border-2 border-[#A86B2B] bg-[#FFF9F2] text-[#8C5219] flex items-center justify-center mb-3 shadow-xs">
                 <Truck className="w-5.5 h-5.5 stroke-[2.2]" />
               </div>
-              <h3 className="text-xs sm:text-sm font-sans font-extrabold uppercase tracking-[0.18em] text-black">
+              <h3 className="text-[10px] sm:text-xs font-sans font-extrabold uppercase tracking-widest text-[#222]">
                 FREE SHIPPING
               </h3>
-              <p className="text-xs font-sans text-[#4A4540] font-medium mt-1 max-w-[220px] leading-snug">
+              <p className="text-[11px] sm:text-xs font-sans text-stone-500 font-medium mt-1.5 max-w-[160px] sm:max-w-[220px] leading-snug">
                 Free shipping on all orders PAN India.
               </p>
             </div>
 
             {/* 3. RATED 4.8 */}
-            <div className="flex flex-col items-center text-center px-4 pt-6 lg:pt-0">
+            <div className="flex flex-col items-center text-center px-2">
               <div className="w-12 h-12 rounded-full border-2 border-[#A86B2B] bg-[#FFF9F2] text-[#8C5219] flex items-center justify-center mb-3 shadow-xs">
                 <ShieldCheck className="w-5.5 h-5.5 stroke-[2.2]" />
               </div>
-              <h3 className="text-xs sm:text-sm font-sans font-extrabold uppercase tracking-[0.18em] text-black">
+              <h3 className="text-[10px] sm:text-xs font-sans font-extrabold uppercase tracking-widest text-[#222]">
                 RATED 4.8
               </h3>
-              <p className="text-xs font-sans text-[#4A4540] font-medium mt-1 max-w-[220px] leading-snug">
+              <p className="text-[11px] sm:text-xs font-sans text-stone-500 font-medium mt-1.5 max-w-[160px] sm:max-w-[220px] leading-snug">
                 By 5k+ Customers
               </p>
             </div>
 
             {/* 4. 24 HOURS DISPATCH */}
-            <div className="flex flex-col items-center text-center px-4 pt-6 lg:pt-0">
+            <div className="flex flex-col items-center text-center px-2">
               <div className="w-12 h-12 rounded-full border-2 border-[#A86B2B] bg-[#FFF9F2] text-[#8C5219] flex items-center justify-center mb-3 shadow-xs">
                 <Clock className="w-5.5 h-5.5 stroke-[2.2]" />
               </div>
-              <h3 className="text-xs sm:text-sm font-sans font-extrabold uppercase tracking-[0.18em] text-black">
+              <h3 className="text-[10px] sm:text-xs font-sans font-extrabold uppercase tracking-widest text-[#222]">
                 24 HOURS DISPATCH
               </h3>
-              <p className="text-xs font-sans text-[#4A4540] font-medium mt-1 max-w-[220px] leading-snug">
+              <p className="text-[11px] sm:text-xs font-sans text-stone-500 font-medium mt-1.5 max-w-[160px] sm:max-w-[220px] leading-snug">
                 Fast, reliable help anytime
               </p>
             </div>
+
 
           </div>
         </div>

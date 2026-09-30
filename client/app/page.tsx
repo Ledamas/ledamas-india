@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/header';
 import { AnimatedHero } from '@/components/AnimatedHero/AnimatedHero';
 import { FeaturedCollection } from '@/components/home/featured-collection';
 import { WhereWeAreAvailable } from '@/components/home/where-we-are-available';
+import { SpecialOffers } from '@/components/home/special-offers';
 import { TestimonialsCarousel } from '@/components/home/testimonials-carousel';
 import { InstagramGallery } from '@/components/home/instagram-gallery';
 import { Footer } from '@/components/layout/footer';
@@ -25,7 +26,10 @@ export default function HomePage() {
         {/* 2. Featured Collection ("Best Sellers & Trending") */}
         <FeaturedCollection />
 
-        {/* 3. Where We're Available (Delivery Apps & Retail Network) */}
+        {/* 3. Special Offers & Promotions */}
+        <SpecialOffers />
+
+        {/* 4. Where We're Available (Delivery Apps & Retail Network) */}
         <WhereWeAreAvailable />
 
         {/* 5. Testimonials & Instagram */}

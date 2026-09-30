@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product, Collection } from '../../lib/types';
 import { ProductCard } from '../product/product-card';
+import { PromoBanner } from '../ui/promo-banner';
 import { SlidersHorizontal, ChevronDown, X, Check, RotateCcw, Search } from 'lucide-react';
 
 interface ShopClientProps {
@@ -44,6 +45,7 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
   // Sorting State
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [isSortOpen, setIsSortOpen] = useState<boolean>(false);
+  const [isPriceOpen, setIsPriceOpen] = useState<boolean>(false);
 
   // Filter Drawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
@@ -136,33 +138,83 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
 
   return (
     <main className="flex-1 pt-44 sm:pt-48 md:pt-56 pb-20 bg-white">
-      <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12 space-y-6">
+      
+      {/* Promotional Banner */}
+      <PromoBanner />
 
-        {/* Sticky Utility Toolbar Row (SORT BY Dropdown | Product Count | FILTERS Button) */}
-        <div className="sticky top-[148px] sm:top-[160px] md:top-[172px] z-30 bg-white border-y border-stone-300 py-4 px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+      {/* Sticky Utility Toolbar Row (Full Width) */}
+      <div className="sticky top-[64px] sm:top-[70px] lg:top-[90px] z-30 w-full bg-white border-b border-stone-200 shadow-sm">
+        <div className="max-w-[1480px] w-full mx-auto px-0 sm:px-6 lg:px-12">
           
-          {/* Left: SORT BY Dropdown + Item Count */}
-          <div className="flex items-center space-x-6 relative">
+          {/* MOBILE TOOLBAR (Clean Layout: Filter v | Price v | Sort v) */}
+          <div className="flex sm:hidden items-center justify-between w-full border-t border-b border-stone-200 py-3 px-6 text-[13px] text-stone-600 font-sans bg-white">
+            <button onClick={() => setIsDrawerOpen(true)} className="flex items-center gap-1.5 hover:text-black transition-colors">
+              Filter <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+            </button>
             <div className="relative">
-              <button
-                onClick={() => setIsSortOpen(!isSortOpen)}
-                className="flex items-center space-x-2 text-xs font-sans uppercase tracking-wider text-[#1A1817] hover:text-[#CB9700] transition-colors cursor-pointer"
+              <button 
+                onClick={() => {
+                  setIsPriceOpen(!isPriceOpen);
+                  setIsSortOpen(false);
+                }} 
+                className="flex items-center gap-1.5 hover:text-black transition-colors"
               >
-                <span className="text-[#1A1817] font-extrabold">SORT BY</span>
-                <span className="text-[#1A1817] font-black underline decoration-[#CB9700] underline-offset-4">
-                  {sortOptionsList.find((s) => s.value === sortOption)?.label}
-                </span>
-                <ChevronDown className={`w-4 h-4 text-[#1A1817] transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+                Price <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform ${isPriceOpen ? 'rotate-180' : ''}`} />
               </button>
-
-              {/* Sort Dropdown Popup */}
+              
+              {/* Price Dropdown Popup (Mobile) */}
+              <AnimatePresence>
+                {isPriceOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-48 bg-white border border-stone-200 shadow-xl rounded-md py-2 z-50 text-xs"
+                  >
+                    {[
+                      { label: 'All Prices', value: 'all' },
+                      { label: 'Under ₹500', value: 'under-500' },
+                      { label: '₹500 - ₹1000', value: '500-1000' },
+                      { label: '₹1000 - ₹1500', value: '1000-1500' },
+                      { label: 'Over ₹1500', value: 'over-1500' }
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          setPricePreset(opt.value);
+                          setIsPriceOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-stone-50 transition-colors ${
+                          pricePreset === opt.value ? 'text-[#CB9700] font-bold bg-stone-50' : 'text-stone-700'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {pricePreset === opt.value && <Check className="w-4 h-4 text-[#CB9700]" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <div className="relative">
+              <button 
+                onClick={() => {
+                  setIsSortOpen(!isSortOpen);
+                  setIsPriceOpen(false);
+                }} 
+                className="flex items-center gap-1.5 hover:text-black transition-colors"
+              >
+                Sort <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {/* Sort Dropdown Popup (Mobile) */}
               <AnimatePresence>
                 {isSortOpen && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-0 top-full mt-2 w-60 bg-white border border-stone-300 shadow-2xl rounded-md py-2 z-50 text-xs font-sans uppercase tracking-wider"
+                    className="absolute right-0 top-full mt-3 w-48 bg-white border border-stone-200 shadow-xl rounded-md py-2 z-50 text-xs"
                   >
                     {sortOptionsList.map((opt) => (
                       <button
@@ -171,8 +223,8 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
                           setSortOption(opt.value);
                           setIsSortOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-3 flex items-center justify-between hover:bg-[#FAF6ED] transition-colors ${
-                          sortOption === opt.value ? 'text-[#CB9700] font-bold bg-[#FAF6ED]' : 'text-[#1A1817] font-medium'
+                        className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-stone-50 transition-colors ${
+                          sortOption === opt.value ? 'text-[#CB9700] font-bold bg-stone-50' : 'text-stone-700'
                         }`}
                       >
                         <span>{opt.label}</span>
@@ -183,25 +235,75 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
                 )}
               </AnimatePresence>
             </div>
-
-            <span className="text-xs font-sans text-[#1A1817] font-extrabold tracking-wider uppercase border-l-2 border-stone-300 pl-6 hidden sm:inline-block">
-              {filteredProducts.length} PRODUCTS
-            </span>
           </div>
 
-          {/* Right: FILTERS Drawer Button */}
-          <div>
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="px-6 py-2.5 border-2 border-[#1A1817] hover:bg-[#1A1817] hover:text-white text-[#1A1817] text-xs font-sans uppercase font-extrabold tracking-[0.15em] transition-all duration-300 flex items-center space-x-2 rounded-xs shadow-xs cursor-pointer"
-            >
-              <span>FILTERS</span>
-              <SlidersHorizontal className="w-4 h-4" />
-            </button>
-          </div>
+          {/* DESKTOP TOOLBAR */}
+          <div className="hidden sm:flex py-4 flex-wrap items-center justify-between gap-4">
+            
+            {/* Left: SORT BY Dropdown + Item Count */}
+            <div className="flex items-center space-x-6 relative">
+              <div className="relative">
+                <button
+                  onClick={() => setIsSortOpen(!isSortOpen)}
+                  className="flex items-center space-x-2 text-xs font-sans uppercase tracking-wider text-[#1A1817] hover:text-[#CB9700] transition-colors cursor-pointer"
+                >
+                  <span className="text-[#1A1817] font-extrabold">SORT BY</span>
+                  <span className="text-[#1A1817] font-black underline decoration-[#CB9700] underline-offset-4">
+                    {sortOptionsList.find((s) => s.value === sortOption)?.label}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-[#1A1817] transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+                </button>
 
+                {/* Sort Dropdown Popup (Desktop) */}
+                <AnimatePresence>
+                  {isSortOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      className="absolute left-0 top-full mt-2 w-60 bg-white border border-stone-300 shadow-2xl rounded-md py-2 z-50 text-xs font-sans uppercase tracking-wider"
+                    >
+                      {sortOptionsList.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => {
+                            setSortOption(opt.value);
+                            setIsSortOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 flex items-center justify-between hover:bg-[#FAF6ED] transition-colors ${
+                            sortOption === opt.value ? 'text-[#CB9700] font-bold bg-[#FAF6ED]' : 'text-[#1A1817] font-medium'
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {sortOption === opt.value && <Check className="w-4 h-4 text-[#CB9700]" />}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <span className="text-xs font-sans text-[#1A1817] font-extrabold tracking-wider uppercase border-l-2 border-stone-300 pl-6 hidden sm:inline-block">
+                {filteredProducts.length} PRODUCTS
+              </span>
+            </div>
+
+            {/* Right: FILTERS Drawer Button */}
+            <div>
+              <button
+                onClick={() => setIsDrawerOpen(true)}
+                className="px-6 py-2.5 border-2 border-[#1A1817] hover:bg-[#1A1817] hover:text-white text-[#1A1817] text-xs font-sans uppercase font-extrabold tracking-[0.15em] transition-all duration-300 flex items-center space-x-2 rounded-xs shadow-xs cursor-pointer"
+              >
+                <span>FILTERS</span>
+                <SlidersHorizontal className="w-4 h-4" />
+              </button>
+            </div>
+
+          </div>
         </div>
+      </div>
 
+      <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12 pt-8">
         {/* Main Product Grid Showcase */}
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8 pt-2">
