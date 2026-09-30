@@ -242,63 +242,66 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
                   {product.tastingNotes && product.tastingNotes.length > 0 && (
                     <p><strong className="text-stone-900 font-medium">Tasting Notes:</strong> {product.tastingNotes.join(', ')}</p>
                   )}
+                  {product.specifications && Object.keys(product.specifications).length > 0 && (
+                    <div className="mt-6 space-y-4 border-t border-stone-200 pt-6">
+                      <h4 className="text-stone-900 font-medium uppercase tracking-[0.2em] text-xs">Additional Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                        {Object.entries(product.specifications).map(([key, value]) => {
+                          const strValue = String(value);
+                          const isLong = strValue.length > 40;
+                          return (
+                            <div key={key} className={`flex flex-col border-b border-stone-100 pb-2 ${isLong ? 'md:col-span-2' : 'justify-between'}`}>
+                              <span className={`text-stone-900 font-medium text-[10px] uppercase tracking-wider mb-1`}>{key}</span>
+                              <span className={`text-stone-600 font-light ${isLong ? 'text-xs leading-relaxed mt-1' : 'text-[11px]'}`}>{strValue}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* 3-Column Specifications Summary Boxes (Matching CarbonSmith Bottom Boxes) */}
-            <div className="bg-[#F8F8F8] border border-stone-200/80 grid grid-cols-1 sm:grid-cols-3 text-[10.5px] font-sans font-medium uppercase tracking-wider text-stone-700 py-3.5 px-4 text-center divide-y sm:divide-y-0 sm:divide-x divide-stone-200/80 gap-2 sm:gap-0">
-              <div className="py-1 px-2">
-                <span className="text-stone-400 font-normal">GROSS WEIGHT : </span>
-                <span className="text-stone-900 font-semibold">{product.weight || '200 g'}</span>
-              </div>
-              <div className="py-1 px-2">
-                <span className="text-stone-400 font-normal">NET WEIGHT : </span>
-                <span className="text-stone-900 font-semibold">{product.weight ? product.weight : '180 g'}</span>
-              </div>
-              <div className="py-1 px-2">
-                <span className="text-stone-400 font-normal">ORIGIN : </span>
-                <span className="text-stone-900 font-semibold">{product.origin || 'Single Origin'}</span>
-              </div>
-            </div>
+
           </div>
         </div>
 
         {/* SEO & Collection Quick Navigation */}
         <section className="mt-20 pt-10 border-t border-stone-200">
           <div className="max-w-3xl">
-            <h2 className="text-lg font-serif text-stone-900 font-normal">
+            <h2 className="text-xl font-serif text-stone-900 font-medium">
               Explore More {categoryName} & Handcrafted Dubai Chocolates
             </h2>
-            <p className="mt-2 text-xs text-stone-500 leading-relaxed font-light">
+            <p className="mt-3 text-sm text-stone-800 leading-relaxed">
               Each LE DAMAS confection is handcrafted in small artisanal batches. Discover our full range of{' '}
-              <Link href="/collections/kunafa-chocolate" className="text-[#CB9700] underline font-medium hover:text-stone-900">
+              <Link href="/collections/kunafa-chocolate" className="text-[#CB9700] underline font-bold hover:text-stone-900">
                 Kunafa Chocolates
               </Link>
               , featuring crisp roasted Kataifi pastry, slow-roasted pistachio creme, and Belgian dark chocolate.
             </p>
-            <div className="mt-4 flex flex-wrap gap-2.5">
+            <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href="/collections/dubai-chocolate"
-                className="text-[11px] px-3.5 py-1.5 bg-stone-50 border border-stone-200 text-stone-700 hover:border-stone-900 hover:text-stone-900 transition-colors uppercase tracking-wider font-sans font-medium"
+                className="text-xs px-4 py-2 bg-stone-100 border border-stone-300 text-stone-900 hover:bg-stone-200 hover:border-stone-400 transition-colors uppercase tracking-wider font-sans font-semibold shadow-sm"
               >
                 Dubai Chocolate Bars
               </Link>
               <Link
                 href="/collections/dark-chocolate"
-                className="text-[11px] px-3.5 py-1.5 bg-stone-50 border border-stone-200 text-stone-700 hover:border-stone-900 hover:text-stone-900 transition-colors uppercase tracking-wider font-sans font-medium"
+                className="text-xs px-4 py-2 bg-stone-100 border border-stone-300 text-stone-900 hover:bg-stone-200 hover:border-stone-400 transition-colors uppercase tracking-wider font-sans font-semibold shadow-sm"
               >
                 Dark Chocolate Collection
               </Link>
               <Link
                 href="/collections/milk-chocolate"
-                className="text-[11px] px-3.5 py-1.5 bg-stone-50 border border-stone-200 text-stone-700 hover:border-stone-900 hover:text-stone-900 transition-colors uppercase tracking-wider font-sans font-medium"
+                className="text-xs px-4 py-2 bg-stone-100 border border-stone-300 text-stone-900 hover:bg-stone-200 hover:border-stone-400 transition-colors uppercase tracking-wider font-sans font-semibold shadow-sm"
               >
                 Milk Chocolate Collection
               </Link>
               <Link
                 href="/collections/mini-chocolate-bars"
-                className="text-[11px] px-3.5 py-1.5 bg-stone-50 border border-stone-200 text-stone-700 hover:border-stone-900 hover:text-stone-900 transition-colors uppercase tracking-wider font-sans font-medium"
+                className="text-xs px-4 py-2 bg-stone-100 border border-stone-300 text-stone-900 hover:bg-stone-200 hover:border-stone-400 transition-colors uppercase tracking-wider font-sans font-semibold shadow-sm"
               >
                 Mini Chocolate Bars
               </Link>

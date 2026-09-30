@@ -186,6 +186,7 @@ router.post('/', verifyAdminAuth, async (req: Request, res: Response) => {
       tastingNotes = [],
       dietaryBadges = [],
       tags = [],
+      specifications,
       images = [],
       seo = {},
     } = req.body;
@@ -247,6 +248,7 @@ router.post('/', verifyAdminAuth, async (req: Request, res: Response) => {
           tastingNotes: Array.isArray(tastingNotes) ? tastingNotes : [],
           dietaryBadges: Array.isArray(dietaryBadges) ? dietaryBadges : [],
           tags: Array.isArray(tags) ? tags : [],
+          specifications: specifications || null,
           images: Array.isArray(images) && images.length > 0 ? images : ['/Kunafa Pistachio Dark Chocolate 1.png'],
           seo: {
             create: {
@@ -302,6 +304,7 @@ router.put('/:id', verifyAdminAuth, async (req: Request, res: Response) => {
       tastingNotes,
       dietaryBadges,
       tags,
+      specifications,
       images,
       seo,
     } = req.body;
@@ -345,6 +348,7 @@ router.put('/:id', verifyAdminAuth, async (req: Request, res: Response) => {
           ...(tastingNotes !== undefined && { tastingNotes: Array.isArray(tastingNotes) ? tastingNotes : [] }),
           ...(dietaryBadges !== undefined && { dietaryBadges: Array.isArray(dietaryBadges) ? dietaryBadges : [] }),
           ...(tags !== undefined && { tags: Array.isArray(tags) ? tags : [] }),
+          ...(specifications !== undefined && { specifications: specifications }),
           ...(images !== undefined && { images: Array.isArray(images) ? images : [] }),
           categoryId,
           ...(seo && {

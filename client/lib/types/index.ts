@@ -38,6 +38,7 @@ export interface Product extends ProductSEO {
   weight: string;
   cacaoPercentage?: number;
   origin?: string;
+  specifications?: Record<string, string>;
   price: number; // base price in INR ₹
   compareAtPrice?: number;
   originalPrice?: number;

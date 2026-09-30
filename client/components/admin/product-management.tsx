@@ -71,6 +71,7 @@ export const ProductManagement: React.FC = () => {
     featuresInput: string;
     ingredientsInput: string;
     tagsInput: string;
+    specificationsInput: string;
     price: number;
     compareAtPrice: number;
     skuCode: string;
@@ -101,6 +102,7 @@ export const ProductManagement: React.FC = () => {
     featuresInput: '',
     ingredientsInput: '',
     tagsInput: 'Handcrafted, Kunafa',
+    specificationsInput: '{}',
     price: 1699,
     compareAtPrice: 1899,
     skuCode: 'LD-SKU-1001',
@@ -185,6 +187,7 @@ export const ProductManagement: React.FC = () => {
       featuresInput: 'Belgian Cacao, Pure Cocoa Butter, Artisanal Batch',
       ingredientsInput: 'Cocoa Butter, Roasted Pistachios, Kataifi Pastry, Sugar, Milk Solids',
       tagsInput: 'Kunafa, Pistachio, Handcrafted',
+      specificationsInput: '{}',
       price: 1699,
       compareAtPrice: 1899,
       skuCode: `LD-SKU-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -223,6 +226,7 @@ export const ProductManagement: React.FC = () => {
       featuresInput: (prod.features || []).join(', '),
       ingredientsInput: (prod.ingredients || []).join(', '),
       tagsInput: (prod.tags || []).join(', '),
+      specificationsInput: prod.specifications ? JSON.stringify(prod.specifications, null, 2) : '{}',
       price: prod.price,
       compareAtPrice: prod.compareAtPrice || prod.originalPrice || prod.price,
       skuCode: prod.skuCode || `LD-SKU-1001`,
@@ -266,6 +270,17 @@ export const ProductManagement: React.FC = () => {
 
     const imagesList = [formData.mainImage, ...formData.galleryImages].filter(Boolean);
 
+    let parsedSpecifications = null;
+    if (formData.specificationsInput && formData.specificationsInput.trim() !== '') {
+      try {
+        parsedSpecifications = JSON.parse(formData.specificationsInput);
+      } catch (e) {
+        setSaving(false);
+        setAlertMsg({ type: 'error', text: 'Invalid JSON format in specifications. Please fix it before saving.' });
+        return;
+      }
+    }
+
     const payload = {
       name: formData.name.trim(),
       slug: generatedSlug,
@@ -288,6 +303,7 @@ export const ProductManagement: React.FC = () => {
       features: formData.featuresInput.split(',').map((s) => s.trim()).filter(Boolean),
       ingredients: formData.ingredientsInput.split(',').map((s) => s.trim()).filter(Boolean),
       tags: formData.tagsInput.split(',').map((s) => s.trim()).filter(Boolean),
+      specifications: parsedSpecifications,
       images: imagesList.length > 0 ? imagesList : ['/Kunafa-Pistachio-Dark-Chocolate-1.png'],
       seo: {
         metaTitle: formData.metaTitle || `${formData.name} | LE DAMAS`,
@@ -415,11 +431,10 @@ export const ProductManagement: React.FC = () => {
       {/* Alert Banner */}
       {alertMsg && (
         <div
-          className={`p-4 rounded-xl border flex items-center justify-between text-xs font-bold transition-all shadow-sm ${
-            alertMsg.type === 'success'
-              ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-              : 'bg-rose-50 border-rose-300 text-rose-900'
-          }`}
+          className={`p-4 rounded-xl border flex items-center justify-between text-xs font-bold transition-all shadow-sm ${alertMsg.type === 'success'
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+            : 'bg-rose-50 border-rose-300 text-rose-900'
+            }`}
         >
           <div className="flex items-center space-x-2">
             {alertMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
@@ -580,11 +595,10 @@ export const ProductManagement: React.FC = () => {
                       <td className="py-3 px-4">
                         <button
                           onClick={() => handleToggleStatus(prod)}
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition-all cursor-pointer ${
-                            prod.status === 'Active' && prod.inStock
-                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200'
-                              : 'bg-rose-100 text-rose-900 border border-rose-300 hover:bg-rose-200'
-                          }`}
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase transition-all cursor-pointer ${prod.status === 'Active' && prod.inStock
+                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300 hover:bg-emerald-200'
+                            : 'bg-rose-100 text-rose-900 border border-rose-300 hover:bg-rose-200'
+                            }`}
                           title="Click to toggle status"
                         >
                           {prod.status === 'Active' && prod.inStock ? 'Active' : 'Out of Stock'}
@@ -666,11 +680,10 @@ export const ProductManagement: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveFormTab(tab.id as any)}
-                  className={`px-4 py-2.5 text-xs font-extrabold tracking-wide uppercase transition-all border-b-2 cursor-pointer whitespace-nowrap ${
-                    activeFormTab === tab.id
-                      ? 'border-[#1A1817] text-[#1A1817] bg-white font-extrabold'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
+                  className={`px-4 py-2.5 text-xs font-extrabold tracking-wide uppercase transition-all border-b-2 cursor-pointer whitespace-nowrap ${activeFormTab === tab.id
+                    ? 'border-[#1A1817] text-[#1A1817] bg-white font-extrabold'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -800,6 +813,17 @@ export const ProductManagement: React.FC = () => {
                         className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-slate-800"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-900 mb-1">Specifications (JSON Format)</label>
+                    <textarea
+                      rows={6}
+                      value={formData.specificationsInput}
+                      onChange={(e) => setFormData({ ...formData, specificationsInput: e.target.value })}
+                      placeholder={'{\n  "Chocolate Type": "Dark Chocolate",\n  "Cocoa Percentage": "41 - 50% Cocoa"\n}'}
+                      className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-slate-800 font-mono"
+                    />
                   </div>
                 </div>
               )}
