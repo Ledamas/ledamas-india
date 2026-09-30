@@ -11,8 +11,6 @@ const CTA_LABEL = 'Explore collection';
 const VIDEO_DESKTOP = '/hero/hero.mp4';
 const VIDEO_MOBILE = '/hero/hero-mobile.mp4';
 const GOLD = '#F2B84B';
-const REVEAL = 1.5; // seconds for the diya-light reveal
-const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 interface Scene {
   id: string;
@@ -35,30 +33,78 @@ const SCENES: Scene[] = [
     focus: '50% 50%',
     duration: 6500,
   },
-  {
-    id: 'part-2',
-    name: 'Banner 2',
-    src: '/hero/part-2.png',
-    mobileSrc: '/hero/portrait-part-2.png',
-    alt: 'LE DAMAS Diwali chocolate banner, part 2',
-    focus: '50% 50%',
-    duration: 6500,
-  },
-  {
-    id: 'part-3',
-    name: 'Banner 3',
-    src: '/hero/part-3.png',
-    mobileSrc: '/hero/portrait-part-3.png',
-    alt: 'LE DAMAS Diwali chocolate banner, part 3',
-    focus: '50% 50%',
-    duration: 6500,
-  },
+
   {
     id: 'part-4',
     name: 'Banner 4',
     src: '/hero/part-4.png',
     mobileSrc: '/hero/portrait-part-4.png',
     alt: 'LE DAMAS Diwali chocolate banner, part 4',
+    focus: '50% 50%',
+    duration: 6500,
+  },
+  {
+    id: 'part-5',
+    name: 'Indulgence Elegance',
+    src: '/hero/banner-elegance.webp',
+    mobileSrc: '/hero/indulgence-banner-portrait.png',
+    alt: 'Indulgence Wrapped in Elegance',
+    focus: '50% 50%',
+    duration: 6500,
+  },
+  {
+    id: 'part-6',
+    name: 'Le Bubu',
+    src: '/hero/banner-le-bubu-v2.webp',
+    mobileSrc: '/hero/le-bubu-banner-portrait.png',
+    alt: 'Le Bubu Chocolate',
+    focus: '50% 50%',
+    duration: 6500,
+  },
+  {
+    id: 'part-7',
+    name: 'Dubai Mini Bar',
+    src: '/hero/hazelnut-mini-bar-portrait.png',
+    mobileSrc: '/hero/hazelnut-mini-bar-portrait.png',
+    alt: 'Dubai Chocolate Mini Bar',
+    focus: '50% 50%',
+    duration: 6500,
+  },
+  {
+    id: 'part-8',
+    name: 'Speculoos Creme',
+    src: '/hero/speculoos-gift-box.webp',
+    mobileSrc: '/hero/speculoos-gift-box.webp',
+    alt: 'Dubai Chocolate Speculoos Creme',
+    focus: '50% 50%',
+    duration: 6500,
+  },
+
+  {
+    id: 'part-10',
+    name: 'Kunafa Creme Board',
+    src: '/hero/kunafa-creme-board.webp',
+    mobileSrc: '/hero/kunafa-creme-board-portrait.webp',
+    alt: 'Kunafa Creme Board',
+    focus: '50% 50%',
+    duration: 6500,
+  },
+  {
+    id: 'part-11',
+    name: 'Kunafa Dark Flatlay',
+    src: '/hero/kunafa-dark-flatlay.webp',
+    mobileSrc: '/hero/kunafa-dark-flatlay.webp',
+    alt: 'Kunafa Dark Flatlay',
+    focus: '50% 50%',
+    duration: 6500,
+  },
+
+  {
+    id: 'part-13',
+    name: 'Speculoos Velvet',
+    src: '/hero/speculoos-velvet.webp',
+    mobileSrc: '/hero/speculoos-velvet.webp',
+    alt: 'Speculoos Velvet',
     focus: '50% 50%',
     duration: 6500,
   },
@@ -263,9 +309,6 @@ export function AnimatedHero() {
   const showVideo = mode === 'video' && videoReady;
   const running = playing && inView;
 
-  // Radius the light circle needs to reach the far corners from the bottom centre
-  const maxR = Math.round(Math.hypot(hero.w / 2, hero.h) * 1.05) || 2000;
-
   const go = useCallback(
     (dir: 1 | -1) => setSlide(([cur]) => [(cur + dir + scenes.length) % scenes.length, dir]),
     [scenes.length]
@@ -386,20 +429,15 @@ export function AnimatedHero() {
           <motion.div
             key={scene.id}
             className="absolute inset-0"
-            /* Diya-light reveal: a circle of light opens from the bottom centre */
-            initial={still ? { opacity: 0 } : { clipPath: 'circle(0px at 50% 100%)' }}
-            animate={
-              still
-                ? { opacity: 1, transition: { duration: 0.6 } }
-                : { clipPath: `circle(${maxR}px at 50% 100%)`, transition: { duration: REVEAL, ease: EASE } }
-            }
-            /* keeps the old shot visible until the new one has finished opening over it */
-            exit={{ opacity: 0.999, transition: { duration: REVEAL + 0.1 } }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.8 } }}
+            /* keeps the old shot visible until the new one has finished fading in */
+            exit={{ opacity: 0.999, transition: { duration: 0.8 } }}
           >
-            {/* Slow camera settle. Starts zoomed in, never below 1, so no edges show. */}
+            {/* Slow camera settle. Significantly reduced zoom to keep more of the image in frame. */}
             <motion.div
               className="absolute inset-0"
-              initial={{ scale: 1.08, x: still ? 0 : direction * 10 }}
+              initial={{ scale: 1.02, x: still ? 0 : direction * 4 }}
               animate={still ? undefined : { scale: 1, x: 0 }}
               transition={{ duration: scene.duration / 1000 + 2, ease: 'linear' }}
             >
@@ -474,34 +512,6 @@ export function AnimatedHero() {
             'linear-gradient(to bottom, rgba(8,2,10,.55) 0%, transparent 22%, transparent 42%, rgba(8,2,10,.55) 72%, rgba(8,2,10,.85) 100%), radial-gradient(ellipse at center, transparent 55%, rgba(8,2,10,.4) 100%)',
         }}
       />
-
-      {/* Golden ring of light that travels with every reveal */}
-      {!still && !showVideo && (
-        <motion.div
-          key={`ring-${scene.id}`}
-          aria-hidden
-          className="pointer-events-none absolute z-[16] rounded-full"
-          style={{
-            left: '50%',
-            top: '100%',
-            width: maxR * 2,
-            height: maxR * 2,
-            x: '-50%',
-            y: '-50%',
-            border: '2px solid rgba(255,226,154,.9)',
-            boxShadow: '0 0 50px 10px rgba(255,170,50,.65), inset 0 0 90px 16px rgba(255,170,50,.35)',
-          }}
-          initial={{ scale: 0, opacity: 1 }}
-          animate={{
-            scale: 1,
-            opacity: [1, 1, 0],
-            transition: {
-              scale: { duration: REVEAL, ease: EASE },
-              opacity: { duration: REVEAL, times: [0, 0.7, 1] },
-            },
-          }}
-        />
-      )}
 
       {DIWALI && !still && (
         <div aria-hidden className="pointer-events-none absolute inset-0 z-[17] mix-blend-screen">

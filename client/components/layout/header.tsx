@@ -190,7 +190,7 @@ export function Header() {
     : 'bg-[#1F1B18] border border-white/20 text-[#FAF6ED] placeholder-stone-400 focus:border-[#CB9700] focus:bg-[#28231F]';
 
   const navLinkColorClass = (isActive: boolean) =>
-    isActive ? 'text-[#CB9700] font-bold drop-shadow-sm' : 'text-[#FAF6ED] hover:text-[#CB9700] font-bold drop-shadow-sm';
+    isActive ? 'text-[#FAF6ED] font-bold drop-shadow-sm' : 'text-[#FAF6ED] hover:text-[#CB9700] font-bold drop-shadow-sm';
 
   const loginButtonClass = isTransparentHeader
     ? 'bg-black/30 backdrop-blur-md border border-[#CB9700]/50 hover:bg-[#CB9700] hover:text-black hover:border-[#CB9700] text-[#FAF6ED] font-sans font-medium text-xs sm:text-[13px] px-4 py-1.5 rounded transition-all duration-200 shadow-sm active:scale-95'
