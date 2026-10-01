@@ -73,10 +73,7 @@ export function Header() {
   }, [hoveredCollectionKey]);
 
   const dropdownFeaturedProducts = React.useMemo(() => {
-    const matching = PRODUCTS.filter(activeCollectionCategory.filterFn);
-    if (matching.length >= 4) return matching.slice(0, 4);
-    const rest = PRODUCTS.filter((p) => !matching.some((m) => m.id === p.id));
-    return [...matching, ...rest].slice(0, 4);
+    return PRODUCTS.filter(activeCollectionCategory.filterFn).slice(0, 4);
   }, [activeCollectionCategory]);
 
   const rawWishlistCount = useWishlistStore((state) => state.items.length);

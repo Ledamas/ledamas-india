@@ -205,15 +205,14 @@ export function Footer() {
                 Based on 148 Google reviews
               </a>
 
-              <button
-                onClick={() => {
-                  const el = document.getElementById('testimonials');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="px-3.5 py-1.5 rounded-full border border-[#D5B268]/60 text-[#FAF6ED] text-xs font-medium hover:bg-[#D5B268] hover:text-[#3D2314] transition-all duration-300 cursor-pointer"
+              <a
+                href="https://g.page/r/CeqyAcxDIgLQEBM/review"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block px-3.5 py-1.5 rounded-full border border-[#D5B268]/60 text-[#FAF6ED] text-xs font-medium hover:bg-[#D5B268] hover:text-[#3D2314] transition-all duration-300 cursor-pointer text-center"
               >
                 Write A Review
-              </button>
+              </a>
             </div>
           </div>
 

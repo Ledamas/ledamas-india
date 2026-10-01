@@ -12,7 +12,7 @@ import {
 } from '../utils/auth-security.js';
 import { Role } from '@prisma/client';
 import { OAuth2Client } from 'google-auth-library';
-
+import { NotificationService } from '../services/notification.service.js';
 const googleAuthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = Router();
@@ -133,6 +133,28 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
           },
         })
       );
+
+      // Send Welcome SMS and Email asynchronously
+      const welcomeMsg = `Welcome to LE DAMAS! We're thrilled to have you. Enjoy exploring our luxury collections.`;
+      const welcomeEmailHtml = `<h1>Welcome to LE DAMAS</h1><p>We are thrilled to have you. Explore our luxury chocolate collections today!</p>`;
+      
+      NotificationService.sendSMS(
+        user.phone || \`+91\${tenDigitPhone}\`,
+        welcomeMsg,
+        user.id,
+        undefined,
+        'CUSTOMER_REGISTERED'
+      );
+
+      NotificationService.sendEmail(
+        uniqueGuestEmail,
+        'Welcome to LE DAMAS',
+        welcomeEmailHtml,
+        user.id,
+        undefined,
+        'CUSTOMER_REGISTERED'
+      );
+      
     } else {
       const existingId = user.id;
       user = await withDbRetry(() =>

@@ -19,7 +19,7 @@ function generateReferralCodeString(name?: string | null, phone?: string | null)
 // POST /api/v1/coupons/validate - Validate coupon or referral code for checkout
 router.post('/validate', async (req: Request, res: Response) => {
   try {
-    const { code, subtotal = 0, userId, phone, email } = req.body;
+    const { code, subtotal = 0, userId, phone, email, cartQuantity = 0 } = req.body;
 
     if (!code || typeof code !== 'string' || !code.trim()) {
       return sendError(res, 'Please provide a valid coupon or referral code.', 400);
@@ -27,6 +27,7 @@ router.post('/validate', async (req: Request, res: Response) => {
 
     const cleanCode = code.trim().toUpperCase();
     const numericSubtotal = Number(subtotal) || 0;
+    const numericQuantity = Number(cartQuantity) || 0;
 
     // 1. Check if matching Coupon in Database
     const coupon = await prisma.coupon.findFirst({
@@ -58,6 +59,32 @@ router.post('/validate', async (req: Request, res: Response) => {
           `Minimum order value of ₹${coupon.minOrderValue.toLocaleString('en-IN')} is required to use this coupon.`,
           400
         );
+      }
+
+      if (coupon.minQuantity && numericQuantity < coupon.minQuantity) {
+        return sendError(
+          res,
+          `Minimum quantity of ${coupon.minQuantity} items is required to use this coupon.`,
+          400
+        );
+      }
+
+      if (coupon.onePerCustomer && (userId || phone || email)) {
+        const previousOrder = await prisma.order.findFirst({
+          where: {
+            couponCode: { equals: cleanCode, mode: 'insensitive' },
+            paymentStatus: { in: ['PAID', 'ADVANCE_PAID'] },
+            OR: [
+              ...(userId ? [{ userId }] : []),
+              ...(phone ? [{ phone }] : []),
+              ...(email ? [{ email }] : []),
+            ]
+          }
+        });
+        
+        if (previousOrder) {
+          return sendError(res, 'This coupon is limited to one use per customer, and you have already used it.', 400);
+        }
       }
 
       let discountAmount = 0;

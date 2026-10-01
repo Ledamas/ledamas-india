@@ -22,7 +22,36 @@ import {
 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/products';
 import { calculateCodDetails, CodCalculation } from '@/lib/utils/cod-calculator';
-import { getAdminOrdersApi, updateOrderStatusApi, processAdminRefundApi } from '@/lib/services/admin-service';
+import { getAdminOrdersApi, updateOrderStatusApi, processAdminRefundApi, createAdminOrderApi } from '@/lib/services/admin-service';
+import { PlusCircle, Plus, Trash2 } from 'lucide-react';
+
+export const generateAndDownloadInvoice = (order: any) => {
+  const cod = order.codDetails || calculateCodDetails(order.baseOrderTotal, order.paymentMethod);
+  const invoiceData = {
+    orderNumber: order.orderNumber,
+    date: order.createdAt,
+    customer: {
+      firstName: order.customerName,
+      lastName: '',
+      email: order.email,
+      phone: order.phone,
+      address: order.address,
+      city: '', state: '', pincode: '',
+    },
+    items: order.items.map((item: any) => ({
+      product: { name: item.name, price: item.price },
+      quantity: item.qty,
+    })),
+    subtotal: order.baseOrderTotal,
+    discount: 0,
+    total: order.baseOrderTotal,
+    isCod: cod.isCod,
+    paymentMethod: order.paymentMethod
+  };
+  
+  localStorage.setItem('ledamas_last_order_invoice', JSON.stringify(invoiceData));
+  window.open('/invoice', '_blank');
+};
 
 export type AdminOrderStatus =
   | 'NEW'
@@ -50,6 +79,9 @@ export interface AdminOrder {
   trackingNumber?: string;
   createdAt: string;
   codDetails?: CodCalculation;
+  awbNumber?: string;
+  courierPartner?: string;
+  trackingUrl?: string;
   razorpayRefundId?: string;
   refundAmount?: number;
   refundStatus?: string;
@@ -110,6 +142,9 @@ const formatDbOrderToAdminOrder = (dbOrder: any): AdminOrder => {
     refundStatus: dbOrder.refundStatus,
     refundReason: dbOrder.refundReason,
     refundedAt: dbOrder.refundedAt ? new Date(dbOrder.refundedAt).toLocaleString('en-IN') : undefined,
+    awbNumber: dbOrder.awbNumber,
+    courierPartner: dbOrder.courierPartner,
+    trackingUrl: dbOrder.trackingUrl,
   };
 };
 
@@ -125,6 +160,9 @@ export const OrderManagement: React.FC = () => {
   // Refund Modal State
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [refundTargetOrder, setRefundTargetOrder] = useState<AdminOrder | null>(null);
+
+  // Manual Order State
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchDbOrders = async () => {
     setLoading(true);
@@ -197,6 +235,14 @@ export const OrderManagement: React.FC = () => {
 
         <div className="flex items-center space-x-3">
           <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-black hover:bg-stone-800 text-white text-xs font-bold transition-all cursor-pointer shadow-md"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>Create Order</span>
+          </button>
+
+          <button
             onClick={fetchDbOrders}
             disabled={loading}
             className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold border border-stone-300 transition-all cursor-pointer"
@@ -233,6 +279,7 @@ export const OrderManagement: React.FC = () => {
             'SHIPPED',
             'DELIVERED',
             'REFUND_REQUESTED',
+            'REFUNDED',
             'CANCELLED',
           ] as AdminOrderStatus[]
         ).map((st) => {
@@ -370,6 +417,17 @@ export const OrderManagement: React.FC = () => {
                             <span>{order.paymentMethod} (PREPAID)</span>
                           </span>
                         )}
+                        {order.awbNumber && (
+                          <div className="mt-2 text-xs font-mono text-stone-600 bg-stone-100 p-1.5 rounded-lg border border-stone-200">
+                            <span className="block font-semibold">AWB: {order.awbNumber}</span>
+                            {order.courierPartner && <span className="block text-[10px] uppercase">{order.courierPartner}</span>}
+                            {order.trackingUrl && (
+                              <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="text-amber-600 hover:underline inline-flex items-center gap-1 mt-0.5">
+                                <Truck className="w-3 h-3" /> Track Package
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       <td className="py-4 px-4">
@@ -401,10 +459,11 @@ export const OrderManagement: React.FC = () => {
                               setSelectedOrder(order);
                               setIsInvoiceModalOpen(true);
                             }}
-                            className="p-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-black transition-colors cursor-pointer border border-stone-300"
-                            title="Print Official Tax Invoice"
+                            className="px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-900 transition-colors cursor-pointer border border-stone-300 flex items-center space-x-1 text-xs font-semibold"
+                            title="Preview & Print Official Tax Invoice"
                           >
-                            <FileText className="w-4 h-4 text-[#CB9700]" />
+                            <FileText className="w-3.5 h-3.5 text-[#CB9700]" />
+                            <span>Invoice</span>
                           </button>
 
                           <button
@@ -446,6 +505,14 @@ export const OrderManagement: React.FC = () => {
             setRefundTargetOrder(null);
           }}
           onSuccess={fetchDbOrders}
+        />
+      )}
+
+      {/* Manual Order Creation Modal */}
+      {isCreateModalOpen && (
+        <CreateManualOrderModal 
+          onClose={() => setIsCreateModalOpen(false)} 
+          onSuccess={() => { setIsCreateModalOpen(false); fetchDbOrders(); }} 
         />
       )}
     </div>
@@ -678,14 +745,107 @@ const TaxInvoiceModal: React.FC<TaxInvoiceModalProps> = ({ order, onClose }) => 
             Close
           </button>
           <button
-            onClick={() => alert('Sending Official Tax Invoice PDF to printer...')}
-            className="px-5 py-2 rounded-xl bg-black text-white text-xs font-bold flex items-center space-x-2"
+            onClick={() => generateAndDownloadInvoice(order)}
+            className="px-5 py-2 rounded-xl bg-black hover:bg-stone-800 text-white text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-lg"
           >
             <Printer className="w-4 h-4 text-[#CB9700]" />
-            <span>Print Official Invoice</span>
+            <span>Download Printable Invoice</span>
           </button>
         </div>
       </div>
     </div>
   );
 };
+
+const CreateManualOrderModal = ({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) => {
+  const [customerName, setCustomerName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [street, setStreet] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [pincode, setPincode] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('UPI');
+  const [paymentStatus, setPaymentStatus] = useState('PAID');
+  
+  const [items, setItems] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addItem = () => setItems([...items, { productId: PRODUCTS[0].id, quantity: 1, price: PRODUCTS[0].price }]);
+  const updateItem = (index: number, key: string, val: any) => {
+    const newItems = [...items];
+    newItems[index][key] = val;
+    if (key === 'productId') {
+      const p = PRODUCTS.find(x => x.id === val);
+      if (p) newItems[index].price = p.price;
+    }
+    setItems(newItems);
+  };
+  const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+  
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        customerName, phone, email, street, city, state, pincode, paymentMethod, paymentStatus, subtotal,
+        items: items.map(i => {
+          const p = PRODUCTS.find(x => x.id === i.productId);
+          return { productId: i.productId, productName: p?.name || 'Manual Item', quantity: i.quantity, price: i.price, image: p?.images[0] };
+        })
+      };
+      await createAdminOrderApi(payload);
+      onSuccess();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to create manual order');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white text-stone-900 p-6 sm:p-8 rounded-3xl w-full max-w-2xl border border-stone-200 shadow-2xl relative my-8">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-stone-100 hover:bg-stone-200 rounded-full cursor-pointer"><XCircle className="w-5 h-5 text-stone-600" /></button>
+        <h2 className="text-2xl font-serif font-bold mb-6">Create Manual Order</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="block text-xs font-bold mb-1">Customer Name *</label><input required value={customerName} onChange={e=>setCustomerName(e.target.value)} className="w-full border p-2 rounded-xl text-sm" /></div>
+            <div><label className="block text-xs font-bold mb-1">Phone Number *</label><input required value={phone} onChange={e=>setPhone(e.target.value)} className="w-full border p-2 rounded-xl text-sm" /></div>
+            <div><label className="block text-xs font-bold mb-1">Email</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full border p-2 rounded-xl text-sm" /></div>
+            <div><label className="block text-xs font-bold mb-1">Street Address</label><input value={street} onChange={e=>setStreet(e.target.value)} className="w-full border p-2 rounded-xl text-sm" /></div>
+            <div><label className="block text-xs font-bold mb-1">City</label><input value={city} onChange={e=>setCity(e.target.value)} className="w-full border p-2 rounded-xl text-sm" /></div>
+            <div><label className="block text-xs font-bold mb-1">State / Pincode</label><div className="flex gap-2"><input value={state} onChange={e=>setState(e.target.value)} className="w-1/2 border p-2 rounded-xl text-sm" placeholder="State"/><input value={pincode} onChange={e=>setPincode(e.target.value)} className="w-1/2 border p-2 rounded-xl text-sm" placeholder="Pin"/></div></div>
+          </div>
+          
+          <div className="border-t border-stone-200 pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-sm">Order Items</h3>
+              <button type="button" onClick={addItem} className="flex items-center gap-1 text-xs bg-black text-white px-2 py-1 rounded cursor-pointer"><Plus className="w-3 h-3"/> Add Item</button>
+            </div>
+            {items.map((item, idx) => (
+              <div key={idx} className="flex gap-2 items-center mb-2">
+                <select value={item.productId} onChange={e => updateItem(idx, 'productId', e.target.value)} className="border p-2 rounded-xl text-sm flex-1">
+                  {PRODUCTS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <input type="number" min="1" value={item.quantity} onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value))} className="border p-2 rounded-xl text-sm w-20" />
+                <button type="button" onClick={() => removeItem(idx)} className="text-rose-500 cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            ))}
+            <div className="text-right text-sm font-bold mt-2">Subtotal: ₹{subtotal}</div>
+          </div>
+          
+          <div className="border-t border-stone-200 pt-4 grid grid-cols-2 gap-4">
+            <div><label className="block text-xs font-bold mb-1">Payment Method</label><select value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value)} className="w-full border p-2 rounded-xl text-sm"><option value="UPI">UPI / Online</option><option value="COD">Cash on Delivery</option><option value="CASH">Cash (In Store)</option></select></div>
+            <div><label className="block text-xs font-bold mb-1">Payment Status</label><select value={paymentStatus} onChange={e=>setPaymentStatus(e.target.value)} className="w-full border p-2 rounded-xl text-sm"><option value="PAID">Paid</option><option value="PENDING">Pending</option><option value="ADVANCE_PAID">Advance Paid</option></select></div>
+          </div>
+          <button type="submit" disabled={isSubmitting} className="w-full bg-black text-white font-bold p-3 rounded-xl hover:bg-stone-800 transition-colors cursor-pointer">{isSubmitting ? 'Creating...' : 'Create Order'}</button>
+        </form>
+      </div>
+    </div>
+  );
+};
+

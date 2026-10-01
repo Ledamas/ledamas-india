@@ -21,6 +21,7 @@ export async function withDbRetry<T>(queryFn: () => Promise<T>): Promise<T> {
       error?.message?.includes('Closed') ||
       error?.message?.includes('connection pool') ||
       error?.message?.includes('Timed out') ||
+      error?.message?.includes('Engine is not yet connected') ||
       error?.code === 'P1001' ||
       error?.code === 'P1017' ||
       error?.code === 'P2024';

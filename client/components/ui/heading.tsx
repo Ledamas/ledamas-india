@@ -33,7 +33,7 @@ export function Heading({
     h3: 'text-2xl md:text-3xl lg:text-4xl font-normal leading-[1.15]',
     h4: 'text-xl md:text-2xl font-normal leading-snug',
     h5: 'text-lg md:text-xl font-normal',
-    h6: 'text-base font-medium'
+    h6: 'text-base font-medium',
   };
 
   return (

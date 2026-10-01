@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { AdminSidebar, AdminTab } from '@/components/admin/admin-sidebar';
 import { AdminHeader } from '@/components/admin/admin-header';
 import { AnalyticsDashboard } from '@/components/admin/analytics-dashboard';
+import { GrowthAnalytics } from '@/components/admin/growth-analytics';
 import { LiveVisitorTracker } from '@/components/admin/live-visitor-tracker';
 import { WebsiteDisplayManagement } from '@/components/admin/website-display-management';
 import { ProductManagement } from '@/components/admin/product-management';
@@ -12,7 +13,7 @@ import { OrderManagement } from '@/components/admin/order-management';
 import { CustomerCRM } from '@/components/admin/customer-crm';
 import { MarketingOffers } from '@/components/admin/marketing-offers';
 import { SeoManagement } from '@/components/admin/seo-management';
-import { WhatsappNotifications } from '@/components/admin/whatsapp-notifications';
+import { NotificationsManagement } from '@/components/admin/notifications-management';
 import { TrustSafetyManagement } from '@/components/admin/trust-safety-management';
 import { StoreSettingsManagement } from '@/components/admin/store-settings-management';
 import { AdminLockScreen } from '@/components/admin/admin-lock-screen';
@@ -82,6 +83,7 @@ export default function AdminPage() {
         {/* Dynamic Admin Module View */}
         <main className="p-6 max-w-[1600px] w-full mx-auto space-y-6">
           {activeTab === 'analytics' && <AnalyticsDashboard />}
+          {activeTab === 'growth' && <GrowthAnalytics />}
           {activeTab === 'traffic' && <LiveVisitorTracker />}
           {activeTab === 'display' && <WebsiteDisplayManagement />}
           {activeTab === 'products' && <ProductManagement />}
@@ -90,7 +92,7 @@ export default function AdminPage() {
           {activeTab === 'crm' && <CustomerCRM />}
           {activeTab === 'marketing' && <MarketingOffers />}
           {activeTab === 'seo' && <SeoManagement />}
-          {activeTab === 'whatsapp' && <WhatsappNotifications />}
+          {activeTab === 'notifications' && <NotificationsManagement />}
           {activeTab === 'safety' && <TrustSafetyManagement />}
           {activeTab === 'settings' && <StoreSettingsManagement />}
         </main>

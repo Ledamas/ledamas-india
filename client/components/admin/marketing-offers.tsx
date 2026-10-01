@@ -25,6 +25,7 @@ import {
   deleteAdminCouponApi,
   getAdminReferralsApi,
   createAdminReferralApi,
+  deleteAdminReferralApi,
 } from '@/lib/services/admin-service';
 
 export interface CouponItem {
@@ -69,13 +70,19 @@ export const MarketingOffers: React.FC = () => {
 
   // Coupon Modal State
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  // Share Modal State
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareCouponCode, setShareCouponCode] = useState<string | null>(null);
+
   const [couponForm, setCouponForm] = useState<any>({
     code: '',
     discountType: 'PERCENTAGE',
     discountValue: 15,
     minOrderValue: 2000,
+    minQuantity: 0,
     maxDiscount: 1000,
     usageLimit: 500,
+    onePerCustomer: false,
     expiryDate: '2026-12-31',
     isActive: true,
   });
@@ -137,8 +144,10 @@ export const MarketingOffers: React.FC = () => {
       discountType: 'PERCENTAGE',
       discountValue: 15,
       minOrderValue: 2000,
+      minQuantity: 0,
       maxDiscount: 1000,
       usageLimit: 500,
+      onePerCustomer: false,
       expiryDate: '2026-12-31',
       isActive: true,
     });
@@ -149,6 +158,13 @@ export const MarketingOffers: React.FC = () => {
     if (confirm(`Are you sure you want to delete coupon '${code}'?`)) {
       await deleteAdminCouponApi(id);
       setCoupons(coupons.filter((c) => c.id !== id));
+    }
+  };
+
+  const handleDeleteReferral = async (id: string, code: string) => {
+    if (confirm(`Are you sure you want to delete referral '${code}'?`)) {
+      await deleteAdminReferralApi(id);
+      setReferrals(referrals.filter((r) => r.id !== id));
     }
   };
 
@@ -284,7 +300,17 @@ export const MarketingOffers: React.FC = () => {
                         <td className="p-3.5 text-right font-mono text-stone-800">
                           ₹{(coupon.aov || 0).toLocaleString('en-IN')}
                         </td>
-                        <td className="p-3.5 text-center">
+                        <td className="p-3.5 text-center flex items-center justify-center space-x-1">
+                          <button
+                            onClick={() => {
+                              setShareCouponCode(coupon.code);
+                              setIsShareModalOpen(true);
+                            }}
+                            className="p-1.5 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer"
+                            title="Share & QR Code"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => handleDeleteCoupon(coupon.id, coupon.code)}
                             className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
@@ -344,6 +370,7 @@ export const MarketingOffers: React.FC = () => {
                     <th className="p-3.5 text-right">Gross Sales</th>
                     <th className="p-3.5 text-right">Referral Discount</th>
                     <th className="p-3.5 text-right">Net Sales</th>
+                    <th className="p-3.5 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-200 bg-white">
@@ -377,6 +404,25 @@ export const MarketingOffers: React.FC = () => {
                         <td className="p-3.5 text-right font-mono font-bold text-stone-900">
                           ₹{(ref.netSales || 0).toLocaleString('en-IN')}
                         </td>
+                        <td className="p-3.5 text-center flex items-center justify-center space-x-1">
+                          <button
+                            onClick={() => {
+                              setShareCouponCode(ref.code);
+                              setIsShareModalOpen(true);
+                            }}
+                            className="p-1.5 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer"
+                            title="Share & QR Code"
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteReferral(ref.id, ref.code)}
+                            className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -399,14 +445,28 @@ export const MarketingOffers: React.FC = () => {
             <form onSubmit={handleSaveCoupon} className="space-y-4">
               <div>
                 <label className="text-xs font-sans text-stone-900 font-bold block mb-1">Coupon Code *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. RAHUL10"
-                  value={couponForm.code}
-                  onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
-                  className="w-full bg-stone-50 text-xs text-black p-2.5 rounded-xl border border-stone-300 focus:border-black focus:outline-none font-mono font-bold uppercase"
-                />
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. RAHUL10"
+                    value={couponForm.code}
+                    onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                    className="w-full bg-stone-50 text-xs text-black p-2.5 rounded-xl border border-stone-300 focus:border-black focus:outline-none font-mono font-bold uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                      let code = '';
+                      for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+                      setCouponForm({ ...couponForm, code });
+                    }}
+                    className="px-3 py-2 bg-stone-100 border border-stone-300 rounded-xl text-xs font-bold text-stone-700 hover:bg-stone-200"
+                  >
+                    Generate
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -444,6 +504,18 @@ export const MarketingOffers: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <label className="text-xs font-sans text-stone-900 font-bold block mb-1">Min Quantity of Items</label>
+                  <input
+                    type="number"
+                    value={couponForm.minQuantity}
+                    onChange={(e) => setCouponForm({ ...couponForm, minQuantity: Number(e.target.value) })}
+                    className="w-full bg-stone-50 text-xs text-black p-2.5 rounded-xl border border-stone-300 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="text-xs font-sans text-stone-900 font-bold block mb-1">Max Discount Cap (₹)</label>
                   <input
                     type="number"
@@ -452,6 +524,28 @@ export const MarketingOffers: React.FC = () => {
                     className="w-full bg-stone-50 text-xs text-black p-2.5 rounded-xl border border-stone-300 font-mono"
                   />
                 </div>
+                <div>
+                  <label className="text-xs font-sans text-stone-900 font-bold block mb-1">Max Discount Uses (Total)</label>
+                  <input
+                    type="number"
+                    value={couponForm.usageLimit}
+                    onChange={(e) => setCouponForm({ ...couponForm, usageLimit: Number(e.target.value) })}
+                    className="w-full bg-stone-50 text-xs text-black p-2.5 rounded-xl border border-stone-300 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="onePerCustomer"
+                  checked={couponForm.onePerCustomer}
+                  onChange={(e) => setCouponForm({ ...couponForm, onePerCustomer: e.target.checked })}
+                  className="w-4 h-4 text-black rounded focus:ring-black border-stone-300"
+                />
+                <label htmlFor="onePerCustomer" className="text-xs font-sans text-stone-900 font-bold">
+                  Limit to one use per customer
+                </label>
               </div>
 
               <div className="pt-4 flex justify-end space-x-3">
@@ -553,6 +647,46 @@ export const MarketingOffers: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Share & QR Code Modal */}
+      {isShareModalOpen && shareCouponCode && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-stone-300 rounded-2xl max-w-sm w-full p-6 space-y-5 shadow-2xl text-stone-900 font-sans text-center">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+              <h3 className="text-lg font-serif font-bold text-black">Get shareable code</h3>
+              <button onClick={() => setIsShareModalOpen(false)} className="text-stone-500 hover:text-black font-bold">✕</button>
+            </div>
+            <p className="text-xs text-stone-600 text-left">Copy the link or save the QR code for email, social, or print.</p>
+            
+            <div className="bg-stone-50 border border-stone-200 p-3 rounded-xl flex items-center justify-between">
+              <span className="text-[11px] font-mono font-bold text-stone-800 break-all text-left truncate">
+                https://www.ledamas.in/discount/{shareCouponCode}
+              </span>
+              <button 
+                onClick={() => navigator.clipboard.writeText(`https://www.ledamas.in/discount/${shareCouponCode}`)}
+                className="p-1.5 bg-stone-200 rounded-lg hover:bg-stone-300 text-stone-700 ml-2 shrink-0"
+                title="Copy Link"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex justify-center items-center p-4 border border-stone-200 rounded-2xl bg-white shadow-sm inline-block mx-auto">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.ledamas.in/discount/${shareCouponCode}`} 
+                alt="QR Code"
+                className="w-48 h-48"
+              />
+            </div>
+            
+            <button
+              onClick={() => setIsShareModalOpen(false)}
+              className="w-full py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold border border-stone-300"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

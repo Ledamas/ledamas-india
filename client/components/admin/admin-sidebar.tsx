@@ -17,10 +17,12 @@ import {
   ShieldAlert,
   ChevronRight,
   Sparkles,
+  TrendingUp,
 } from 'lucide-react';
 
 export type AdminTab =
   | 'analytics'
+  | 'growth'
   | 'traffic'
   | 'display'
   | 'products'
@@ -29,7 +31,7 @@ export type AdminTab =
   | 'crm'
   | 'marketing'
   | 'seo'
-  | 'whatsapp'
+  | 'notifications'
   | 'safety'
   | 'settings';
 
@@ -46,6 +48,7 @@ export const NAV_ITEMS: {
   icon: React.ComponentType<{ className?: string }>;
 }[] = [
   { id: 'analytics', label: 'Analytics Dashboard', icon: LayoutDashboard },
+  { id: 'growth', label: 'Growth & Performance', icon: TrendingUp },
   { id: 'traffic', label: 'Live Visitors & Events', icon: Activity },
   { id: 'display', label: 'Website Display Manager', icon: Layout },
   { id: 'products', label: 'Product Catalog & SKUs', icon: Package },
@@ -54,7 +57,7 @@ export const NAV_ITEMS: {
   { id: 'crm', label: 'Customer 360 CRM', icon: Users },
   { id: 'marketing', label: 'Offers & Marketing', icon: Tag },
   { id: 'seo', label: 'SEO & Schema Studio', icon: Search },
-  { id: 'whatsapp', label: 'WhatsApp Alerts', icon: MessageSquare },
+  { id: 'notifications', label: 'Notifications & Alerts', icon: MessageSquare },
   { id: 'safety', label: 'Trust & Safety Studio', icon: ShieldAlert },
   { id: 'settings', label: 'Business & Store Settings', icon: Settings },
 ];

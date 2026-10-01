@@ -17,12 +17,6 @@ import { Product } from '@/lib/types';
 
 export const WebsiteDisplayManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>(PRODUCTS);
-  const [announcementText, setAnnouncementText] = useState(
-    'Complimentary Pan-India Express Cold-Chain Shipping on Orders Above ₹2,499 🚚✨'
-  );
-  const [announcementLink, setAnnouncementLink] = useState('/shop');
-  const [heroTitle, setHeroTitle] = useState('Crafted for Royalty');
-  const [heroTagline, setHeroTagline] = useState('Artisanal Middle Eastern Confections & Single-Origin Dark Cacao');
 
   const toggleFeatured = (id: string) => {
     setProducts(
@@ -70,68 +64,6 @@ export const WebsiteDisplayManagement: React.FC = () => {
         </button>
       </div>
 
-      {/* 1. Top Announcement Bar Config */}
-      <div className="p-6 rounded-xl bg-stone-50 border border-stone-200 space-y-4 shadow-xs">
-        <div className="flex items-center space-x-2">
-          <Megaphone className="w-5 h-5 text-black" />
-          <h3 className="font-serif font-bold text-black text-lg">Top Website Announcement Bar</h3>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div className="sm:col-span-2">
-            <label className="type-label text-stone-700 block mb-1 font-bold">Announcement Message *</label>
-            <input
-              type="text"
-              value={announcementText}
-              onChange={(e) => setAnnouncementText(e.target.value)}
-              className="w-full bg-white text-black p-2.5 rounded-xl border border-stone-300 focus:border-black focus:outline-none font-bold"
-            />
-          </div>
-          <div>
-            <label className="type-label text-stone-700 block mb-1 font-bold">Target Link URL</label>
-            <input
-              type="text"
-              value={announcementLink}
-              onChange={(e) => setAnnouncementLink(e.target.value)}
-              className="w-full bg-white text-black p-2.5 rounded-xl border border-stone-300 focus:border-black focus:outline-none font-mono font-bold"
-            />
-          </div>
-        </div>
-
-        <div className="p-3 rounded-lg bg-black text-white text-xs font-sans text-center flex items-center justify-center gap-2">
-          <span className="font-mono text-white uppercase font-bold text-[10px] bg-stone-800 px-2 py-0.5 rounded border border-stone-700">Preview</span>
-          <span className="font-bold">{announcementText}</span>
-        </div>
-      </div>
-
-      {/* 2. Hero Banner Config */}
-      <div className="p-6 rounded-xl bg-stone-50 border border-stone-200 space-y-4 shadow-xs">
-        <div className="flex items-center space-x-2">
-          <ImageIcon className="w-5 h-5 text-black" />
-          <h3 className="font-serif font-bold text-black text-lg">Homepage Hero Banner & Copy</h3>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div>
-            <label className="type-label text-stone-700 block mb-1 font-bold">Hero Title</label>
-            <input
-              type="text"
-              value={heroTitle}
-              onChange={(e) => setHeroTitle(e.target.value)}
-              className="w-full bg-white text-black p-2.5 rounded-xl border border-stone-300 focus:border-black focus:outline-none font-serif text-sm font-bold"
-            />
-          </div>
-          <div>
-            <label className="type-label text-stone-700 block mb-1 font-bold">Hero Tagline</label>
-            <input
-              type="text"
-              value={heroTagline}
-              onChange={(e) => setHeroTagline(e.target.value)}
-              className="w-full bg-white text-black p-2.5 rounded-xl border border-stone-300 focus:border-black focus:outline-none font-bold"
-            />
-          </div>
-        </div>
-      </div>
 
       {/* 3. Product Display Toggles (Featured, Best Seller, New Arrival, Visibility) */}
       <div className="space-y-4">

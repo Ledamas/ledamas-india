@@ -36,6 +36,7 @@ export default function CheckoutPage() {
     firstName: '',
     lastName: '',
     phone: '',
+    alternatePhone: '',
     address: '',
     apartment: '',
     city: '',
@@ -69,6 +70,14 @@ export default function CheckoutPage() {
 
   // Pre-fill user data & saved shipping address upon authentication
   useEffect(() => {
+    try {
+      const savedCheckout = localStorage.getItem('ledamas_saved_checkout');
+      if (savedCheckout) {
+        setForm(JSON.parse(savedCheckout));
+        return; // Prioritize local storage (last used) over generic user profile
+      }
+    } catch (e) {}
+
     if (user) {
       const nameParts = (user.name || '').split(' ');
       const saved = user.savedAddress;
@@ -108,6 +117,7 @@ export default function CheckoutPage() {
     setCodeError(null);
 
     try {
+      const cartQuantity = items.reduce((acc, item) => acc + item.quantity, 0);
       const res: any = await fetchApi('/coupons/validate', {
         method: 'POST',
         body: JSON.stringify({
@@ -116,6 +126,7 @@ export default function CheckoutPage() {
           userId: user?.id,
           phone: form.phone,
           email: form.email,
+          cartQuantity: cartQuantity,
         }),
       });
 
@@ -183,7 +194,7 @@ export default function CheckoutPage() {
           razorpaySignature: signature,
           customerName: `${form.firstName} ${form.lastName}`,
           email: form.email,
-          phone: form.phone,
+          phone: form.alternatePhone ? `${form.phone} (Alt: ${form.alternatePhone})` : form.phone,
           street: form.address,
           apartment: form.apartment,
           city: form.city,
@@ -218,6 +229,23 @@ export default function CheckoutPage() {
             value: baseOrderTotal,
             items,
           });
+
+          // Save address and payment method for next time
+          try {
+            localStorage.setItem('ledamas_saved_checkout', JSON.stringify(form));
+            // Save data for invoice generation
+            localStorage.setItem('ledamas_last_order_invoice', JSON.stringify({
+              orderNumber: confirmedOrder.orderNumber || razorpayOrderId,
+              date: new Date().toISOString(),
+              customer: form,
+              items: items,
+              subtotal: totalPrice,
+              discount: discountAmount,
+              total: baseOrderTotal,
+              paymentMethod: form.paymentMethod,
+              isCod: (confirmedOrder.paymentMethod || form.paymentMethod.toUpperCase()) === 'COD',
+            }));
+          } catch (e) {}
 
           setCreatedOrderDetails(confirmedOrder);
           setCreatedOrderNumber(confirmedOrder.orderNumber);
@@ -359,12 +387,20 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          <Link
-            href="/"
-            className="inline-block w-full py-3.5 rounded-full bg-[#3D2314] hover:bg-[#5A3822] text-[#FAF6ED] font-bold text-xs uppercase tracking-widest transition-all"
-          >
-            Return to Homepage
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Link
+              href="/"
+              className="flex-1 py-3.5 rounded-full bg-[#3D2314] hover:bg-[#5A3822] text-[#FAF6ED] font-bold text-xs uppercase tracking-widest transition-all text-center flex items-center justify-center"
+            >
+              Return to Homepage
+            </Link>
+            <button
+              onClick={() => window.open('/invoice', '_blank')}
+              className="flex-1 py-3.5 rounded-full bg-white border-2 border-[#3D2314] hover:bg-stone-50 text-[#3D2314] font-bold text-xs uppercase tracking-widest transition-all text-center flex items-center justify-center cursor-pointer"
+            >
+              Download Invoice
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -457,38 +493,16 @@ export default function CheckoutPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-8 lg:gap-12">
               {/* Left Form Column */}
               <div className="lg:col-span-7 space-y-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Contact Information */}
-                  <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-4 shadow-lg shadow-[#3D2314]/5">
-                    <h2 className="text-sm uppercase tracking-widest text-[#CB9700] font-bold">
-                      1. Contact Details
+                  {/* Contact & Shipping Address */}
+                  <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-5 shadow-lg shadow-[#3D2314]/5">
+                    <h2 className="text-sm uppercase tracking-widest text-[#CB9700] font-bold border-b border-[#E8DCCB] pb-3">
+                      1. Contact & Delivery Details
                     </h2>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider mb-1.5">
-                          Email Address for Order Tracking *
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          required
-                          value={form.email}
-                          onChange={handleChange}
-                          placeholder="Enter email address"
-                          className="w-full bg-[#FAF6ED] border border-[#D6C2B4] rounded-xl px-4 py-3 text-sm text-[#3D2314] placeholder-stone-400 focus:outline-none focus:border-[#CB9700] focus:ring-1 focus:ring-[#CB9700] transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Shipping Address */}
-                  <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-4 shadow-lg shadow-[#3D2314]/5">
-                    <h2 className="text-sm uppercase tracking-widest text-[#CB9700] font-bold">
-                      2. Delivery Address (India)
-                    </h2>
+                    
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider mb-1.5">First Name *</label>
@@ -517,16 +531,44 @@ export default function CheckoutPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider mb-1.5">Phone Number (For Delivery OTP) *</label>
+                      <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider mb-1.5">
+                        Email Address *
+                      </label>
                       <input
-                        type="tel"
-                        name="phone"
+                        type="email"
+                        name="email"
                         required
-                        value={form.phone}
+                        value={form.email}
                         onChange={handleChange}
-                        placeholder="Enter 10-digit mobile number"
+                        placeholder="For order tracking"
                         className="w-full bg-[#FAF6ED] border border-[#D6C2B4] rounded-xl px-4 py-3 text-sm text-[#3D2314] placeholder-stone-400 focus:outline-none focus:border-[#CB9700] focus:ring-1 focus:ring-[#CB9700] transition-colors"
                       />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider mb-1.5">Phone Number *</label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          required
+                          value={form.phone}
+                          onChange={handleChange}
+                          placeholder="Primary contact"
+                          className="w-full bg-[#FAF6ED] border border-[#D6C2B4] rounded-xl px-4 py-3 text-sm text-[#3D2314] placeholder-stone-400 focus:outline-none focus:border-[#CB9700] focus:ring-1 focus:ring-[#CB9700] transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Alternate Phone (Optional)</label>
+                        <input
+                          type="tel"
+                          name="alternatePhone"
+                          value={form.alternatePhone}
+                          onChange={handleChange}
+                          placeholder="Secondary contact"
+                          className="w-full bg-[#FAF6ED] border border-[#D6C2B4] rounded-xl px-4 py-3 text-sm text-[#3D2314] placeholder-stone-400 focus:outline-none focus:border-[#CB9700] focus:ring-1 focus:ring-[#CB9700] transition-colors"
+                        />
+                      </div>
                     </div>
 
                     <div>
@@ -585,7 +627,7 @@ export default function CheckoutPage() {
                   {/* Payment Selection */}
                   <div className="bg-white border border-[#E8DCCB] rounded-2xl p-6 space-y-4 shadow-lg shadow-[#3D2314]/5">
                     <h2 className="text-sm uppercase tracking-widest text-[#CB9700] font-bold">
-                      3. Select Payment Method
+                      2. Select Payment Method
                     </h2>
                     <div className="space-y-3">
                       <label className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${form.paymentMethod === 'upi' ? 'bg-[#CB9700]/10 border-[#CB9700]' : 'bg-[#FAF6ED] border-[#E8DCCB]'}`}>

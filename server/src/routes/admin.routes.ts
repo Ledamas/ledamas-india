@@ -2,10 +2,10 @@ import { Router, Request, Response } from 'express';
 import { prisma, withDbRetry } from '../config/db.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { getRazorpayInstance } from '../utils/razorpay.js';
-import { sendOrderStatusSms } from '../utils/message-central.js';
 import { broadcastOrderEvent } from '../utils/realtime.js';
 import { PaymentStatus, OrderStatus } from '@prisma/client';
 import { adminLoginRateLimiter } from '../middleware/rate-limit.middleware.js';
+import { NotificationService } from '../services/notification.service.js';
 
 const router = Router();
 
@@ -99,31 +99,98 @@ router.get('/orders', async (_req: Request, res: Response) => {
   }
 });
 
+// POST /api/v1/admin/orders - Create manual order
+router.post('/orders', async (req: Request, res: Response) => {
+  try {
+    const {
+      customerName, phone, email, street, city, state, pincode,
+      items, subtotal, paymentMethod, paymentStatus
+    } = req.body;
+
+    const totalOrdersCount = await prisma.order.count();
+    const orderNumber = `LD-${1025 + totalOrdersCount}`;
+
+    const newOrder = await prisma.order.create({
+      data: {
+        orderNumber,
+        customerName: customerName || 'Manual Customer',
+        phone: phone || 'N/A',
+        email: email || 'N/A',
+        street: street || 'N/A',
+        city: city || 'N/A',
+        state: state || 'N/A',
+        pincode: pincode || '000000',
+        subtotal: subtotal || 0,
+        total: subtotal || 0,
+        orderTotal: subtotal || 0,
+        paymentMethod: paymentMethod || 'MANUAL',
+        paymentStatus: paymentStatus || 'PAID',
+        orderStatus: 'NEW',
+        items: {
+          create: items.map((item: any) => ({
+            productId: item.productId || 'manual-entry',
+            productName: item.productName,
+            variantId: item.variantId || null,
+            variantName: item.variantName || null,
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+            image: item.image || '/Le-Damas-Sweets-Logo-enhanced.png',
+          })),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    return sendSuccess(res, newOrder, 'Manual order created successfully.');
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to create manual order';
+    console.error('[ADMIN ORDER CREATE ERROR]', error);
+    return sendError(res, message, 500);
+  }
+});
+
 // PATCH /api/v1/admin/orders/:id/status - Update order status in DB, send SMS, and broadcast SSE
 router.patch('/orders/:id/status', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
-    const { orderStatus } = req.body;
+    const { orderStatus, awbNumber, courierPartner, trackingUrl } = req.body;
 
     const updated = await withDbRetry(() =>
       prisma.order.update({
         where: { id },
         data: {
           ...(orderStatus ? { orderStatus } : {}),
-        },
+          ...(awbNumber !== undefined ? { awbNumber } : {}),
+          ...(courierPartner !== undefined ? { courierPartner } : {}),
+          ...(trackingUrl !== undefined ? { trackingUrl } : {}),
+        } as any,
         include: {
           items: true,
         },
       })
     );
 
-    // 1. Dispatch SMS Notification to Customer Phone Number
+    // 1. Dispatch Notifications
     if (updated.phone) {
-      sendOrderStatusSms({
-        phone: updated.phone,
-        orderNumber: updated.orderNumber,
-        status: updated.orderStatus,
-      }).catch((smsErr) => console.warn('[STATUS SMS ERROR]', smsErr));
+      NotificationService.sendSMS(
+        updated.phone,
+        `Your LE DAMAS order ${updated.orderNumber} is now ${updated.orderStatus}.`,
+        updated.userId || undefined,
+        updated.id,
+        'ORDER_STATUS_CHANGED'
+      );
+    }
+    if (updated.email) {
+      NotificationService.sendEmail(
+        updated.email,
+        `Order Update: ${updated.orderNumber} is ${updated.orderStatus}`,
+        `<p>Your LE DAMAS order ${updated.orderNumber} status has been updated to <strong>${updated.orderStatus}</strong>.</p>`,
+        updated.userId || undefined,
+        updated.id,
+        'ORDER_STATUS_CHANGED'
+      );
     }
 
     // 2. Broadcast Live SSE Event to connected customer screens
@@ -365,7 +432,7 @@ router.get('/coupons', async (_req: Request, res: Response) => {
 // POST /api/v1/admin/coupons - Create new coupon in DB
 router.post('/coupons', async (req: Request, res: Response) => {
   try {
-    const { code, discountType, discountValue, minOrderValue, maxDiscount, usageLimit, expiryDate } = req.body;
+    const { code, discountType, discountValue, minOrderValue, minQuantity, onePerCustomer, maxDiscount, usageLimit, expiryDate } = req.body;
 
     if (!code || discountValue === undefined) {
       return sendError(res, 'Coupon code and discount value are required.', 400);
@@ -384,8 +451,10 @@ router.post('/coupons', async (req: Request, res: Response) => {
           discountType: discountType || 'PERCENTAGE',
           discountValue: Number(discountValue) || 0,
           minOrderValue: minOrderValue ? Number(minOrderValue) : null,
+          minQuantity: minQuantity ? Number(minQuantity) : null,
           maxDiscount: maxDiscount ? Number(maxDiscount) : null,
           usageLimit: usageLimit ? Number(usageLimit) : null,
+          onePerCustomer: Boolean(onePerCustomer),
           startDate: new Date(),
           expiryDate: expiryDate ? new Date(expiryDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           isActive: true,
@@ -405,7 +474,7 @@ router.post('/coupons', async (req: Request, res: Response) => {
 router.patch('/coupons/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
-    const { isActive, discountValue, minOrderValue, usageLimit } = req.body;
+    const { isActive, discountValue, minOrderValue, minQuantity, onePerCustomer, usageLimit, expiryDate } = req.body;
 
     const updated = await withDbRetry(() =>
       prisma.coupon.update({
@@ -414,7 +483,10 @@ router.patch('/coupons/:id', async (req: Request, res: Response) => {
           ...(isActive !== undefined && { isActive: Boolean(isActive) }),
           ...(discountValue !== undefined && { discountValue: Number(discountValue) }),
           ...(minOrderValue !== undefined && { minOrderValue: Number(minOrderValue) }),
+          ...(minQuantity !== undefined && { minQuantity: Number(minQuantity) }),
+          ...(onePerCustomer !== undefined && { onePerCustomer: Boolean(onePerCustomer) }),
           ...(usageLimit !== undefined && { usageLimit: Number(usageLimit) }),
+          ...(expiryDate !== undefined && { expiryDate: new Date(expiryDate) }),
         },
       })
     );
@@ -531,6 +603,19 @@ router.post('/referrals', async (req: Request, res: Response) => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to create referral code';
     console.error('[CREATE REFERRAL ERROR]', error);
+    return sendError(res, message, 500);
+  }
+});
+
+// DELETE /api/v1/admin/referrals/:id - Delete a referral code
+router.delete('/referrals/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await withDbRetry(() => prisma.referralCode.delete({ where: { id } }));
+    return sendSuccess(res, null, 'Referral code deleted successfully.');
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to delete referral code';
+    console.error('[DELETE REFERRAL ERROR]', error);
     return sendError(res, message, 500);
   }
 });
@@ -835,6 +920,106 @@ router.patch('/inventory/:id', async (req: Request, res: Response) => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to update stock';
     console.error('[UPDATE STOCK ERROR]', error);
+    return sendError(res, message, 500);
+  }
+});
+
+// ==========================================
+// NOTIFICATIONS MANAGEMENT
+// ==========================================
+
+// GET /api/v1/admin/notifications
+router.get('/notifications', async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const [notifications, total, stats] = await Promise.all([
+      prisma.notification.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip,
+        include: {
+          user: { select: { name: true, email: true, phone: true } },
+          order: { select: { orderNumber: true } }
+        }
+      }),
+      prisma.notification.count(),
+      prisma.notification.groupBy({
+        by: ['channel', 'status'],
+        _count: true,
+      })
+    ]);
+
+    // Format stats
+    const formattedStats = {
+      totalSmsSent: 0,
+      totalEmailSent: 0,
+      delivered: 0,
+      failed: 0,
+      pending: 0,
+    };
+
+    stats.forEach(stat => {
+      if (stat.channel === 'SMS') formattedStats.totalSmsSent += stat._count;
+      if (stat.channel === 'EMAIL') formattedStats.totalEmailSent += stat._count;
+      if (stat.status === 'DELIVERED') formattedStats.delivered += stat._count;
+      if (stat.status === 'FAILED') formattedStats.failed += stat._count;
+      if (stat.status === 'PENDING') formattedStats.pending += stat._count;
+      if (stat.status === 'SENT') formattedStats.delivered += stat._count; // treat sent as delivered for simplicity in high level stats
+    });
+
+    return sendSuccess(res, { notifications, total, page, limit, stats: formattedStats }, 'Notifications fetched successfully');
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch notifications';
+    return sendError(res, message, 500);
+  }
+});
+
+// POST /api/v1/admin/notifications/:id/resend
+router.post('/notifications/:id/resend', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const notification = await prisma.notification.findUnique({
+      where: { id },
+      include: { order: true, user: true }
+    });
+
+    if (!notification) {
+      return sendError(res, 'Notification not found', 404);
+    }
+
+    let success = false;
+    if (notification.channel === 'SMS') {
+      success = await NotificationService.sendSMS(
+        notification.recipient,
+        notification.message,
+        notification.userId || undefined,
+        notification.orderId || undefined,
+        notification.type
+      );
+    } else if (notification.channel === 'EMAIL') {
+      success = await NotificationService.sendEmail(
+        notification.recipient,
+        'Resent: LE DAMAS Notification',
+        notification.message,
+        notification.userId || undefined,
+        notification.orderId || undefined,
+        notification.type
+      );
+    }
+
+    if (success) {
+      // The send function creates a new notification record, so we could mark the old one as resent
+      // or we can just say the new one was successfully dispatched.
+      return sendSuccess(res, null, 'Notification resent successfully');
+    } else {
+      return sendError(res, 'Failed to resend notification. Please check provider logs.', 500);
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to resend notification';
     return sendError(res, message, 500);
   }
 });

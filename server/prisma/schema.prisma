@@ -25,6 +25,18 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum NotificationChannel {
+  SMS
+  EMAIL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+}
+
 enum OrderStatus {
   NEW
   PROCESSING
@@ -51,6 +63,7 @@ model User {
   updatedAt       DateTime         @updatedAt
   customerProfile CustomerProfile?
   referralCodes   ReferralCode[]
+  notifications   Notification[]
 }
 
 model Category {
@@ -193,7 +206,11 @@ model Order {
   refundStatus          String?
   refundReason          String?
   refundedAt            DateTime?
+  awbNumber             String?
+  courierPartner        String?
+  trackingUrl           String?
   items                 OrderItem[]
+  notifications         Notification[]
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
@@ -348,18 +365,21 @@ model TrackedEvent {
 }
 
 model Coupon {
-  id            String   @id @default(uuid())
-  code          String   @unique
-  discountType  String   // PERCENTAGE, FIXED_AMOUNT, BOGO, FREE_SHIPPING
-  discountValue Float
-  minOrderValue Float?
-  maxDiscount   Float?
-  usageLimit    Int?
-  timesUsed     Int      @default(0)
-  startDate     DateTime
-  expiryDate    DateTime
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
+  id              String   @id @default(uuid())
+  code            String   @unique
+  discountType    String   // PERCENTAGE, FIXED_AMOUNT, BOGO, FREE_SHIPPING
+  discountValue   Float
+  minOrderValue   Float?
+  minQuantity     Int?
+  maxDiscount     Float?
+  usageLimit      Int?
+  onePerCustomer  Boolean  @default(false)
+  timesUsed       Int      @default(0)
+  startDate       DateTime
+  expiryDate      DateTime
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
 }
 
 model ReferralCode {
@@ -459,5 +479,27 @@ model BlockedUser {
   ipAddress     String?
 
   @@index([userPhone])
+}
+
+model Notification {
+  id                String              @id @default(uuid())
+  userId            String?
+  user              User?               @relation(fields: [userId], references: [id])
+  orderId           String?
+  order             Order?              @relation(fields: [orderId], references: [id])
+  type              String              // ORDER_CONFIRMED, CUSTOMER_REGISTERED, ORDER_STATUS_CHANGED, etc.
+  channel           NotificationChannel
+  recipient         String
+  message           String
+  status            NotificationStatus  @default(PENDING)
+  providerMessageId String?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
 }
 

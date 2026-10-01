@@ -6,6 +6,7 @@ import { PaymentStatus, OrderStatus } from '@prisma/client';
 import { calculateCodDetails } from '../utils/cod-calculator.js';
 import { addRealtimeClient, broadcastOrderEvent } from '../utils/realtime.js';
 import { sendOrderStatusSms } from '../utils/message-central.js';
+import { NotificationService } from '../services/notification.service.js';
 
 const router = Router();
 
@@ -116,7 +117,8 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
-    const orderNumber = `LD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+    const totalOrdersCount = await prisma.order.count();
+    const orderNumber = `LD-${1025 + totalOrdersCount}`;
     const baseOrderTotal = (subtotal || 0) + (shippingFee || 0) - (discount || 0) || total || 0;
     const codDetails = calculateCodDetails(baseOrderTotal, paymentMethod);
     const resolvedItems = await resolveValidProductItems(items);
@@ -384,7 +386,8 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       codAmount = 0;
     }
 
-    const orderNumber = `LD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+    const totalOrdersCount = await prisma.order.count();
+    const orderNumber = `LD-${1025 + totalOrdersCount}`;
     const resolvedItems = await resolveValidProductItems(items);
     const cleanCouponCode = couponCode ? String(couponCode).trim().toUpperCase() : null;
     const cleanReferralCode = referralCode ? String(referralCode).trim().toUpperCase() : null;
@@ -643,7 +646,7 @@ router.post('/verify-payment', async (req: Request, res: Response) => {
     }
 
     if (dbOrderId) {
-      await prisma.order.update({
+      const updatedOrder = await prisma.order.update({
         where: { id: dbOrderId },
         data: {
           paymentStatus: PaymentStatus.PAID,
@@ -652,6 +655,23 @@ router.post('/verify-payment', async (req: Request, res: Response) => {
           razorpaySignature: razorpaySignature,
         },
       });
+
+      NotificationService.sendSMS(
+        updatedOrder.phone,
+        `Your LE DAMAS order ${updatedOrder.orderNumber} is confirmed! Amount: Rs.${updatedOrder.total}`,
+        updatedOrder.userId || undefined,
+        updatedOrder.id,
+        'ORDER_CONFIRMED'
+      );
+      
+      NotificationService.sendEmail(
+        updatedOrder.email,
+        `Order Confirmed: ${updatedOrder.orderNumber}`,
+        `<p>Your LE DAMAS order <strong>${updatedOrder.orderNumber}</strong> has been confirmed. Amount: Rs.${updatedOrder.total}. We're getting it ready!</p>`,
+        updatedOrder.userId || undefined,
+        updatedOrder.id,
+        'ORDER_CONFIRMED'
+      );
     }
 
     return sendSuccess(

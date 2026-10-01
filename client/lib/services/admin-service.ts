@@ -57,6 +57,18 @@ export async function getAdminOrdersApi(): Promise<{ count: number; orders: any[
   }
 }
 
+export async function createAdminOrderApi(payload: any): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>('/admin/orders', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return res.data || res;
+  } catch (err: any) {
+    throw new Error(err?.message || 'Failed to create order manually');
+  }
+}
+
 export async function updateOrderStatusApi(orderId: string, orderStatus: string): Promise<any> {
   try {
     const res = await fetchApi<{ data: any }>(`/admin/orders/${orderId}/status`, {
@@ -135,6 +147,18 @@ export async function createAdminReferralApi(payload: any): Promise<any> {
   }
 }
 
+export async function deleteAdminReferralApi(referralId: string): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>(`/admin/referrals/${referralId}`, {
+      method: 'DELETE',
+    });
+    return res.data || res;
+  } catch (err) {
+    return null;
+  }
+}
+
+
 export interface LiveViewAnalyticsData {
   visitorsRightNow: number;
   totalSales: number;
@@ -170,6 +194,15 @@ export interface LiveViewAnalyticsData {
 export async function getLiveViewAnalyticsApi(range: string = '30d'): Promise<LiveViewAnalyticsData | null> {
   try {
     const res = await fetchApi<{ data: LiveViewAnalyticsData }>(`/analytics/live-view?range=${range}`);
+    return res.data || res;
+  } catch (err) {
+    return null;
+  }
+}
+
+export async function getAdminMarketingGrowthApi(range: string = '200d'): Promise<any> {
+  try {
+    const res = await fetchApi<{ data: any }>(`/analytics/marketing-growth?range=${range}`);
     return res.data || res;
   } catch (err) {
     return null;
