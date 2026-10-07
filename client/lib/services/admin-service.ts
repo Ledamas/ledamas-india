@@ -243,3 +243,12 @@ export async function updateAdminInventoryStockApi(id: string, payload: any): Pr
 }
 
 
+
+export async function getAdminPopupSubscribersApi(): Promise<{ count: number; subscribers: any[] }> {
+  try {
+    const res = await fetchApi<{ data: { count: number; subscribers: any[] } }>('/admin/popup-subscribers');
+    return res.data || res;
+  } catch (err) {
+    return { count: 0, subscribers: [] };
+  }
+}

@@ -64,6 +64,7 @@ model User {
   customerProfile CustomerProfile?
   referralCodes   ReferralCode[]
   notifications   Notification[]
+  popupClaim      PopupClaim?
 }
 
 model Category {
@@ -503,3 +504,26 @@ model Notification {
   @@index([status])
 }
 
+model PopupSetting {
+  id              String   @id @default("global")
+  isEnabled       Boolean  @default(true)
+  discountPercent Float    @default(5.0)
+  couponCode      String   @default("WELCOME5")
+  title           String   @default("WELCOME TO LE DAMAS")
+  subtitle        String   @default("ENJOY 5% OFF YOUR FIRST ORDER")
+  description     String   @default("Exclusive offers. First access. Exceptional chocolate.")
+  totalClaims     Int      @default(0)
+  redeemedOffers  Int      @default(0)
+  updatedAt       DateTime @updatedAt
+}
+
+model PopupClaim {
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone      String    @unique
+  couponCode String
+  claimedAt  DateTime  @default(now())
+  redeemed   Boolean   @default(false)
+  redeemedAt DateTime?
+}

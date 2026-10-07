@@ -281,13 +281,13 @@ router.post('/orders/:id/refund', async (req: Request, res: Response) => {
 
     // 1. Dispatch SMS Notification to Customer Phone Number
     if (updatedOrder.phone) {
-      sendOrderStatusSms({
-        phone: updatedOrder.phone,
-        orderNumber: updatedOrder.orderNumber,
-        status: 'REFUNDED',
-        amount: refundAmount,
-        refundId,
-      }).catch((smsErr) => console.warn('[REFUND SMS ERROR]', smsErr));
+      NotificationService.sendSMS(
+        updatedOrder.phone,
+        `Your LE DAMAS refund of Rs. ${refundAmount} for order ${updatedOrder.orderNumber} has been initiated.`,
+        undefined,
+        updatedOrder.id,
+        'ORDER_REFUNDED'
+      ).catch((smsErr: any) => console.warn('[REFUND SMS ERROR]', smsErr));
     }
 
     // 2. Broadcast Live Realtime SSE Event
@@ -571,6 +571,35 @@ router.get('/referrals', async (_req: Request, res: Response) => {
   }
 });
 
+// GET /api/v1/admin/popup-subscribers - Fetch all users who claimed the first order popup
+router.get('/popup-subscribers', async (_req: Request, res: Response) => {
+  try {
+    const claims = await withDbRetry(() =>
+      prisma.popupClaim.findMany({
+        include: { user: true },
+        orderBy: { claimedAt: 'desc' },
+      })
+    );
+
+    const subscribers = claims.map((c) => ({
+      id: c.id,
+      phone: c.phone,
+      couponCode: c.couponCode,
+      claimedAt: c.claimedAt,
+      redeemed: c.redeemed,
+      redeemedAt: c.redeemedAt,
+      userName: c.user?.name || 'Luxury Connoisseur',
+      userEmail: c.user?.email || 'N/A',
+    }));
+
+    return sendSuccess(res, { count: subscribers.length, subscribers }, 'Subscribers retrieved successfully.');
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch popup subscribers';
+    console.error('[GET POPUP SUBSCRIBERS ERROR]', error);
+    return sendError(res, message, 500);
+  }
+});
+
 // POST /api/v1/admin/referrals - Create custom referral code in DB
 router.post('/referrals', async (req: Request, res: Response) => {
   try {
@@ -611,7 +640,7 @@ router.post('/referrals', async (req: Request, res: Response) => {
 router.delete('/referrals/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    await withDbRetry(() => prisma.referralCode.delete({ where: { id } }));
+    await withDbRetry(() => prisma.referralCode.delete({ where: { id: id as string } }));
     return sendSuccess(res, null, 'Referral code deleted successfully.');
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to delete referral code';
@@ -983,7 +1012,7 @@ router.post('/notifications/:id/resend', async (req: Request, res: Response) => 
     const { id } = req.params;
     
     const notification = await prisma.notification.findUnique({
-      where: { id },
+      where: { id: id as string },
       include: { order: true, user: true }
     });
 

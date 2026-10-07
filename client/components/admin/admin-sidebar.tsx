@@ -32,6 +32,7 @@ export type AdminTab =
   | 'marketing'
   | 'seo'
   | 'notifications'
+  | 'whatsapp'
   | 'safety'
   | 'settings';
 

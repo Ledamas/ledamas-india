@@ -7,6 +7,7 @@ import { AuthProvider } from '../lib/context/auth-context';
 import { StickyOrderCta } from '../components/ui/sticky-order-cta';
 import { MetaPixelScript } from '../components/meta-pixel-script';
 import { ReferralTracker } from '../components/referral-tracker';
+import FirstOrderPopup from '../components/ui/first-order-popup';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -97,6 +98,7 @@ export default function RootLayout({
             {children}
             <CookieConsentBanner />
             <StickyOrderCta />
+            <FirstOrderPopup />
           </CartProvider>
         </AuthProvider>
       </body>

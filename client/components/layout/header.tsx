@@ -24,29 +24,17 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [hoveredCollectionKey, setHoveredCollectionKey] = useState<string>('lebubu');
+  const [hoveredCollectionKey, setHoveredCollectionKey] = useState<string>('kunafa-pistachio');
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const isHomePage = pathname === '/';
 
   const collectionCategories = [
     {
-      key: 'lebubu',
-      name: 'Lebubu',
-      href: '/collections/lebubu',
-      filterFn: (p: any) => p.categorySlug === 'lebubu' || p.slug.includes('lebubu') || p.name.toLowerCase().includes('lebubu'),
-    },
-    {
       key: 'kunafa-pistachio',
       name: 'Kunafa Pistachio',
       href: '/collections/kunafa-chocolate',
       filterFn: (p: any) => p.categorySlug === 'kunafa-chocolate' || p.slug.includes('kunafa') || p.name.toLowerCase().includes('kunafa'),
-    },
-    {
-      key: 'dark-chocolate',
-      name: 'Dark Chocolate',
-      href: '/collections/dark-chocolate',
-      filterFn: (p: any) => p.categorySlug === 'dark-chocolate' || p.slug.includes('dark') || p.name.toLowerCase().includes('dark'),
     },
     {
       key: 'milk-chocolate',
@@ -55,16 +43,28 @@ export function Header() {
       filterFn: (p: any) => p.categorySlug === 'milk-chocolate' || p.slug.includes('milk') || p.name.toLowerCase().includes('milk'),
     },
     {
+      key: 'mini-bars',
+      name: 'Mini Bars',
+      href: '/collections/mini-chocolate-bars',
+      filterFn: (p: any) => p.categorySlug === 'mini-chocolate-bars' || p.slug.includes('mini') || p.name.toLowerCase().includes('mini') || p.name.toLowerCase().includes('35g'),
+    },
+    {
       key: 'speculoos',
       name: 'Speculoos',
       href: '/collections/speculoos-chocolate',
       filterFn: (p: any) => p.categorySlug === 'speculoos' || p.slug.includes('speculoos') || p.name.toLowerCase().includes('speculoos'),
     },
     {
-      key: 'mini-bars',
-      name: 'Mini Bars',
-      href: '/collections/mini-chocolate-bars',
-      filterFn: (p: any) => p.categorySlug === 'mini-chocolate-bars' || p.slug.includes('mini') || p.name.toLowerCase().includes('mini') || p.name.toLowerCase().includes('35g'),
+      key: 'dark-chocolate',
+      name: 'Dark Chocolate',
+      href: '/collections/dark-chocolate',
+      filterFn: (p: any) => p.categorySlug === 'dark-chocolate' || p.slug.includes('dark') || p.name.toLowerCase().includes('dark'),
+    },
+    {
+      key: 'lebubu',
+      name: 'Lebubu',
+      href: '/collections/lebubu',
+      filterFn: (p: any) => p.categorySlug === 'lebubu' || p.slug.includes('lebubu') || p.name.toLowerCase().includes('lebubu'),
     },
   ];
 

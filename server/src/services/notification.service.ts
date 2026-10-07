@@ -137,10 +137,10 @@ export class NotificationService {
 
     try {
       // Step 1: Get Auth Token (Assuming they use OAuth/Token flow, or similar)
-      const tokenUrl = \`https://cpaas.messagecentral.com/auth/v1/authentication/token?country=IN&customerId=\${customerId}&key=\${authKey}&scope=NEW\`;
+      const tokenUrl = `https://cpaas.messagecentral.com/auth/v1/authentication/token?country=IN&customerId=${customerId}&key=${authKey}&scope=NEW`;
       
       const tokenRes = await fetch(tokenUrl, { method: 'GET' });
-      const tokenData = await tokenRes.json();
+      const tokenData: any = await tokenRes.json();
       const token = tokenData?.token;
       
       if (!token) throw new Error('Failed to fetch SMS auth token');
@@ -148,13 +148,13 @@ export class NotificationService {
       // Step 2: Send SMS
       // Formatting phone: remove +, keep digits
       const formattedPhone = phone.replace(/\\D/g, '');
-      const sendUrl = \`https://cpaas.messagecentral.com/smsgw/v1/sms/send\`;
+      const sendUrl = `https://cpaas.messagecentral.com/smsgw/v1/sms/send`;
 
       const sendRes = await fetch(sendUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': \`Bearer \${token}\`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           customerId,
@@ -165,7 +165,7 @@ export class NotificationService {
         })
       });
 
-      const result = await sendRes.json();
+      const result: any = await sendRes.json();
       return {
         status: result.status || (sendRes.ok ? 'success' : 'failed'),
         messageId: result.messageId || result.id || 'mc-' + Date.now()

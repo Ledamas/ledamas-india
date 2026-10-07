@@ -26,6 +26,7 @@ import {
   getAdminReferralsApi,
   createAdminReferralApi,
   deleteAdminReferralApi,
+  getAdminPopupSubscribersApi,
 } from '@/lib/services/admin-service';
 
 export interface CouponItem {
@@ -63,9 +64,10 @@ export interface ReferralItem {
 }
 
 export const MarketingOffers: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'coupons' | 'referrals'>('coupons');
+  const [activeTab, setActiveTab] = useState<'coupons' | 'referrals' | 'subscribers'>('coupons');
   const [coupons, setCoupons] = useState<CouponItem[]>([]);
   const [referrals, setReferrals] = useState<ReferralItem[]>([]);
+  const [subscribers, setSubscribers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Coupon Modal State
@@ -101,7 +103,11 @@ export const MarketingOffers: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [couponRes, refRes] = await Promise.all([getAdminCouponsApi(), getAdminReferralsApi()]);
+      const [couponRes, refRes, subRes] = await Promise.all([
+        getAdminCouponsApi(), 
+        getAdminReferralsApi(),
+        getAdminPopupSubscribersApi()
+      ]);
 
       if (couponRes?.coupons && Array.isArray(couponRes.coupons)) {
         const mappedCoupons: CouponItem[] = couponRes.coupons.map((c: any) => ({
@@ -126,6 +132,10 @@ export const MarketingOffers: React.FC = () => {
 
       if (refRes?.referrals && Array.isArray(refRes.referrals)) {
         setReferrals(refRes.referrals);
+      }
+      
+      if (subRes?.subscribers && Array.isArray(subRes.subscribers)) {
+        setSubscribers(subRes.subscribers);
       }
     } catch (err) {
       console.error('[MARKETING FETCH ERROR]', err);
@@ -232,6 +242,17 @@ export const MarketingOffers: React.FC = () => {
             <Share2 className="w-3.5 h-3.5" />
             <span>Referrals ({referrals.length})</span>
           </button>
+          <button
+            onClick={() => setActiveTab('subscribers')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
+              activeTab === 'subscribers'
+                ? 'bg-emerald-600 text-white font-extrabold shadow-md'
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-300'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Popup Subscribers ({subscribers.length})</span>
+          </button>
         </div>
       </div>
 
@@ -327,7 +348,7 @@ export const MarketingOffers: React.FC = () => {
             </div>
           </div>
         </div>
-      ) : (
+      ) : activeTab === 'referrals' ? (
         /* Referral Section */
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -431,7 +452,60 @@ export const MarketingOffers: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      ) : activeTab === 'subscribers' ? (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-serif text-xl font-bold text-black">First Order Popup Subscribers</h3>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Track customers who entered their phone number to claim the 5% welcome offer.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-stone-50 rounded-2xl border border-stone-200 overflow-hidden shadow-xs">
+            <div className="p-4 bg-stone-100/70 border-b border-stone-200 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-black font-serif flex items-center space-x-2">
+                <Users className="w-4 h-4 text-emerald-600" />
+                <span>Subscribers List</span>
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-sans">
+                <thead className="bg-stone-100 text-stone-700 uppercase text-[11px] font-bold border-b border-stone-200">
+                  <tr>
+                    <th className="p-3.5">Customer Name</th>
+                    <th className="p-3.5">Phone Number</th>
+                    <th className="p-3.5">Coupon Claimed</th>
+                    <th className="p-3.5">Claimed At</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-200 bg-white">
+                  {subscribers.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-stone-500 text-xs">
+                        No subscribers yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    subscribers.map((sub) => (
+                      <tr key={sub.id} className="hover:bg-stone-50 transition-colors">
+                        <td className="p-3.5 font-bold text-stone-900">{sub.userName}</td>
+                        <td className="p-3.5 font-mono text-stone-800">{sub.phone}</td>
+                        <td className="p-3.5 font-mono font-bold text-[#CB9700]">{sub.couponCode}</td>
+                        <td className="p-3.5 text-stone-500">
+                          {new Date(sub.claimedAt).toLocaleString('en-IN')}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Coupon Modal */}
       {isCouponModalOpen && (

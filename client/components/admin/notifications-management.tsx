@@ -81,7 +81,7 @@ export function NotificationsManagement() {
           onClick={fetchNotifications}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm text-sm font-medium"
         >
-          <RefreshCw className={\`w-4 h-4 \${isLoading ? 'animate-spin' : ''}\`} />
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           Refresh Stats
         </button>
       </div>

@@ -14,7 +14,7 @@ const PARTNERS: Partner[] = [
   {
     id: 'blinkit',
     name: 'Blinkit',
-    logo: '/Blinkit.webp'
+    logo: '/blinkitt.jpg'
   },
   {
     id: 'swiggy-instamart',
@@ -98,7 +98,7 @@ export function WhereWeAreAvailable() {
                         src={partner.logo}
                         alt={partner.name}
                         fill
-                        className="object-contain"
+                        className="object-contain rounded-md"
                         unoptimized
                       />
                     </div>
