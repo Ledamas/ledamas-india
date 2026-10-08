@@ -348,8 +348,8 @@ export function AnimatedHero() {
       data-running={running ? 'true' : 'false'}
       aria-roledescription="carousel"
       aria-label="LE DAMAS featured chocolates"
-      className="group/hero relative isolate h-[54svh] min-h-[360px] max-h-[460px] w-full touch-pan-y overflow-hidden rounded-b-[1.75rem] bg-[#0C040F] md:h-[100svh] md:max-h-none md:min-h-[640px] md:rounded-none"
-      style={{ overscrollBehaviorX: 'contain' }}
+      className="group/hero relative isolate h-[54svh] min-h-[360px] max-h-[460px] w-full touch-pan-y overflow-hidden rounded-b-[1.75rem] bg-[#E8DFD0] outline-none border-none [transform:translateZ(0)] md:h-[100svh] md:max-h-none md:min-h-[640px] md:rounded-none"
+      style={{ overscrollBehaviorX: 'contain', transform: 'translateZ(0)' }}
     >
       <style>{`
         /* Fairy lights hang from the header's bottom line.
@@ -420,7 +420,7 @@ export function AnimatedHero() {
       <div
         aria-hidden
         className="absolute inset-0 z-[1]"
-        style={{ background: 'radial-gradient(ellipse 90% 60% at 50% 45%, #5E1230 0%, #33091F 45%, #150718 85%)' }}
+        style={{ background: 'radial-gradient(ellipse 90% 60% at 50% 45%, #F0E6D8 0%, #E8DFD0 45%, #D6CABA 85%)' }}
       />
 
       {/* Photo hero: always fills the screen. Also the placeholder while video loads. */}

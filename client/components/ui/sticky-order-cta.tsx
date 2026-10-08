@@ -15,7 +15,7 @@ export function StickyOrderCta() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-45 pointer-events-auto">
+    <div className="hidden md:block fixed bottom-6 right-6 z-45 pointer-events-auto">
       <button
         onClick={openCart}
         className="group relative flex items-center space-x-2.5 px-6 py-3.5 rounded-full bg-[#CB9700] hover:bg-[#e0a800] text-black font-sans text-xs uppercase tracking-widest font-bold shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 border-2 border-black/20"

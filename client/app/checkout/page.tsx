@@ -102,6 +102,39 @@ export default function CheckoutPage() {
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string>('');
   const [createdOrderDetails, setCreatedOrderDetails] = useState<any>(null);
 
+  // Sync cart email/phone for guests (Abandoned Cart)
+  useEffect(() => {
+    if (items.length === 0 || !form.email) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const userStorageKey = `ledamas_cart_${user?.id || (user?.phone ? user.phone.replace(/\D/g, '') : null) || user?.email || 'guest'}`;
+        const cartIdKey = `${userStorageKey}_cart_id`;
+        const existingCartId = localStorage.getItem(cartIdKey);
+        
+        const response = await fetchApi<{ cartId: string }>('/cart/sync', {
+          method: 'POST',
+          body: JSON.stringify({
+            cartId: existingCartId,
+            userId: user?.id,
+            email: form.email || user?.email,
+            phone: form.phone || user?.phone,
+            items,
+            subtotal: items.reduce((sum, item) => sum + (item.variant ? item.variant.price : item.product.price) * item.quantity, 0),
+          }),
+        });
+
+        if (response?.cartId) {
+          localStorage.setItem(cartIdKey, response.cartId);
+        }
+      } catch (e) {
+        // fail silently
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [form.email, form.phone, items, user]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -325,7 +358,7 @@ export default function CheckoutPage() {
     const customerTotalExpense = createdOrderDetails?.total ?? (isCod ? (isUnder3k ? orderTotalVal + 99 : orderTotalVal) : orderTotalVal);
 
     return (
-      <div className="min-h-screen bg-[#FAF6ED] text-[#3D2314] pt-32 pb-20 px-4 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAF6ED] text-[#3D2314] pt-24 pb-20 px-4 flex items-center justify-center">
         <div className="max-w-lg w-full bg-white border border-[#CB9700]/40 rounded-2xl p-8 text-center space-y-6 shadow-xl shadow-[#3D2314]/10">
           <div className="w-16 h-16 bg-[#CB9700]/10 rounded-full flex items-center justify-center mx-auto text-[#CB9700]">
             <CheckCircle2 className="w-10 h-10" />
@@ -410,7 +443,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-[#FAF6ED] text-[#3D2314] font-sans">
         <Header />
-        <main className="pt-44 sm:pt-48 lg:pt-52 pb-24 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <main className="pt-[110px] sm:pt-32 md:pt-36 pb-24 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
           <div className="w-full max-w-lg bg-[#FDFBF7] rounded-2xl shadow-2xl p-8 border border-[#EBE3D3] text-center space-y-6">
             <div className="w-16 h-16 rounded-full bg-[#CB9700]/15 text-[#CB9700] border border-[#CB9700]/40 flex items-center justify-center mx-auto shadow-sm">
               <Lock className="w-8 h-8 stroke-[2]" />
@@ -455,7 +488,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-[#FAF6ED] text-[#3D2314] font-sans selection:bg-[#CB9700]/30 selection:text-[#3D2314]">
       <Header />
 
-      <main className="pt-44 sm:pt-48 lg:pt-52 pb-24 px-4 sm:px-6 lg:px-8">
+      <main className="pt-[110px] sm:pt-32 md:pt-36 pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Navigation back link */}
           <div className="mb-6">

@@ -11,6 +11,8 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import couponsRoutes from './routes/coupons.routes.js';
+import cartRoutes from './routes/cart.routes.js';
+import { startAbandonedCartJob } from './jobs/abandoned-cart.job.js';
 import { sendError } from './utils/response.js';
 import {
   globalRateLimiter,
@@ -83,6 +85,10 @@ app.use('/admin', adminRoutes);
 app.use('/api/v1/coupons', couponRateLimiter, couponsRoutes);
 app.use('/coupons', couponRateLimiter, couponsRoutes);
 
+// Cart Routes
+app.use('/api/v1/cart', cartRoutes);
+app.use('/cart', cartRoutes);
+
 // Root Route Welcome
 app.get('/', (_req: Request, res: Response) => {
   res.json({
@@ -112,6 +118,9 @@ app.listen(PORT, () => {
   console.log(`📡 URL: http://localhost:${PORT}`);
   console.log(`🩺 Health: http://localhost:${PORT}/api/v1/health`);
   console.log(`==================================================\n`);
+
+  // Start Background Jobs
+  startAbandonedCartJob();
 });
 
 export default app;

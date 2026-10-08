@@ -338,6 +338,27 @@ router.post('/google', async (req: Request, res: Response) => {
           },
         })
       );
+
+      // Send Welcome Email
+      const welcomeEmailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #c99339;">Welcome to LE DAMAS!</h2>
+          <p>Hi ${name || 'Luxury Connoisseur'},</p>
+          <p>We're thrilled to have you join our exclusive chocolaterie.</p>
+          <p>Explore our premium collections and discover the true meaning of indulgence.</p>
+          <br/>
+          <p>Best regards,<br/>LE DAMAS Team</p>
+        </div>
+      `;
+      
+      NotificationService.sendEmail(
+        email,
+        'Welcome to LE DAMAS',
+        welcomeEmailHtml,
+        user.id,
+        undefined,
+        'CUSTOMER_REGISTERED'
+      ).catch(err => console.error('[EMAIL NOTIFICATION ERROR]', err));
     } else if (!user.email) {
       const userId = user.id;
       user = await withDbRetry(() =>
@@ -505,16 +526,10 @@ router.put('/profile', async (req: Request, res: Response) => {
       return sendError(res, 'Invalid or expired session token.', 401);
     }
 
-    const { name, phone } = req.body;
+    const { name } = req.body;
 
-    const updateData: { name?: string; phone?: string } = {};
+    const updateData: { name?: string } = {};
     if (name !== undefined) updateData.name = name.trim();
-    if (phone !== undefined) {
-      const cleaned = phone.replace(/\D/g, '').slice(-10);
-      if (cleaned.length === 10) {
-        updateData.phone = `+91${cleaned}`;
-      }
-    }
 
     // Update User record in Neon PostgreSQL Database
     const updatedUser = await withDbRetry(() =>
@@ -534,13 +549,12 @@ router.put('/profile', async (req: Request, res: Response) => {
     );
 
     // Also sync CustomerProfile if exists
-    if (updateData.name || updateData.phone) {
+    if (updateData.name) {
       await withDbRetry(() =>
         prisma.customerProfile.updateMany({
           where: { userId: decoded.userId },
           data: {
-            ...(updateData.name ? { fullName: updateData.name } : {}),
-            ...(updateData.phone ? { phone: updateData.phone } : {}),
+            fullName: updateData.name,
           },
         })
       );
@@ -550,6 +564,142 @@ router.put('/profile', async (req: Request, res: Response) => {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to update profile';
     console.error('[PROFILE UPDATE ROUTE ERROR]', error);
+    return sendError(res, message, 500);
+  }
+});
+
+// POST /api/v1/auth/profile/request-phone-update
+router.post('/profile/request-phone-update', async (req: Request, res: Response) => {
+  try {
+    let token = req.cookies?.ledamas_session;
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.split(' ')[1];
+    }
+    if (!token) return sendError(res, 'Authorization session missing.', 401);
+
+    const { valid, decoded } = verifyAndRotateSession(token, res);
+    if (!valid || !decoded) return sendError(res, 'Invalid or expired session token.', 401);
+
+    const { phone } = req.body;
+    if (!phone) return sendError(res, 'Mobile number is required.', 400);
+
+    const cleanedPhone = phone.replace(/\D/g, '');
+    if (cleanedPhone.length < 10) return sendError(res, 'Please enter a valid 10-digit mobile number.', 400);
+
+    const tenDigitPhone = cleanedPhone.slice(-10);
+    const fullPhone = `+91${tenDigitPhone}`;
+
+    // Rate Limiting check
+    const rateCheck = checkOtpRateLimit(cleanedPhone);
+    if (!rateCheck.allowed) return sendError(res, rateCheck.message || 'OTP rate limit exceeded.', 429);
+
+    // Check if another account already uses this number
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        phone: fullPhone,
+        id: { not: decoded.userId }
+      }
+    });
+
+    if (existingUser) {
+      return sendError(res, 'Ye number already kisi aur account se linked hai.', 400);
+    }
+
+    // Update pendingPhone
+    await prisma.user.update({
+      where: { id: decoded.userId },
+      data: { pendingPhone: fullPhone }
+    });
+
+    const result = await sendMessageCentralOtp(fullPhone);
+    if (!result.success) return sendError(res, result.message, 400);
+
+    return sendSuccess(res, { verificationId: result.verificationId }, result.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to request phone update';
+    console.error('[PHONE UPDATE REQUEST ERROR]', error);
+    return sendError(res, message, 500);
+  }
+});
+
+// POST /api/v1/auth/profile/verify-phone-update
+router.post('/profile/verify-phone-update', async (req: Request, res: Response) => {
+  try {
+    let token = req.cookies?.ledamas_session;
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) token = authHeader.split(' ')[1];
+    }
+    if (!token) return sendError(res, 'Authorization session missing.', 401);
+
+    const { valid, decoded } = verifyAndRotateSession(token, res);
+    if (!valid || !decoded) return sendError(res, 'Invalid or expired session token.', 401);
+
+    const { otp, verificationId } = req.body;
+    if (!otp) return sendError(res, 'OTP code is required.', 400);
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!user || !user.pendingPhone) {
+      return sendError(res, 'No pending phone update found.', 400);
+    }
+
+    const cleanedPhone = user.pendingPhone.replace(/\D/g, '');
+
+    const result = await verifyMessageCentralOtp(user.pendingPhone, otp, verificationId);
+    const attemptCheck = trackOtpAttempt(cleanedPhone, result.success);
+
+    if (!result.success) {
+      if (!attemptCheck.allowed) {
+        return sendError(res, 'Too many failed OTP attempts. This OTP session has been invalidated.', 429);
+      }
+      return sendError(res, `${result.message} (${attemptCheck.remainingAttempts} attempt(s) remaining)`, 400);
+    }
+
+    // Final check for uniqueness before saving
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        phone: user.pendingPhone,
+        id: { not: decoded.userId }
+      }
+    });
+
+    if (existingUser) {
+      return sendError(res, 'Ye number already kisi aur account se linked hai.', 400);
+    }
+
+    const oldPhone = user.phone;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: decoded.userId },
+      data: {
+        phone: user.pendingPhone,
+        phoneVerified: true,
+        pendingPhone: null
+      },
+      select: { id: true, name: true, phone: true, phoneVerified: true }
+    });
+
+    // Update CustomerProfile phone as well
+    await prisma.customerProfile.updateMany({
+      where: { userId: decoded.userId },
+      data: { phone: user.pendingPhone }
+    });
+    
+    // 5. Rate limiting aur logging: Phone/email change ke events log karo, aur purane number/email pe alert bhejo.
+    if (oldPhone) {
+      try {
+        const alertMsg = `Your LE DAMAS account phone number has been updated. If this wasn't you, please contact support immediately.`;
+        NotificationService.sendSMS(oldPhone, alertMsg, user.id, undefined, 'SECURITY_ALERT');
+      } catch (err) {
+        console.warn('[SECURITY ALERT SMS FAILED]', err);
+      }
+    }
+
+    return sendSuccess(res, updatedUser, 'Phone number updated successfully.');
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to verify phone update';
+    console.error('[PHONE UPDATE VERIFY ERROR]', error);
     return sendError(res, message, 500);
   }
 });

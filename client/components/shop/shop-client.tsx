@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product, Collection } from '../../lib/types';
 import { ProductCard } from '../product/product-card';
@@ -13,6 +14,7 @@ interface ShopClientProps {
   products: Product[];
   collections: Collection[];
   isTrendingView?: boolean;
+  isBestSellerView?: boolean;
 }
 
 type SortOption =
@@ -24,9 +26,10 @@ type SortOption =
   | 'rating'
   | 'discount';
 
-export function ShopClient({ products, collections, isTrendingView = false }: ShopClientProps) {
+export function ShopClient({ products, collections, isTrendingView = false, isBestSellerView = false }: ShopClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const urlSearchQuery = searchParams ? searchParams.get('search') || searchParams.get('q') || '' : '';
 
   // Search state synced with URL
@@ -81,6 +84,10 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
       if (isTrendingView && !p.isBestSeller && !p.isFeatured && !p.isNewRelease) {
         return false;
       }
+      
+      if (isBestSellerView && !p.isBestSeller) {
+        return false;
+      }
 
       // Search match
       if (searchTerm.trim()) {
@@ -126,7 +133,7 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
       // Newest first default
       return 0;
     });
-  }, [products, isTrendingView, selectedCategory, selectedWeight, pricePreset, maxPriceRange, sortOption]);
+  }, [products, isTrendingView, isBestSellerView, selectedCategory, selectedWeight, pricePreset, maxPriceRange, sortOption]);
 
   const resetAllFilters = () => {
     setSelectedCategory('all');
@@ -137,103 +144,67 @@ export function ShopClient({ products, collections, isTrendingView = false }: Sh
   };
 
   return (
-    <main className="flex-1 pt-44 sm:pt-48 md:pt-56 pb-20 bg-white">
+    <main className="flex-1 pt-[120px] sm:pt-[140px] md:pt-[170px] lg:pt-[220px] pb-20 bg-white">
       
       {/* Promotional Banner */}
-      <PromoBanner />
+      <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12">
+        <PromoBanner isMinimized={true} />
+      </div>
 
       {/* Sticky Utility Toolbar Row (Full Width) */}
-      <div className="sticky top-[64px] sm:top-[70px] lg:top-[90px] z-30 w-full bg-white border-b border-stone-200 shadow-sm">
+      <div className="sticky top-[64px] sm:top-[70px] lg:top-[140px] z-30 w-full bg-white border-b border-stone-200 shadow-sm">
         <div className="max-w-[1480px] w-full mx-auto px-0 sm:px-6 lg:px-12">
           
-          {/* MOBILE TOOLBAR (Clean Layout: Filter v | Price v | Sort v) */}
-          <div className="flex sm:hidden items-center justify-between w-full border-t border-b border-stone-200 py-3 px-6 text-[13px] text-stone-600 font-sans bg-white">
-            <button onClick={() => setIsDrawerOpen(true)} className="flex items-center gap-1.5 hover:text-black transition-colors">
-              Filter <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-            </button>
-            <div className="relative">
-              <button 
-                onClick={() => {
-                  setIsPriceOpen(!isPriceOpen);
-                  setIsSortOpen(false);
-                }} 
-                className="flex items-center gap-1.5 hover:text-black transition-colors"
+          {/* MOBILE TOOLBAR (Screenshot Layout) */}
+          <div className="flex flex-col sm:hidden w-full bg-[#f8f9fa] border-b border-stone-200">
+            {/* Top Row: Pill Navigation */}
+            <div className="flex items-center justify-between px-3 py-3 gap-2 overflow-x-auto hide-scrollbar">
+              <Link 
+                href="/shop"
+                className={`flex-1 min-w-max text-center px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
+                  pathname === '/shop' ? 'bg-[#1A1817] text-white' : 'bg-stone-200/60 text-stone-700'
+                }`}
               >
-                Price <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform ${isPriceOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {/* Price Dropdown Popup (Mobile) */}
-              <AnimatePresence>
-                {isPriceOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-48 bg-white border border-stone-200 shadow-xl rounded-md py-2 z-50 text-xs"
-                  >
-                    {[
-                      { label: 'All Prices', value: 'all' },
-                      { label: 'Under ₹500', value: 'under-500' },
-                      { label: '₹500 - ₹1000', value: '500-1000' },
-                      { label: '₹1000 - ₹1500', value: '1000-1500' },
-                      { label: 'Over ₹1500', value: 'over-1500' }
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => {
-                          setPricePreset(opt.value);
-                          setIsPriceOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-stone-50 transition-colors ${
-                          pricePreset === opt.value ? 'text-[#CB9700] font-bold bg-stone-50' : 'text-stone-700'
-                        }`}
-                      >
-                        <span>{opt.label}</span>
-                        {pricePreset === opt.value && <Check className="w-4 h-4 text-[#CB9700]" />}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                All Products
+              </Link>
+              <Link 
+                href="/trending"
+                className={`flex-1 min-w-max text-center px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
+                  pathname === '/trending' ? 'bg-[#1A1817] text-white' : 'bg-stone-200/60 text-stone-700'
+                }`}
+              >
+                Trending
+              </Link>
+              <Link 
+                href="/best-seller"
+                className={`flex-1 min-w-max text-center px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
+                  pathname === '/best-seller' ? 'bg-[#1A1817] text-white' : 'bg-stone-200/60 text-stone-700'
+                }`}
+              >
+                Best Seller
+              </Link>
             </div>
-            <div className="relative">
-              <button 
-                onClick={() => {
-                  setIsSortOpen(!isSortOpen);
-                  setIsPriceOpen(false);
-                }} 
-                className="flex items-center gap-1.5 hover:text-black transition-colors"
-              >
-                Sort <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {/* Sort Dropdown Popup (Mobile) */}
-              <AnimatePresence>
-                {isSortOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="absolute right-0 top-full mt-3 w-48 bg-white border border-stone-200 shadow-xl rounded-md py-2 z-50 text-xs"
-                  >
-                    {sortOptionsList.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => {
-                          setSortOption(opt.value);
-                          setIsSortOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 flex items-center justify-between hover:bg-stone-50 transition-colors ${
-                          sortOption === opt.value ? 'text-[#CB9700] font-bold bg-stone-50' : 'text-stone-700'
-                        }`}
-                      >
-                        <span>{opt.label}</span>
-                        {sortOption === opt.value && <Check className="w-4 h-4 text-[#CB9700]" />}
-                      </button>
-                    ))}
-                  </motion.div>
+
+            {/* Bottom Row: Count & Filters */}
+            <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-stone-200">
+              <div className="text-[13px] text-stone-500 font-medium">
+                {searchTerm ? (
+                  <span className="font-bold text-stone-800">Search matches</span>
+                ) : isBestSellerView ? (
+                  <span className="font-bold text-stone-800">Best sellers for you</span>
+                ) : isTrendingView ? (
+                  <span className="font-bold text-stone-800">Trending items</span>
+                ) : (
+                  <span className="font-bold text-stone-800">Explore products</span>
                 )}
-              </AnimatePresence>
+              </div>
+              <button 
+                onClick={() => setIsDrawerOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#f8f9fa] border border-stone-200 rounded-md text-[13px] font-bold text-stone-700 hover:bg-stone-100 transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                FILTERS
+              </button>
             </div>
           </div>
 

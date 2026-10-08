@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, ProductVariant, CartItem } from '../types';
 import { trackAddToCart } from '../meta-pixel';
 import { useAuth } from './auth-context';
+import { fetchApi } from '../api-client';
+import { usePathname } from 'next/navigation';
 
 export type SimpleCartProduct = {
   id: string;
@@ -42,6 +44,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const userStorageKey = `ledamas_cart_${user?.id || (user?.phone ? user.phone.replace(/\D/g, '') : null) || user?.email || 'guest'}`;
+  const pathname = usePathname();
+
+  // Close cart when navigating to a different page
+  useEffect(() => {
+    if (isOpen) {
+      setIsOpen(false);
+    }
+  }, [pathname]);
 
   // Load cart from localStorage on mount or when logged-in user changes
   useEffect(() => {
@@ -67,6 +77,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error('Failed to save cart to localStorage', e);
     }
   }, [items, userStorageKey]);
+
+  // Sync cart to backend for Abandoned Cart Tracking
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const cartIdKey = `${userStorageKey}_cart_id`;
+        const existingCartId = localStorage.getItem(cartIdKey);
+        
+        const response = await fetchApi<{ cartId: string }>('/cart/sync', {
+          method: 'POST',
+          body: JSON.stringify({
+            cartId: existingCartId,
+            userId: user?.id,
+            email: user?.email,
+            phone: user?.phone,
+            items,
+            subtotal: items.reduce((sum, item) => sum + (item.variant ? item.variant.price : item.product.price) * item.quantity, 0),
+          }),
+        });
+
+        if (response?.cartId) {
+          localStorage.setItem(cartIdKey, response.cartId);
+        }
+      } catch (e) {
+        console.warn('Failed to sync cart to backend (endpoint may not exist yet).');
+      }
+    }, 2000); // 2-second debounce
+
+    return () => clearTimeout(timer);
+  }, [items, user, userStorageKey]);
 
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);

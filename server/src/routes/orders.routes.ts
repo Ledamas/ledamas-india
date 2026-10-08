@@ -7,6 +7,7 @@ import { calculateCodDetails } from '../utils/cod-calculator.js';
 import { addRealtimeClient, broadcastOrderEvent } from '../utils/realtime.js';
 import { sendOrderStatusSms } from '../utils/message-central.js';
 import { NotificationService } from '../services/notification.service.js';
+import { verifyAndRotateSession } from '../utils/auth-security.js';
 
 const router = Router();
 
@@ -186,14 +187,50 @@ router.post('/', async (req: Request, res: Response) => {
       await prisma.coupon.updateMany({
         where: { code: cleanCouponCode },
         data: { timesUsed: { increment: 1 } },
-      }).catch(() => {});
+      }).catch(() => { });
     }
     if (cleanReferralCode) {
       await prisma.referralCode.updateMany({
         where: { code: cleanReferralCode },
         data: { timesUsed: { increment: 1 } },
-      }).catch(() => {});
+      }).catch(() => { });
     }
+
+    // Mark active cart as CONVERTED
+    await prisma.cart.updateMany({
+      where: {
+        OR: [
+          { userId: associatedUserId || undefined },
+          { email: email ? email.trim().toLowerCase() : undefined },
+          { phone: phone || undefined }
+        ],
+        status: 'ACTIVE'
+      },
+      data: { status: 'CONVERTED' }
+    }).catch(err => console.error('[CART CONVERSION ERROR]', err));
+
+    // Send Order Confirmation Email
+    const orderEmailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <h2 style="color: #c99339;">Order Confirmed!</h2>
+        <p>Hi ${customerName},</p>
+        <p>Thank you for shopping with LE DAMAS. We have received your order <strong>#${newOrder.orderNumber}</strong>.</p>
+        <p><strong>Total Amount:</strong> ₹${codDetails.totalCustomerPays}</p>
+        <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+        <br/>
+        <p>We'll notify you once your order is shipped.</p>
+        <p>Best regards,<br/>LE DAMAS Team</p>
+      </div>
+    `;
+
+    NotificationService.sendEmail(
+      email.trim(),
+      `Your LE DAMAS Order Confirmation - #${newOrder.orderNumber}`,
+      orderEmailHtml,
+      associatedUserId || undefined,
+      newOrder.id,
+      'ORDER_CREATED'
+    ).catch(err => console.error('[EMAIL NOTIFICATION ERROR]', err));
 
     return sendSuccess(res, { ...newOrder, codDetails }, 'Order placed and saved to database successfully.');
   } catch (error: unknown) {
@@ -206,29 +243,27 @@ router.post('/', async (req: Request, res: Response) => {
 // GET /api/v1/orders - Get user orders filtered strictly by userId, email, or phone
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { email, userId, phone } = req.query;
-
-    const orConditions: any[] = [];
-    if (userId) {
-      orConditions.push({ userId: String(userId) });
-    }
-    if (email) {
-      orConditions.push({ email: String(email) });
-    }
-    if (phone) {
-      const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
-      if (cleanPhone) {
-        orConditions.push({ phone: { contains: cleanPhone } });
+    let token = req.cookies?.ledamas_session;
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
       }
     }
 
-    if (orConditions.length === 0) {
-      return sendSuccess(res, [], 'No user identification parameters provided.');
+    if (!token) {
+      return sendError(res, 'Authentication required to view orders.', 401);
+    }
+
+    const { valid, decoded } = verifyAndRotateSession(token, res);
+
+    if (!valid || !decoded || !decoded.userId) {
+      return sendError(res, 'Invalid or expired session token.', 401);
     }
 
     const orders = await prisma.order.findMany({
       where: {
-        OR: orConditions,
+        userId: decoded.userId,
       },
       include: {
         items: true,
@@ -451,14 +486,27 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       await prisma.coupon.updateMany({
         where: { code: cleanCouponCode },
         data: { timesUsed: { increment: 1 } },
-      }).catch(() => {});
+      }).catch(() => { });
     }
     if (cleanReferralCode) {
       await prisma.referralCode.updateMany({
         where: { code: cleanReferralCode },
         data: { timesUsed: { increment: 1 } },
-      }).catch(() => {});
+      }).catch(() => { });
     }
+
+    // Mark active cart as CONVERTED
+    await prisma.cart.updateMany({
+      where: {
+        OR: [
+          { userId: finalUserId || undefined },
+          { email: email ? email.trim().toLowerCase() : undefined },
+          { phone: phone || undefined }
+        ],
+        status: 'ACTIVE'
+      },
+      data: { status: 'CONVERTED' }
+    }).catch(err => console.error('[CART CONVERSION ERROR]', err));
 
     // Update or create CustomerProfile to track stats for CRM
     if (finalUserId || email || phone) {
@@ -508,6 +556,29 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
     // 2. Broadcast Live Realtime Event
     broadcastOrderEvent('ORDER_CREATED', newOrder);
 
+    // 3. Send Order Confirmation Email
+    const orderEmailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <h2 style="color: #c99339;">Order Confirmed!</h2>
+        <p>Hi ${customerName},</p>
+        <p>Thank you for shopping with LE DAMAS. We have received your order <strong>#${orderNumber}</strong>.</p>
+        <p><strong>Total Amount:</strong> ₹${newOrder.total}</p>
+        <p><strong>Payment Method:</strong> ${newOrder.paymentMethod}</p>
+        <br/>
+        <p>We'll notify you once your order is shipped.</p>
+        <p>Best regards,<br/>LE DAMAS Team</p>
+      </div>
+    `;
+
+    NotificationService.sendEmail(
+      email.trim(),
+      `Your LE DAMAS Order Confirmation - #${orderNumber}`,
+      orderEmailHtml,
+      finalUserId || undefined,
+      newOrder.id,
+      'ORDER_CREATED'
+    ).catch(err => console.error('[EMAIL NOTIFICATION ERROR]', err));
+
     return sendSuccess(
       res,
       {
@@ -531,70 +602,6 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/v1/orders - Get user orders or all orders
-router.get('/', async (req: Request, res: Response) => {
-  try {
-    const { email, phone, userId } = req.query;
-
-    const whereConditions: any[] = [];
-
-    if (userId) {
-      whereConditions.push({ userId: String(userId) });
-
-      try {
-        const u = await prisma.user.findUnique({
-          where: { id: String(userId) },
-          include: { customerProfile: true },
-        });
-        if (u) {
-          if (u.email) whereConditions.push({ email: u.email });
-          if (u.phone) {
-            const tenDigit = u.phone.replace(/\D/g, '').slice(-10);
-            if (tenDigit && tenDigit.length >= 10) {
-              whereConditions.push({ phone: { contains: tenDigit } });
-            }
-          }
-          if (u.customerProfile?.email) whereConditions.push({ email: u.customerProfile.email });
-          if (u.customerProfile?.phone) {
-            const tenDigit = u.customerProfile.phone.replace(/\D/g, '').slice(-10);
-            if (tenDigit && tenDigit.length >= 10) {
-              whereConditions.push({ phone: { contains: tenDigit } });
-            }
-          }
-        }
-      } catch (uErr) {}
-    }
-
-    if (email) {
-      whereConditions.push({ email: String(email) });
-    }
-
-    if (phone) {
-      const tenDigit = String(phone).replace(/\D/g, '').slice(-10);
-      if (tenDigit && tenDigit.length >= 10) {
-        whereConditions.push({ phone: { contains: tenDigit } });
-      }
-    }
-
-    const whereClause: any = whereConditions.length > 0 ? { OR: whereConditions } : {};
-
-    const orders = await prisma.order.findMany({
-      where: whereClause,
-      include: {
-        items: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    return sendSuccess(res, orders, 'Fetched orders from database successfully.');
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to fetch orders';
-    console.error('[GET ORDERS DB ERROR]', error);
-    return sendError(res, message, 500);
-  }
-});
 
 // Create Razorpay Gateway Order (Legacy Endpoint compatibility)
 router.post('/create-razorpay-order', async (req: Request, res: Response) => {
@@ -663,7 +670,7 @@ router.post('/verify-payment', async (req: Request, res: Response) => {
         updatedOrder.id,
         'ORDER_CONFIRMED'
       );
-      
+
       NotificationService.sendEmail(
         updatedOrder.email,
         `Order Confirmed: ${updatedOrder.orderNumber}`,

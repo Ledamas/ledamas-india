@@ -62,7 +62,7 @@ export function HeroSection({
   }));
 
   return (
-    <section className="relative h-screen min-h-[720px] w-full overflow-hidden bg-[#0F0D0C] flex flex-col justify-between pt-36 sm:pt-40 pb-10">
+    <section className="relative h-screen min-h-[720px] w-full overflow-hidden bg-[#0F0D0C] flex flex-col justify-between pt-[110px] sm:pt-32 pb-10">
       {/* Animated Background Photo Collection Crossfade & Ken-Burns Zoom */}
       <div className="absolute inset-0 z-0">
         <AnimatePresence mode="wait">

@@ -34,7 +34,7 @@ export default function FranchisePage() {
     <div className="min-h-screen bg-[#FAF6ED] text-[#3D2314] font-sans selection:bg-[#CB9700]/30 selection:text-[#3D2314]">
       <Header />
 
-      <main className="pt-44 sm:pt-48 lg:pt-52 pb-24 px-4 sm:px-6 lg:px-8">
+      <main className="pt-[110px] sm:pt-32 md:pt-36 pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Back Option */}
           <div>

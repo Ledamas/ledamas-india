@@ -25,7 +25,7 @@ export function CookieConsentBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-[#1A1817] text-white p-4 rounded-xl border border-stone-700 shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
+    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-[#1A1817] text-white p-4 rounded-xl border border-stone-700 shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">
       <div className="flex items-start space-x-3">
         <div className="p-2 rounded-full bg-[#CB9700]/20 text-[#CB9700] shrink-0 mt-0.5">
           <ShieldCheck className="w-5 h-5" />

@@ -20,7 +20,7 @@ export default function TermsAndConditionsPage() {
     <div className="min-h-screen flex flex-col bg-white text-stone-900 font-sans">
       <Header />
 
-      <main className="flex-1 pt-44 sm:pt-48 md:pt-52 pb-24">
+      <main className="flex-1 pt-[110px] sm:pt-32 md:pt-36 pb-24">
         <section className="bg-[#FAF7F2] border-b border-stone-200 py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Breadcrumbs items={breadcrumbs} />

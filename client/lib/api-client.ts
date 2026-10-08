@@ -3,7 +3,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/a
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('ledamas_auth_token') : null;
+  const isAdminRoute = endpoint.startsWith('/admin') || endpoint.startsWith('admin');
+  const tokenKey = isAdminRoute ? 'ledamas_admin_session' : 'ledamas_auth_token';
+  const token = typeof window !== 'undefined' ? localStorage.getItem(tokenKey) : null;
 
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',

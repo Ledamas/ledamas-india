@@ -41,7 +41,7 @@ export function ContactPage() {
     <div className="min-h-screen bg-white text-stone-900 font-sans flex flex-col justify-between">
       <Header />
 
-      <main className="flex-1 pt-44 sm:pt-48 lg:pt-52 pb-24 px-6">
+      <main className="flex-1 pt-[110px] sm:pt-32 md:pt-36 pb-24 px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           {/* Back Option */}
           <div className="lg:col-span-2">

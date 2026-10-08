@@ -6,6 +6,8 @@ import { broadcastOrderEvent } from '../utils/realtime.js';
 import { PaymentStatus, OrderStatus } from '@prisma/client';
 import { adminLoginRateLimiter } from '../middleware/rate-limit.middleware.js';
 import { NotificationService } from '../services/notification.service.js';
+import { generateSessionToken } from '../utils/auth-security.js';
+import { authenticateUser, requireRole } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -24,7 +26,11 @@ router.post('/login', adminLoginRateLimiter, (req: Request, res: Response) => {
     const isPassValid = String(password).trim() === requiredPass;
 
     if (isIdValid && isPassValid) {
-      const token = `admin_auth_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const token = generateSessionToken({
+        userId: 'admin_1',
+        phone: 'admin',
+        role: 'SUPER_ADMIN'
+      });
       return sendSuccess(res, { token, adminId: requiredId }, 'Admin authentication successful.');
     }
 
@@ -34,6 +40,10 @@ router.post('/login', adminLoginRateLimiter, (req: Request, res: Response) => {
     return sendError(res, message, 500);
   }
 });
+
+// Apply Authentication Middleware for all subsequent admin routes
+router.use(authenticateUser);
+router.use(requireRole(['ADMIN', 'SUPER_ADMIN']));
 
 // GET /api/v1/admin/users - Fetch all signed-up users from PostgreSQL database
 router.get('/users', async (_req: Request, res: Response) => {

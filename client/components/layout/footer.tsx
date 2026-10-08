@@ -73,7 +73,7 @@ export function Footer() {
       <div className="max-w-[1480px] w-full mx-auto px-6 sm:px-10 lg:px-12 relative z-10 space-y-8">
 
         {/* Top Navigation & Google Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           
           {/* Column 1: Brand Logo & Damascus Heritage Description */}
           <div className="lg:col-span-4 space-y-3.5 pr-0 lg:pr-4">
@@ -93,8 +93,10 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Column 2: CATEGORIES */}
-          <div className="lg:col-span-2 space-y-3">
+          {/* Links Wrapper Grid for Mobile/Tablet */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 lg:col-span-8 lg:grid-cols-8">
+            {/* Column 2: CATEGORIES */}
+            <div className="lg:col-span-2 space-y-3">
             <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-[#D5B268]">
               CATEGORIES
             </h4>
@@ -214,6 +216,8 @@ export function Footer() {
                 Write A Review
               </a>
             </div>
+          </div>
+          {/* End Links Wrapper Grid */}
           </div>
 
         </div>

@@ -107,7 +107,7 @@ export async function getCurrentUserApi(): Promise<UserSession | null> {
   }
 }
 
-export async function updateUserProfileApi(payload: { name?: string; phone?: string }): Promise<UserSession> {
+export async function updateUserProfileApi(payload: { name?: string }): Promise<UserSession> {
   const token = getAuthToken();
   const headers: Record<string, string> = {};
   if (token) {
@@ -118,6 +118,36 @@ export async function updateUserProfileApi(payload: { name?: string; phone?: str
     method: 'PUT',
     headers,
     body: JSON.stringify(payload),
+  });
+
+  if (data && typeof window !== 'undefined') {
+    localStorage.setItem('ledamas_user', JSON.stringify(data));
+  }
+
+  return data;
+}
+
+export async function requestPhoneUpdateApi(phone: string): Promise<{ verificationId: string }> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  return fetchApi<{ verificationId: string }>('/auth/profile/request-phone-update', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ phone }),
+  });
+}
+
+export async function verifyPhoneUpdateApi(otp: string, verificationId: string): Promise<UserSession> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const data = await fetchApi<UserSession>('/auth/profile/verify-phone-update', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ otp, verificationId }),
   });
 
   if (data && typeof window !== 'undefined') {

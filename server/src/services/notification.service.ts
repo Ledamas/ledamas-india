@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const emailFrom = process.env.EMAIL_FROM || '"Le Damas" <info@ledamas.in>';
+const emailFrom = process.env.EMAIL_FROM || '"Le Damas" <hr@ledamas.in>';
 
 export class NotificationService {
   /**
@@ -43,9 +43,9 @@ export class NotificationService {
 
       // Actually send SMS using Message Central
       const providerResponse = await this._sendViaMessageCentral(recipient, message);
-      
+
       const success = providerResponse && (providerResponse.status === 'success' || providerResponse.messageId);
-      
+
       // Update DB record
       await withDbRetry(() =>
         prisma.notification.update({
@@ -99,7 +99,7 @@ export class NotificationService {
         subject: subject,
         html: message,
       });
-      
+
       const success = !!providerResponse.messageId;
 
       // Update DB record
@@ -138,11 +138,11 @@ export class NotificationService {
     try {
       // Step 1: Get Auth Token (Assuming they use OAuth/Token flow, or similar)
       const tokenUrl = `https://cpaas.messagecentral.com/auth/v1/authentication/token?country=IN&customerId=${customerId}&key=${authKey}&scope=NEW`;
-      
+
       const tokenRes = await fetch(tokenUrl, { method: 'GET' });
       const tokenData: any = await tokenRes.json();
       const token = tokenData?.token;
-      
+
       if (!token) throw new Error('Failed to fetch SMS auth token');
 
       // Step 2: Send SMS

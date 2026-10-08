@@ -16,13 +16,12 @@ export function CollectionGrid({ collection, products, allCollections }: Collect
   const collectionJsonLd = generateCollectionJsonLd(collection, products);
 
   return (
-    <div className="min-h-screen bg-white text-stone-900 pt-44 sm:pt-48 md:pt-52 pb-20">
+    <div className="min-h-screen bg-white text-stone-900 pt-[110px] sm:pt-[140px] md:pt-[170px] lg:pt-[220px] pb-20">
       <JsonLd data={collectionJsonLd} />
 
-      {/* Promotional Banner */}
-      <PromoBanner />
-
       <div className="max-w-[1480px] w-full mx-auto px-6 lg:px-12">
+        {/* Promotional Banner */}
+        <PromoBanner />
 
         {/* Redesigned Clean Luxury Collection Hero Header */}
         <div className="mb-12 text-center max-w-2xl mx-auto space-y-3">

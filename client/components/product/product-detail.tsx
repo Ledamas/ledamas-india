@@ -58,12 +58,12 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
   const whatsappMessage = encodeURIComponent(`Hello LE DAMAS team, I would like to inquire about "${product.name}".`);
 
   return (
-    <div className="bg-white text-stone-900 pt-44 sm:pt-48 md:pt-52 pb-24">
+    <div className="bg-white text-stone-900 pt-[128px] sm:pt-[132px] md:pt-36 lg:pt-52 pb-32 md:pb-24">
       <JsonLd data={productJsonLd} />
 
       <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* CarbonSmith Top Left Navigation */}
-        <div className="mb-6">
+        <div className="mb-6 hidden md:block">
           <button
             onClick={() => router.back()}
             className="inline-flex items-center text-[11px] font-sans font-medium uppercase tracking-[0.25em] text-stone-600 hover:text-stone-900 transition-colors"
@@ -76,7 +76,7 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
         {/* Main Product Display Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           {/* Left Column: Pure Studio Product Image & Thumbnails (7 cols) */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className="lg:col-span-7 space-y-4 mt-4 md:mt-0">
             <div className="relative aspect-square sm:aspect-[4/3] w-full bg-[#FAFAFA] border border-stone-200/70 rounded-none overflow-hidden p-6 sm:p-10 flex items-center justify-center">
               <Image
                 src={selectedImage || product.images[0]}

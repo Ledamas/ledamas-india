@@ -23,7 +23,7 @@ export const globalRateLimiter = rateLimit({
  */
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 10,
+  limit: 50, // Increased for easier testing
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   handler: (_req: Request, res: Response) => {

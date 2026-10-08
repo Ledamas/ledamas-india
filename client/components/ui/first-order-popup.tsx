@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useAuth } from "../../lib/context/auth-context";
 
 interface PopupSettings {
   isEnabled: boolean;
@@ -21,23 +22,25 @@ export default function FirstOrderPopup() {
   const [step, setStep] = useState<"phone" | "success">("phone");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [hasShown, setHasShown] = useState(false);
   const pathname = usePathname();
+  const { isAuthenticated } = useAuth();
 
   const popupDismissedKey = "ledamas_first_order_dismissed";
   const popupClaimedKey = "ledamas_first_order_claimed";
 
   useEffect(() => {
-    // The user requested to remove local storage checks so the popup appears on EVERY refresh.
-    // If you want to stop the popup from appearing for returning visitors, uncomment this block:
-    /*
-    if (
-      localStorage.getItem(popupDismissedKey) ||
-      localStorage.getItem(popupClaimedKey)
-    ) {
+    // If user is logged in, don't show the popup at all
+    if (isAuthenticated) {
       return;
     }
-    */
 
+    if (hasShown) {
+      return;
+    }
+
+    let timer: NodeJS.Timeout;
+    
     // Fetch settings
     const fetchSettings = async () => {
       try {
@@ -45,19 +48,25 @@ export default function FirstOrderPopup() {
         const data = await res.json();
         if (data.success && data.data?.isEnabled) {
           setSettings(data.data);
-          
+
           // Show after exactly 6 seconds (6000ms)
-          const timer = setTimeout(() => setIsOpen(true), 6000);
-          
+          timer = setTimeout(() => {
+            if (!hasShown) {
+              setIsOpen(true);
+              setHasShown(true);
+            }
+          }, 6000);
+
           // Or on exit intent
           const handleMouseLeave = (e: MouseEvent) => {
-            if (e.clientY <= 0) {
+            if (e.clientY <= 0 && !hasShown) {
               setIsOpen(true);
+              setHasShown(true);
               document.removeEventListener("mouseleave", handleMouseLeave);
             }
           };
           document.addEventListener("mouseleave", handleMouseLeave);
-          
+
           return () => {
             clearTimeout(timer);
             document.removeEventListener("mouseleave", handleMouseLeave);
@@ -69,7 +78,11 @@ export default function FirstOrderPopup() {
     };
 
     fetchSettings();
-  }, []);
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isAuthenticated, hasShown]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -106,8 +119,8 @@ export default function FirstOrderPopup() {
     }
   };
 
-  // Do not render the popup on any admin pages
-  if (pathname?.startsWith('/admin')) {
+  // Do not render the popup on any admin pages, checkout pages, or if user is authenticated
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/checkout') || isAuthenticated) {
     return null;
   }
 
@@ -205,7 +218,7 @@ export default function FirstOrderPopup() {
                       {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "CLAIM NOW"}
                     </button>
                   </form>
-                  
+
                   <p className="mt-6 text-[10px] text-white/30 uppercase tracking-wider">
                     By submitting your number, you agree to our Terms & Privacy Policy.
                   </p>

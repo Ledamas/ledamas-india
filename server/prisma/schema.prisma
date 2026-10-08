@@ -57,6 +57,7 @@ model User {
   name            String?
   role            Role             @default(CUSTOMER)
   phone           String?          @unique
+  pendingPhone    String?
   phoneVerified   Boolean          @default(false)
   referralCode    String?          @unique
   createdAt       DateTime         @default(now())
@@ -526,4 +527,29 @@ model PopupClaim {
   claimedAt  DateTime  @default(now())
   redeemed   Boolean   @default(false)
   redeemedAt DateTime?
+}
+
+enum CartStatus {
+  ACTIVE
+  ABANDONED
+  RECOVERED
+  CONVERTED
+}
+
+model Cart {
+  id           String     @id @default(uuid())
+  userId       String?    // Nullable for guest checkouts before login
+  email        String?    // Captured if guest enters email
+  phone        String?    // Captured if guest enters phone
+  items        Json       // Array of cart items { productId, variantId, quantity, price, etc. }
+  subtotal     Float      @default(0)
+  status       CartStatus @default(ACTIVE)
+  lastActiveAt DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([lastActiveAt])
 }

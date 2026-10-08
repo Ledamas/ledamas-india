@@ -75,7 +75,6 @@ export default function UserProfilePage() {
     try {
       const updatedUser = await updateUserProfileApi({
         name: editName.trim() || user.name,
-        phone: editPhone.trim() || user.phone,
       });
 
       if (setSessionUser) {
@@ -88,7 +87,6 @@ export default function UserProfilePage() {
       const fallbackUser = {
         ...user,
         name: editName.trim() || user.name,
-        phone: editPhone.trim() || user.phone,
       };
       if (setSessionUser) {
         setSessionUser(fallbackUser);
@@ -216,7 +214,7 @@ export default function UserProfilePage() {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex flex-col justify-between font-sans">
         <Header />
-        <main className="pt-52 sm:pt-60 md:pt-64 pb-20 max-w-xl mx-auto px-4 text-center flex-1 flex items-center justify-center">
+        <main className="pt-28 sm:pt-32 md:pt-40 pb-20 max-w-xl mx-auto px-4 text-center flex-1 flex items-center justify-center">
           <div className="bg-white rounded-3xl p-10 border border-stone-200 shadow-xl space-y-4 text-stone-900">
             <div className="w-10 h-10 border-4 border-[#CB9700] border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-sm font-semibold text-stone-700">Validating your connoisseur session...</p>
@@ -232,7 +230,7 @@ export default function UserProfilePage() {
       <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col justify-between font-sans">
         <Header />
 
-        <main className="pt-52 sm:pt-60 md:pt-64 pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <main className="pt-28 sm:pt-32 md:pt-40 pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           {/* Main Sign In Card */}
           <div className="bg-white rounded-3xl p-8 sm:p-12 border border-stone-300 shadow-2xl text-center space-y-8 relative overflow-hidden">
             <div className="w-20 h-20 bg-[#CB9700]/15 text-[#CB9700] rounded-full flex items-center justify-center mx-auto border-2 border-[#CB9700]/40 shadow-inner">
@@ -312,7 +310,7 @@ export default function UserProfilePage() {
     <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col justify-between font-sans">
       <Header />
 
-      <main className="pt-52 sm:pt-60 md:pt-64 pb-20 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <main className="pt-28 sm:pt-32 md:pt-40 pb-20 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* CarbonSmith Luxury Hero Banner */}
         <section className="relative rounded-3xl bg-gradient-to-r from-[#50311D] via-[#854E29] to-[#D9822B] shadow-2xl p-6 sm:p-8 md:p-10 text-white overflow-hidden">
           {/* Subtle Background Pattern Decorative overlay */}

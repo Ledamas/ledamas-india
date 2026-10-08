@@ -94,7 +94,7 @@ export default function WhyTrustLeDamasPage() {
       />
       <Header />
 
-      <main className="flex-1 pt-44 sm:pt-48 md:pt-52 pb-24">
+      <main className="flex-1 pt-[110px] sm:pt-32 md:pt-36 pb-24">
         {/* Top Header */}
         <section className="bg-[#FAF7F2] border-b border-stone-200 py-10 sm:py-14">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">

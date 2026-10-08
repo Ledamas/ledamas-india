@@ -8,6 +8,8 @@ import { StickyOrderCta } from '../components/ui/sticky-order-cta';
 import { MetaPixelScript } from '../components/meta-pixel-script';
 import { ReferralTracker } from '../components/referral-tracker';
 import FirstOrderPopup from '../components/ui/first-order-popup';
+import { ScrollToTop } from '../components/scroll-to-top';
+import { MobileBottomNav } from '../components/layout/mobile-bottom-nav';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -88,14 +90,16 @@ export default function RootLayout({
       <head>
         <MetaPixelScript />
       </head>
-      <body className="bg-[#FDFDFB] text-[#2B2B2B] antialiased selection:bg-[#2AD2C5] selection:text-white min-h-screen flex flex-col font-sans">
+      <body className="bg-[#FDFDFB] text-[#2B2B2B] antialiased selection:bg-[#2AD2C5] selection:text-white min-h-screen flex flex-col font-sans pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
         <AuthProvider>
           <CartProvider>
             <Suspense fallback={null}>
               <ReferralTracker />
             </Suspense>
             <StorefrontTracker />
+            <ScrollToTop />
             {children}
+            <MobileBottomNav />
             <CookieConsentBanner />
             <StickyOrderCta />
             <FirstOrderPopup />

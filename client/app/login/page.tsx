@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Script from 'next/script';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Lock, ArrowRight, ChevronDown, Check, Edit2, RotateCw, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { SiteHeader } from '../../components/layout/site-header';
@@ -11,7 +12,7 @@ import { Footer } from '../../components/layout/footer';
 import { sendOtpApi, verifyOtpApi, resendOtpApi, googleAuthApi, UserSession } from '@/lib/services/auth-service';
 import { useAuth } from '@/lib/context/auth-context';
 
-export default function LoginPage() {
+function LoginContent() {
   const { setSessionUser } = useAuth();
   const [step, setStep] = useState<'phone' | 'otp' | 'success'>('phone');
   const [phone, setPhone] = useState('');
@@ -23,6 +24,9 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [user, setUser] = useState<UserSession | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/profile';
 
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -76,6 +80,7 @@ export default function LoginPage() {
       setUser(authenticatedUser);
       setSessionUser(authenticatedUser);
       setStep('success');
+      setTimeout(() => router.push(callbackUrl), 1500);
     } catch (err: any) {
       console.error('[GOOGLE SIGN-IN ERROR]', err);
       setErrorMsg(err?.message || 'Failed to authenticate with Google. Please try again.');
@@ -137,6 +142,7 @@ export default function LoginPage() {
       setUser(authenticatedUser);
       setSessionUser(authenticatedUser);
       setStep('success');
+      setTimeout(() => router.push(callbackUrl), 1500);
     } catch (err: any) {
       console.error('[VERIFY OTP ERROR]', err);
       setErrorMsg(err?.message || 'Invalid verification code. Please check and try again.');
@@ -231,7 +237,7 @@ export default function LoginPage() {
 
       <SiteHeader />
 
-      <main className="flex-1 flex items-center justify-center pt-44 sm:pt-48 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 flex items-center justify-center pt-[110px] sm:pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md bg-[#FDFBF7] text-[#2B2825] rounded-2xl shadow-2xl shadow-black/60 overflow-hidden border border-[#EBE4D8] relative z-10">
           {/* Top Luxury Banner Photo */}
           <div className="relative h-44 sm:h-52 w-full overflow-hidden bg-[#0F0D0C]">
@@ -524,5 +530,13 @@ export default function LoginPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0F0D0C] text-white flex items-center justify-center">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
