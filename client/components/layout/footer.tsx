@@ -70,7 +70,7 @@ export function Footer() {
       </section>
 
       <footer id="contact" className="bg-[#3D2314] text-[#FAF6ED] pt-8 sm:pt-10 pb-5 font-sans relative overflow-hidden border-t border-[#5A3822]">
-      <div className="max-w-[1480px] w-full mx-auto px-6 sm:px-10 lg:px-12 relative z-10 space-y-8">
+      <div className="max-w-[1480px] w-full mx-auto px-6 sm:px-10 lg:px-12 relative z-10 space-y-5 lg:space-y-8">
 
         {/* Top Navigation & Google Reviews Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
@@ -158,8 +158,9 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 4: LINKS & Google Reviews Box */}
-          <div className="lg:col-span-3 space-y-4 lg:border-l lg:border-[#5A3822] lg:pl-6">
+          {/* Column 4 & 5: LINKS & Google Reviews Box */}
+          <div className="col-span-2 sm:col-span-1 lg:col-span-3 lg:border-l lg:border-[#5A3822] lg:pl-6 grid grid-cols-2 sm:grid-cols-1 lg:flex lg:flex-col items-start lg:items-stretch gap-4 sm:gap-4 lg:gap-0 lg:space-y-4">
+            
             <div className="space-y-2.5">
               <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-[#D5B268]">
                 LINKS
@@ -189,20 +190,20 @@ export function Footer() {
             </div>
 
             {/* Google Reviews Badge */}
-            <div className="pt-2.5 border-t border-[#5A3822] space-y-2">
+            <div className="lg:pt-2.5 lg:border-t lg:border-[#5A3822] flex flex-col items-start gap-2 selection:bg-transparent selection:text-inherit">
               <div className="flex items-baseline space-x-1">
-                <span className="text-xl font-bold font-serif text-white">4.7</span>
-                <span className="text-xs font-sans text-stone-400">/5</span>
-                <div className="flex items-center space-x-1 ml-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-[#D5B268] text-[#D5B268]" />
-                  ))}
-                </div>
+                <span className="text-2xl font-bold font-serif text-white">4.7</span>
+                <span className="text-sm font-sans text-stone-400">/5</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-[14px] h-[14px] lg:w-3.5 lg:h-3.5 fill-[#D5B268] text-[#D5B268]" />
+                ))}
               </div>
 
               <a
                 href="#testimonials"
-                className="text-[11px] text-[#D6C2B4] underline hover:text-[#D5B268] transition-colors block"
+                className="text-xs text-[#D6C2B4] hover:underline hover:text-[#D5B268] transition-colors leading-snug max-w-[140px] lg:max-w-full"
               >
                 Based on 148 Google reviews
               </a>
@@ -211,7 +212,7 @@ export function Footer() {
                 href="https://g.page/r/CeqyAcxDIgLQEBM/review"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block px-3.5 py-1.5 rounded-full border border-[#D5B268]/60 text-[#FAF6ED] text-xs font-medium hover:bg-[#D5B268] hover:text-[#3D2314] transition-all duration-300 cursor-pointer text-center"
+                className="inline-block px-4 py-2 mt-1 rounded-full border border-[#D5B268]/60 text-[#FAF6ED] text-sm font-medium hover:bg-[#D5B268] hover:text-[#3D2314] transition-all duration-300 cursor-pointer text-center whitespace-nowrap w-full lg:w-auto"
               >
                 Write A Review
               </a>
@@ -223,7 +224,7 @@ export function Footer() {
         </div>
 
         {/* Middle Support & Contact Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 py-5 border-y border-[#5A3822] items-start">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 py-4 lg:py-5 border-y border-[#5A3822] items-start">
           
           {/* Email Box */}
           <div className="flex items-start space-x-3.5">

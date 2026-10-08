@@ -142,7 +142,7 @@ export function CartDrawer() {
 
             {/* Footer / checkout */}
             {items.length > 0 && (
-              <div className="border-t border-white/10 px-6 py-5 space-y-4 bg-[#0F0D0C]">
+              <div className="border-t border-white/10 px-6 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))] space-y-4 bg-[#0F0D0C]">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-stone-400 font-light">Subtotal</span>
                   <span className="font-serif text-lg text-white font-medium">

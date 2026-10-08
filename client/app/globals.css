@@ -24,6 +24,11 @@
     --font-serif: var(--font-cormorant), 'Times New Roman', serif;
     --font-script: var(--font-script), 'Alex Brush', cursive, sans-serif;
     --font-sans: var(--font-jakarta), system-ui, sans-serif;
+    
+    /* Layout Variables */
+    --header-height: 104px;
+    --header-height-md: 140px;
+    --header-height-lg: 190px;
   }
 }
 

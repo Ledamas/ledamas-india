@@ -214,7 +214,7 @@ export default function UserProfilePage() {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex flex-col justify-between font-sans">
         <Header />
-        <main className="pt-28 sm:pt-32 md:pt-40 pb-20 max-w-xl mx-auto px-4 text-center flex-1 flex items-center justify-center">
+        <main className="pt-[calc(var(--header-height)+16px)] md:pt-[calc(var(--header-height-md)+20px)] lg:pt-[calc(var(--header-height-lg)+20px)] pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-20 max-w-xl mx-auto px-4 text-center flex-1 flex items-center justify-center">
           <div className="bg-white rounded-3xl p-10 border border-stone-200 shadow-xl space-y-4 text-stone-900">
             <div className="w-10 h-10 border-4 border-[#CB9700] border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-sm font-semibold text-stone-700">Validating your connoisseur session...</p>
@@ -230,7 +230,7 @@ export default function UserProfilePage() {
       <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col justify-between font-sans">
         <Header />
 
-        <main className="pt-28 sm:pt-32 md:pt-40 pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <main className="pt-[calc(var(--header-height)+16px)] md:pt-[calc(var(--header-height-md)+20px)] lg:pt-[calc(var(--header-height-lg)+20px)] pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           {/* Main Sign In Card */}
           <div className="bg-white rounded-3xl p-8 sm:p-12 border border-stone-300 shadow-2xl text-center space-y-8 relative overflow-hidden">
             <div className="w-20 h-20 bg-[#CB9700]/15 text-[#CB9700] rounded-full flex items-center justify-center mx-auto border-2 border-[#CB9700]/40 shadow-inner">
@@ -310,9 +310,9 @@ export default function UserProfilePage() {
     <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col justify-between font-sans">
       <Header />
 
-      <main className="pt-28 sm:pt-32 md:pt-40 pb-20 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <main className="pt-[calc(var(--header-height)+16px)] md:pt-[calc(var(--header-height-md)+20px)] lg:pt-[calc(var(--header-height-lg)+20px)] pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-20 max-w-[1360px] w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-4 md:space-y-8">
         {/* CarbonSmith Luxury Hero Banner */}
-        <section className="relative rounded-3xl bg-gradient-to-r from-[#50311D] via-[#854E29] to-[#D9822B] shadow-2xl p-6 sm:p-8 md:p-10 text-white overflow-hidden">
+        <section className="relative rounded-2xl md:rounded-3xl bg-gradient-to-r from-[#50311D] via-[#854E29] to-[#D9822B] shadow-2xl p-4 md:p-10 text-white overflow-hidden">
           {/* Subtle Background Pattern Decorative overlay */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_60%)] pointer-events-none" />
 
@@ -321,22 +321,22 @@ export default function UserProfilePage() {
             <div className="flex items-center space-x-5 sm:space-x-6">
               {/* Avatar Circle with Edit Badge */}
               <div className="relative">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white text-[#50311D] font-serif font-bold text-3xl sm:text-4xl flex items-center justify-center shadow-2xl border-4 border-white/20">
+                <div className="w-14 h-14 md:w-24 md:h-24 rounded-full bg-white text-[#50311D] font-serif font-bold text-xl md:text-4xl flex items-center justify-center shadow-2xl border-4 border-white/20">
                   {userInitial}
                 </div>
                 <button 
                   onClick={() => setIsEditProfileOpen(true)}
                   title="Edit Profile & Avatar" 
-                  className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#1F1B18] text-[#CB9700] border border-white/40 flex items-center justify-center hover:scale-110 transition-transform shadow-md cursor-pointer"
+                  className="absolute bottom-0 right-0 w-5 h-5 md:w-7 md:h-7 rounded-full bg-[#1F1B18] text-[#CB9700] border border-white/40 flex items-center justify-center hover:scale-110 transition-transform shadow-md cursor-pointer"
                 >
-                  <Edit3 className="w-3.5 h-3.5" />
+                  <Edit3 className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" />
                 </button>
               </div>
 
               {/* User Name & Details */}
               <div className="space-y-1.5">
                 <div className="flex items-center space-x-2">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-serif font-bold tracking-tight text-white">
+                  <h1 className="text-lg md:text-3xl font-serif font-bold tracking-tight text-white">
                     {user?.name && !user.name.startsWith('Customer +') && !user.name.startsWith('Guest User')
                       ? user.name
                       : 'Luxury Connoisseur'}
@@ -350,8 +350,8 @@ export default function UserProfilePage() {
                   </button>
                 </div>
 
-                <div className="inline-flex items-center space-x-2 bg-black/25 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full text-xs font-medium text-stone-100">
-                  <span>
+                <div className="inline-flex items-center space-x-2 bg-black/25 backdrop-blur-md border border-white/20 px-2.5 py-1 md:px-3 md:py-1 rounded-full text-xs font-medium text-stone-100 max-w-[180px] sm:max-w-xs overflow-hidden">
+                  <span className="truncate">
                     {user?.phone && !user.phone.startsWith('google_')
                       ? `+91 ${user.phone.replace(/\D/g, '').slice(-10)}`
                       : user?.email || 'Logged In'}
@@ -361,20 +361,20 @@ export default function UserProfilePage() {
             </div>
 
             {/* Right: User Quick Stat Counter Tiles */}
-            <div className="grid grid-cols-3 gap-3 sm:gap-6 bg-black/20 backdrop-blur-md border border-white/15 p-4 rounded-2xl md:min-w-[320px] text-center">
+            <div className="grid grid-cols-3 gap-3 sm:gap-6 bg-black/20 backdrop-blur-md border border-white/15 py-2 px-2 md:p-4 mt-3 md:mt-0 rounded-2xl md:min-w-[320px] text-center">
               <div>
-                <div className="text-xl sm:text-2xl font-bold font-serif text-white">0</div>
-                <div className="text-[11px] font-medium text-stone-300 uppercase tracking-wider mt-0.5">Reviews</div>
+                <div className="text-base md:text-2xl font-bold font-serif text-white">0</div>
+                <div className="text-[10px] md:text-[11px] font-medium text-stone-300 uppercase tracking-wider mt-0.5">Reviews</div>
               </div>
               <div className="border-x border-white/15 px-2">
-                <div className="text-xl sm:text-2xl font-bold font-serif text-[#FFE082]">
+                <div className="text-base md:text-2xl font-bold font-serif text-[#FFE082]">
                   {loadingOrders ? '...' : orders.length}
                 </div>
-                <div className="text-[11px] font-medium text-stone-300 uppercase tracking-wider mt-0.5">Orders</div>
+                <div className="text-[10px] md:text-[11px] font-medium text-stone-300 uppercase tracking-wider mt-0.5">Orders</div>
               </div>
               <div>
-                <div className="text-xl sm:text-2xl font-bold font-serif text-white">₹0</div>
-                <div className="text-[11px] font-medium text-stone-300 uppercase tracking-wider mt-0.5">Credits</div>
+                <div className="text-base md:text-2xl font-bold font-serif text-white">₹0</div>
+                <div className="text-[10px] md:text-[11px] font-medium text-stone-300 uppercase tracking-wider mt-0.5">Credits</div>
               </div>
             </div>
           </div>

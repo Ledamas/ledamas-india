@@ -348,7 +348,7 @@ export function AnimatedHero() {
       data-running={running ? 'true' : 'false'}
       aria-roledescription="carousel"
       aria-label="LE DAMAS featured chocolates"
-      className="group/hero relative isolate h-[54svh] min-h-[360px] max-h-[460px] w-full touch-pan-y overflow-hidden rounded-b-[1.75rem] bg-[#E8DFD0] outline-none border-none [transform:translateZ(0)] md:h-[100svh] md:max-h-none md:min-h-[640px] md:rounded-none"
+      className="group/hero relative isolate h-[54svh] min-h-[360px] max-h-[460px] w-full touch-pan-y overflow-hidden rounded-b-[1.75rem] bg-[#0c0806] outline-none border-none [transform:translateZ(0)] md:h-[100svh] md:max-h-none md:min-h-[640px] md:rounded-none -mt-px"
       style={{ overscrollBehaviorX: 'contain', transform: 'translateZ(0)' }}
     >
       <style>{`
@@ -509,7 +509,7 @@ export function AnimatedHero() {
         className="pointer-events-none absolute inset-0 z-[15]"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(8,2,10,.55) 0%, transparent 22%, transparent 42%, rgba(8,2,10,.55) 72%, rgba(8,2,10,.85) 100%), radial-gradient(ellipse at center, transparent 55%, rgba(8,2,10,.4) 100%)',
+            'linear-gradient(to bottom, transparent 0%, transparent 22%, transparent 42%, rgba(8,2,10,.55) 72%, rgba(8,2,10,.85) 100%), radial-gradient(ellipse at center, transparent 55%, rgba(8,2,10,.4) 100%)',
         }}
       />
 

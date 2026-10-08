@@ -177,7 +177,7 @@ export function Header() {
   const headerContainerClass = isScrolled
     ? 'bg-[#0c0806]/95 backdrop-blur-2xl py-3 border-b border-[#CB9700]/30 shadow-2xl text-white'
     : isTransparentHeader
-    ? 'bg-gradient-to-b from-black/85 via-black/40 to-transparent py-3.5 border-b border-transparent shadow-none text-white'
+    ? 'bg-gradient-to-b from-black/85 via-black/40 to-transparent py-3.5 border-b-0 border-transparent shadow-none text-white'
     : 'bg-[#0c0806] backdrop-blur-2xl py-3.5 border-b border-[#CB9700]/25 shadow-xl text-white';
 
   const iconColorClass = 'text-[#FAF6ED] hover:text-[#CB9700] transition-colors';

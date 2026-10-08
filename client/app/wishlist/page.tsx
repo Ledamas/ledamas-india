@@ -25,7 +25,7 @@ export default function WishlistPage() {
     <div className="min-h-screen bg-[#0F0D0C] text-white flex flex-col justify-between font-sans">
       <Header />
 
-      <main className="flex-1 max-w-[1480px] w-full mx-auto px-6 lg:px-12 pt-[110px] sm:pt-32 md:pt-36 pb-16">
+      <main className="flex-1 max-w-[1480px] w-full mx-auto px-6 lg:px-12 pt-[calc(var(--header-height)+16px)] md:pt-[calc(var(--header-height-md)+20px)] lg:pt-[calc(var(--header-height-lg)+20px)] pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-16">
         {/* Title Header */}
         <div className="mb-8">
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-white font-light tracking-wide">

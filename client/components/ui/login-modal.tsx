@@ -57,7 +57,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         (window as any).google.accounts.id.initialize({
           client_id: googleClientId,
           callback: handleGoogleCredentialResponse,
-          use_fedcm_for_prompt: false,
+          use_fedcm_for_prompt: true,
         });
         googleInitializedRef.current = true;
       } catch (e) {

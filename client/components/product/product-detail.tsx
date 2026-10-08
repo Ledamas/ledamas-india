@@ -58,7 +58,7 @@ export function ProductDetail({ product, relatedProducts }: ProductDetailProps) 
   const whatsappMessage = encodeURIComponent(`Hello LE DAMAS team, I would like to inquire about "${product.name}".`);
 
   return (
-    <div className="bg-white text-stone-900 pt-[128px] sm:pt-[132px] md:pt-36 lg:pt-52 pb-32 md:pb-24">
+    <div className="bg-white text-stone-900 pt-[calc(var(--header-height)+16px)] md:pt-[calc(var(--header-height-md)+20px)] lg:pt-[calc(var(--header-height-lg)+20px)] pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-24">
       <JsonLd data={productJsonLd} />
 
       <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">

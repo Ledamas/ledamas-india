@@ -287,7 +287,7 @@ export default function UserOrdersPage() {
     return (
       <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col justify-between font-sans">
         <Header />
-        <main className="pt-56 sm:pt-64 pb-20 max-w-lg mx-auto px-4 text-center">
+        <main className="pt-[calc(var(--header-height)+16px)] md:pt-[calc(var(--header-height-md)+20px)] lg:pt-[calc(var(--header-height-lg)+20px)] pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-20 max-w-lg mx-auto px-4 text-center">
           <div className="bg-white rounded-3xl p-10 border border-stone-200 shadow-xl space-y-6">
             <div className="w-16 h-16 bg-[#CB9700]/15 text-[#CB9700] rounded-full flex items-center justify-center mx-auto border border-[#CB9700]/30">
               <Package className="w-8 h-8" />
@@ -315,7 +315,7 @@ export default function UserOrdersPage() {
     <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col justify-between font-sans selection:bg-[#CB9700]/20">
       <Header />
 
-      <main className="pt-56 sm:pt-64 lg:pt-72 pb-24 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <main className="pt-[calc(var(--header-height)+16px)] md:pt-[calc(var(--header-height-md)+20px)] lg:pt-[calc(var(--header-height-lg)+20px)] pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-24 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-5">
           <div>
