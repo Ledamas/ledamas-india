@@ -57,7 +57,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         (window as any).google.accounts.id.initialize({
           client_id: googleClientId,
           callback: handleGoogleCredentialResponse,
-          use_fedcm_for_prompt: true,
+          use_fedcm_for_prompt: false,
         });
         googleInitializedRef.current = true;
       } catch (e) {
@@ -95,11 +95,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     if (isRealGoogleClientId && typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
       try {
         initGoogleSDK();
-        (window as any).google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.log('[GOOGLE ONE TAP NOT DISPLAYED] Prompt notice.');
-          }
-        });
+        (window as any).google.accounts.id.prompt();
       } catch (e) {
         console.warn('[GOOGLE GSI PROMPT ERROR]', e);
         setErrorMessage('Failed to trigger Google Sign-In prompt.');

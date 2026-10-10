@@ -1,142 +1,354 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { Printer, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { useAuth } from '../../lib/context/auth-context';
 
 export default function InvoicePage() {
-  const [order, setOrder] = useState<any>(null);
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const { user } = useAuth();
+
+  const [invoice, setInvoice] = useState({
+    invoiceNumber: '',
+    billedToName: '',
+    billedToAddress: '',
+    billedToEmail: '',
+    invoiceDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    dueDate: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    fromName: 'Le Damas Sweets',
+    fromAddress: 'Delhi, India',
+    items: [] as any[],
+    notes: 'Thank you for choosing Le Damas.'
+  });
 
   useEffect(() => {
     setMounted(true);
     try {
       const data = localStorage.getItem('ledamas_last_order_invoice');
       if (data) {
-        setOrder(JSON.parse(data));
-        // Small delay to ensure the page renders properly before printing
-        setTimeout(() => {
-          window.print();
-        }, 800);
-      }
-    } catch (e) {}
-  }, []);
+        const order = JSON.parse(data);
+        
+        if (order.customer?.firstName === 'Valued' && order.customer?.lastName === 'Customer' && user) {
+          order.customer.firstName = user.name?.split(' ')[0] || '';
+          order.customer.lastName = user.name?.split(' ').slice(1).join(' ') || '';
+        }
+        if (order.customer?.address === 'N/A' && user?.savedAddress) {
+          order.customer.address = `${user.savedAddress.street || ''} ${user.savedAddress.apartment || ''}`.trim();
+          order.customer.city = user.savedAddress.city || '';
+          order.customer.state = user.savedAddress.state || '';
+          order.customer.pincode = user.savedAddress.pincode || '';
+        }
+
+        // Map order data to invoice template
+        setInvoice({
+          invoiceNumber: `NO. ${order.orderNumber || 'LD-0001'}`,
+          billedToName: `${order.customer?.firstName || ''} ${order.customer?.lastName || ''}`.trim() || user?.name || '',
+          billedToAddress: `${order.customer?.address || ''}\n${order.customer?.city || ''}, ${order.customer?.state || ''} ${order.customer?.pincode || ''}`.replace('N/A', '').trim() || '',
+          billedToEmail: order.customer?.email !== 'N/A' ? order.customer?.email : (user?.email || user?.phone || ''),
+          invoiceDate: new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          dueDate: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            fromName: 'Le Damas Sweets',
+            fromAddress: 'Delhi, India',
+            items: order.items?.map((item: any, i: number) => ({
+              id: i,
+              name: item.productName || item.product?.name || 'Item',
+              desc: item.variantName || item.variant?.name || item.variant?.weight || '',
+              qty: item.quantity || 1,
+              price: item.price ?? (item.variant ? item.variant.price : (item.product?.price || 0))
+            })) || [],
+            notes: 'Thank you for choosing Le Damas.'
+          });
+        } else if (user) {
+          // If no order data, but user is logged in, pre-fill with their profile data
+          setInvoice(prev => ({
+            ...prev,
+            billedToName: user.name || '',
+            billedToEmail: user.email || user.phone || '',
+            billedToAddress: user.savedAddress ? `${user.savedAddress.street || ''} ${user.savedAddress.apartment || ''}\n${user.savedAddress.city || ''}, ${user.savedAddress.state || ''} ${user.savedAddress.pincode || ''}`.trim() : '',
+            invoiceDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            dueDate: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          }));
+        }
+      } catch (e) {}
+  }, [user]);
 
   if (!mounted) return null;
 
-  if (!order) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 font-sans">
-        <div className="bg-white p-8 rounded-xl shadow-sm text-center">
-          <h1 className="text-xl font-bold text-gray-800 mb-2">No Invoice Found</h1>
-          <p className="text-gray-500 mb-6">We couldn't find your recent order details.</p>
-          <button onClick={() => router.push('/')} className="bg-[#3D2314] text-white px-6 py-2 rounded-full text-sm font-semibold cursor-pointer">
-            Return to Store
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const handleUpdate = (field: string, value: any) => {
+    setInvoice(prev => ({ ...prev, [field]: value }));
+  };
 
-  const { customer, items, orderNumber, date, subtotal, discount, total, isCod } = order;
+  const handleItemUpdate = (id: number, field: string, value: any) => {
+    setInvoice(prev => ({
+      ...prev,
+      items: prev.items.map(item => item.id === id ? { ...item, [field]: value } : item)
+    }));
+  };
+
+  const addItem = () => {
+    setInvoice(prev => ({
+      ...prev,
+      items: [...prev.items, { id: Date.now(), name: 'New Item', desc: 'Description', qty: 1, price: 0 }]
+    }));
+  };
+
+  const removeItem = (id: number) => {
+    setInvoice(prev => ({
+      ...prev,
+      items: prev.items.filter(item => item.id !== id)
+    }));
+  };
+
+  const grandTotal = invoice.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+  };
 
   return (
-    <div className="min-h-screen bg-white text-black font-sans p-8 md:p-12 max-w-4xl mx-auto print:p-0 print:max-w-full">
-      <div className="flex justify-between items-start mb-12 border-b-2 border-[#3D2314] pb-6">
-        <div>
-          <h1 className="font-serif text-3xl font-bold text-[#3D2314] tracking-widest">LE DAMAS</h1>
-          <p className="text-sm text-gray-500 mt-1 uppercase tracking-wider">Luxury Chocolate</p>
-        </div>
-        <div className="text-right">
-          <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-widest">Invoice</h2>
-          <p className="text-sm font-mono mt-2 text-gray-600">Order: #{orderNumber}</p>
-          <p className="text-sm font-mono text-gray-600">Date: {new Date(date).toLocaleDateString()}</p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-200 flex justify-center items-start overflow-x-auto py-10 print:py-0 print:bg-white font-sans text-[#2a2622]">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+        
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        .font-dm { font-family: 'DM Sans', sans-serif; }
+        .font-pinyon { font-family: 'Pinyon Script', cursive; }
 
-      <div className="grid grid-cols-2 gap-12 mb-12">
-        <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 border-b pb-2">Billed To</h3>
-          <div className="text-sm space-y-1 text-gray-800">
-            <p className="font-bold">{customer.firstName} {customer.lastName}</p>
-            <p>{customer.email}</p>
-            <p>{customer.phone}</p>
-            {customer.alternatePhone && <p>Alt: {customer.alternatePhone}</p>}
-          </div>
-        </div>
-        <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 border-b pb-2">Shipped To</h3>
-          <div className="text-sm space-y-1 text-gray-800">
-            <p>{customer.address}</p>
-            {customer.apartment && <p>{customer.apartment}</p>}
-            <p>{customer.city}, {customer.state} {customer.pincode}</p>
-            <p className="mt-2 font-semibold text-gray-600">Payment: <span className="text-[#3D2314]">{isCod ? 'Cash on Delivery' : 'Prepaid Online'}</span></p>
-          </div>
-        </div>
-      </div>
+        @media print {
+          @page { margin: 0; size: A4 portrait; }
+          body { 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact; 
+            background: white; 
+          }
+          .print-hide { display: none !important; }
+          /* Ensure inputs look like regular text on print */
+          input, textarea {
+            border: none !important;
+            background: transparent !important;
+            resize: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            outline: none !important;
+          }
+        }
+      `}} />
 
-      <div className="mb-12">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b-2 border-gray-200">
-              <th className="py-3 text-xs font-bold uppercase tracking-wider text-gray-500 w-1/2">Item Description</th>
-              <th className="py-3 text-xs font-bold uppercase tracking-wider text-gray-500 text-center">Qty</th>
-              <th className="py-3 text-xs font-bold uppercase tracking-wider text-gray-500 text-right">Price</th>
-              <th className="py-3 text-xs font-bold uppercase tracking-wider text-gray-500 text-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item: any, idx: number) => {
-              const itemPrice = item.variant ? item.variant.price : item.product.price;
-              const variantName = item.variant?.name || item.variant?.weight;
-              return (
-                <tr key={idx} className="border-b border-gray-100">
-                  <td className="py-4 text-sm font-semibold text-gray-800">
-                    {item.product.name}
-                    {variantName && <span className="block text-xs text-gray-500 font-normal mt-0.5">{variantName}</span>}
-                  </td>
-                  <td className="py-4 text-sm text-gray-600 text-center font-mono">{item.quantity}</td>
-                  <td className="py-4 text-sm text-gray-600 text-right font-mono">₹{itemPrice.toLocaleString('en-IN')}</td>
-                  <td className="py-4 text-sm text-gray-800 font-bold text-right font-mono">₹{(itemPrice * item.quantity).toLocaleString('en-IN')}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="flex justify-end mb-16">
-        <div className="w-full sm:w-1/2 md:w-1/3 space-y-3 text-sm">
-          <div className="flex justify-between text-gray-600">
-            <span>Subtotal:</span>
-            <span className="font-mono">₹{subtotal.toLocaleString('en-IN')}</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-emerald-600">
-              <span>Discount:</span>
-              <span className="font-mono">- ₹{discount.toLocaleString('en-IN')}</span>
-            </div>
-          )}
-          <div className="flex justify-between text-gray-600">
-            <span>Shipping:</span>
-            <span className="font-mono">Free</span>
-          </div>
-          <div className="flex justify-between items-center border-t-2 border-gray-800 pt-3 mt-3">
-            <span className="font-bold text-gray-800">Total:</span>
-            <span className="font-bold text-lg text-gray-800 font-mono">₹{total.toLocaleString('en-IN')}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="text-center text-xs text-gray-400 border-t pt-8">
-        <p>Thank you for shopping with LE DAMAS.</p>
-        <p className="mt-1">For any queries regarding your order, please contact support@ledamas.in</p>
-      </div>
-
-      <div className="mt-12 text-center print:hidden">
-        <button onClick={() => window.print()} className="bg-[#3D2314] text-white px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#5A3822] transition-colors shadow-lg cursor-pointer">
-          Print Invoice Again
+      {/* Floating Action Buttons */}
+      <div className="fixed top-6 right-6 flex flex-col gap-3 print-hide z-50">
+        <button onClick={() => router.back()} className="bg-white text-gray-800 p-3 rounded-full shadow-lg hover:bg-gray-50 flex items-center justify-center">
+          <ArrowLeft className="w-5 h-5" />
         </button>
+        <button onClick={() => window.print()} className="bg-[#12b5aa] text-white p-3 rounded-full shadow-lg hover:bg-[#0b857d] flex items-center justify-center">
+          <Printer className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* A4 Paper Container */}
+      <div className="min-w-[210mm] max-w-[210mm] w-[210mm] min-h-[297mm] bg-[#fbf8f1] shadow-2xl relative flex flex-col box-border font-dm overflow-hidden print:shadow-none print:min-w-full print:w-full print:max-w-full print:h-[297mm]">
+        
+        {/* Top Accent Strip */}
+        <div className="flex h-4 w-full">
+          <div className="bg-[#12b5aa] w-[70%] h-full"></div>
+          <div className="bg-[#e0a21b] w-[30%] h-full"></div>
+        </div>
+
+        {/* Content Wrapper */}
+        <div className="px-16 pt-12 pb-10 flex-1 flex flex-col relative">
+          
+          {/* Header */}
+          <div className="flex justify-between items-start mb-16">
+            <div className="w-48">
+              <Image 
+                src="/Le-Damas-Sweets-Logo-enhanced.png" 
+                alt="Le Damas" 
+                width={200} 
+                height={84} 
+                className="h-[84px] w-auto object-contain"
+              />
+            </div>
+            <div className="text-right">
+              <h1 className="font-playfair text-6xl tracking-widest text-[#2a2622] mb-2 uppercase">INVOICE</h1>
+              <input 
+                type="text" 
+                value={invoice.invoiceNumber}
+                onChange={e => handleUpdate('invoiceNumber', e.target.value)}
+                className="text-right bg-transparent text-[#8a8277] font-dm text-sm tracking-widest uppercase outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -mr-1 w-40"
+              />
+            </div>
+          </div>
+
+          <div className="h-[1px] w-full bg-[#e6dfd1] mb-12"></div>
+
+          {/* Three Columns Info */}
+          <div className="grid grid-cols-3 gap-8 mb-16">
+            {/* Billed To */}
+            <div>
+              <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">BILLED TO</h3>
+              <input 
+                type="text" 
+                value={invoice.billedToName}
+                onChange={e => handleUpdate('billedToName', e.target.value)}
+                className="w-full bg-transparent text-[#2a2622] font-medium outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 mb-1"
+              />
+              <textarea 
+                value={invoice.billedToAddress}
+                onChange={e => handleUpdate('billedToAddress', e.target.value)}
+                className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 resize-none h-12"
+              />
+              <input 
+                type="text" 
+                value={invoice.billedToEmail}
+                onChange={e => handleUpdate('billedToEmail', e.target.value)}
+                className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1"
+              />
+            </div>
+
+            {/* Dates */}
+            <div>
+              <div className="mb-6">
+                <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">INVOICE DATE</h3>
+                <input 
+                  type="text" 
+                  value={invoice.invoiceDate}
+                  onChange={e => handleUpdate('invoiceDate', e.target.value)}
+                  className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1"
+                />
+              </div>
+              <div>
+                <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">DUE DATE</h3>
+                <input 
+                  type="text" 
+                  value={invoice.dueDate}
+                  onChange={e => handleUpdate('dueDate', e.target.value)}
+                  className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1"
+                />
+              </div>
+            </div>
+
+            {/* From */}
+            <div>
+              <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">FROM</h3>
+              <input 
+                type="text" 
+                value={invoice.fromName}
+                onChange={e => handleUpdate('fromName', e.target.value)}
+                className="w-full bg-transparent text-[#2a2622] font-medium outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 mb-1"
+              />
+              <textarea 
+                value={invoice.fromAddress}
+                onChange={e => handleUpdate('fromAddress', e.target.value)}
+                className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 resize-none h-12"
+              />
+            </div>
+          </div>
+
+          {/* Table Header */}
+          <div className="grid grid-cols-12 gap-4 pb-4 border-b border-[#e6dfd1] mb-6">
+            <div className="col-span-6 text-[#8a8277] text-[10px] font-bold tracking-widest uppercase">ITEM</div>
+            <div className="col-span-2 text-center text-[#8a8277] text-[10px] font-bold tracking-widest uppercase">QTY</div>
+            <div className="col-span-2 text-right text-[#8a8277] text-[10px] font-bold tracking-widest uppercase">UNIT PRICE</div>
+            <div className="col-span-2 text-right text-[#8a8277] text-[10px] font-bold tracking-widest uppercase">TOTAL</div>
+          </div>
+
+          {/* Table Rows */}
+          <div className="flex-1">
+            {invoice.items.map((item, index) => (
+              <div key={item.id} className="grid grid-cols-12 gap-4 py-4 border-b border-[#e6dfd1] group relative items-start">
+                <div className="col-span-6 pr-4">
+                  <input 
+                    type="text" 
+                    value={item.name}
+                    onChange={e => handleItemUpdate(item.id, 'name', e.target.value)}
+                    className="w-full bg-transparent text-[#2a2622] font-medium outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1"
+                  />
+                  <input 
+                    type="text" 
+                    value={item.desc}
+                    onChange={e => handleItemUpdate(item.id, 'desc', e.target.value)}
+                    className="w-full bg-transparent text-[#8a8277] text-sm outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 mt-1"
+                  />
+                </div>
+                <div className="col-span-2 text-center pt-1">
+                  <input 
+                    type="number" 
+                    value={item.qty}
+                    onChange={e => handleItemUpdate(item.id, 'qty', Number(e.target.value))}
+                    className="w-16 text-center bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded"
+                  />
+                </div>
+                <div className="col-span-2 text-right pt-1">
+                  <input 
+                    type="number" 
+                    value={item.price}
+                    onChange={e => handleItemUpdate(item.id, 'price', Number(e.target.value))}
+                    className="w-20 text-right bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded"
+                  />
+                </div>
+                <div className="col-span-2 text-right pt-1 text-[#2a2622]">
+                  {formatCurrency(item.qty * item.price)}
+                </div>
+
+                {/* Delete Button (Hidden in print) */}
+                <button 
+                  onClick={() => removeItem(item.id)}
+                  className="absolute -right-12 top-6 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity print-hide hover:text-red-600"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+
+            {/* Add Item Button */}
+            <button 
+              onClick={addItem}
+              className="mt-4 flex items-center space-x-2 text-[#0b857d] text-sm hover:text-[#12b5aa] transition-colors print-hide"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Item</span>
+            </button>
+          </div>
+
+          {/* Totals Block */}
+          <div className="mt-8 pt-8 border-t-2 border-[#e6dfd1] flex justify-end">
+            <div className="flex justify-between items-center w-64">
+              <span className="font-playfair text-2xl font-bold tracking-widest text-[#2a2622]">TOTAL</span>
+              <span className="font-playfair text-2xl font-bold text-[#0b857d]">{formatCurrency(grandTotal)}</span>
+            </div>
+          </div>
+          
+          <div className="h-[1px] w-full bg-[#e6dfd1] mt-8 mb-16"></div>
+
+          {/* Footer Notes and Contacts */}
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">NOTES</h3>
+              <textarea 
+                value={invoice.notes}
+                onChange={e => handleUpdate('notes', e.target.value)}
+                className="w-64 bg-transparent text-[#8a8277] text-sm outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 resize-none h-8"
+              />
+              <div className="font-pinyon text-5xl text-[#e0a21b] mt-4 -ml-2">thank you</div>
+            </div>
+            
+            <div className="text-right text-sm text-[#8a8277] space-y-1">
+              <p className="font-medium text-[#2a2622]">ledamas.in</p>
+              <p>info@ledamas.in</p>
+              <p>+91 93112 28575</p>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Bottom Teal Band */}
+        <div className="bg-[#12b5aa] w-full py-6 text-center mt-auto">
+          <p className="text-white text-xs tracking-[0.2em] uppercase font-medium">LE DAMAS · DELICIOUS SINCE 1951</p>
+        </div>
+
       </div>
     </div>
   );

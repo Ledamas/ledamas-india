@@ -72,8 +72,8 @@ export default function FirstOrderPopup() {
             document.removeEventListener("mouseleave", handleMouseLeave);
           };
         }
-      } catch (err) {
-        console.error("Failed to load popup settings", err);
+      } catch (err: any) {
+        console.warn("Popup settings not reachable:", err.message);
       }
     };
 

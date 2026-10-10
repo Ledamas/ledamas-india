@@ -59,6 +59,7 @@ model User {
   phone           String?          @unique
   pendingPhone    String?
   phoneVerified   Boolean          @default(false)
+  welcomeEmailSent Boolean         @default(false)
   referralCode    String?          @unique
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt

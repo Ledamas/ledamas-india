@@ -12,7 +12,7 @@ export function MobileBottomNav() {
   const { totalItems, openCart } = useCart();
   const { isAuthenticated, openLoginModal } = useAuth();
 
-  if (pathname.startsWith('/checkout') || pathname.startsWith('/admin') || pathname === '/search') {
+  if (pathname.startsWith('/checkout') || pathname.startsWith('/admin') || pathname.startsWith('/invoice') || pathname === '/search') {
     return null;
   }
 

@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   FileText,
   CreditCard,
+  Download
 } from 'lucide-react';
 
 interface OrderItem {
@@ -59,6 +60,8 @@ interface Order {
   refundStatus?: string;
   refundReason?: string;
   refundedAt?: string;
+  shippingAddress?: any;
+  discount?: number;
 }
 
 export default function UserOrdersPage() {
@@ -187,6 +190,32 @@ export default function UserOrdersPage() {
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [orders, searchQuery, activeTab]);
+
+  const handleDownloadInvoice = (order: Order) => {
+    const invoiceData = {
+      orderNumber: order.orderNumber,
+      date: order.createdAt,
+      customer: order.shippingAddress || {
+        firstName: 'Valued',
+        lastName: 'Customer',
+        email: 'N/A',
+        phone: 'N/A',
+        address: 'N/A',
+        city: '',
+        state: '',
+        pincode: ''
+      },
+      items: order.items || [],
+      subtotal: order.subtotal,
+      discount: order.discount,
+      total: order.total,
+      paymentMethod: order.paymentStatus,
+      isCod: order.paymentStatus === 'COD'
+    };
+
+    localStorage.setItem('ledamas_last_order_invoice', JSON.stringify(invoiceData));
+    window.open('/invoice', '_blank');
+  };
 
   const handleReorder = (order: Order) => {
     order.items?.forEach((item) => {
@@ -494,6 +523,13 @@ export default function UserOrdersPage() {
                   </div>
 
                   <div className="flex items-center space-x-2.5">
+                    <button
+                      onClick={() => handleDownloadInvoice(order)}
+                      className="px-4 py-2 rounded-xl bg-white border border-stone-300 hover:border-stone-900 text-stone-800 font-semibold transition-all shadow-2xs flex items-center space-x-1.5 cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-stone-500" />
+                      <span>Invoice</span>
+                    </button>
                     <button
                       onClick={() => setSelectedOrder(order)}
                       className="px-4 py-2 rounded-xl bg-white border border-stone-300 hover:border-stone-900 text-stone-800 font-semibold transition-all shadow-2xs flex items-center space-x-1.5 cursor-pointer"

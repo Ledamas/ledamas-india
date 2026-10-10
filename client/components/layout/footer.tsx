@@ -83,6 +83,7 @@ export function Footer() {
                   src="/Le-Damas-Sweets-Logo-enhanced.png"
                   alt="Le Damas Sweets Logo"
                   fill
+                  sizes="(max-width: 768px) 192px, 192px"
                   className="object-contain filter contrast-125 drop-shadow-md group-hover:scale-105 transition-transform duration-300"
                 />
               </div>

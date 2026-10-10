@@ -30,7 +30,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-import { updateUserProfileApi } from '../../lib/services/auth-service';
+import { updateUserProfileApi, requestPhoneUpdateApi, verifyPhoneUpdateApi } from '../../lib/services/auth-service';
 
 interface SavedAddress {
   id: string;
@@ -60,6 +60,14 @@ export default function UserProfilePage() {
     user?.phone && !user.phone.startsWith('google_') ? user.phone : ''
   );
 
+  // Phone Update OTP State
+  const [isPhoneUpdateOtpOpen, setIsPhoneUpdateOtpOpen] = useState(false);
+  const [phoneUpdateOtp, setPhoneUpdateOtp] = useState('');
+  const [phoneUpdateVerificationId, setPhoneUpdateVerificationId] = useState('');
+  const [isPhoneUpdating, setIsPhoneUpdating] = useState(false);
+  const [phoneUpdateError, setPhoneUpdateError] = useState('');
+  const [editProfileError, setEditProfileError] = useState('');
+
   // Keep state synced when user changes
   useEffect(() => {
     if (user) {
@@ -73,14 +81,38 @@ export default function UserProfilePage() {
     if (!user) return;
 
     try {
-      const updatedUser = await updateUserProfileApi({
-        name: editName.trim() || user.name,
-      });
-
-      if (setSessionUser) {
-        setSessionUser(updatedUser);
+      // Update name if changed
+      if (editName.trim() !== user.name) {
+        const updatedUser = await updateUserProfileApi({
+          name: editName.trim() || user.name,
+        });
+        if (setSessionUser) {
+          setSessionUser(updatedUser);
+        }
       }
-      setIsEditProfileOpen(false);
+
+      // Check if phone changed
+      const originalPhone = user.phone && !user.phone.startsWith('google_') ? user.phone : '';
+      if (editPhone.trim() !== originalPhone && editPhone.trim() !== '') {
+        setIsPhoneUpdating(true);
+        setEditProfileError('');
+        try {
+          const res = await requestPhoneUpdateApi(editPhone.trim());
+          if (res.verificationId) {
+            setPhoneUpdateVerificationId(res.verificationId);
+            setIsPhoneUpdateOtpOpen(true);
+          } else {
+             setEditProfileError('Failed to send OTP. Please try again.');
+          }
+        } catch (err: any) {
+          console.warn('Phone update request error:', err.message);
+          setEditProfileError(err.message || 'Failed to send OTP');
+        } finally {
+          setIsPhoneUpdating(false);
+        }
+      } else {
+        setIsEditProfileOpen(false);
+      }
     } catch (err: any) {
       console.error('[PROFILE DB UPDATE ERROR]', err);
       // Fallback local update if offline
@@ -92,6 +124,27 @@ export default function UserProfilePage() {
         setSessionUser(fallbackUser);
       }
       setIsEditProfileOpen(false);
+    }
+  };
+
+  const handleVerifyPhoneUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneUpdateError('');
+    setIsPhoneUpdating(true);
+    try {
+      const updatedUser = await verifyPhoneUpdateApi(phoneUpdateOtp, phoneUpdateVerificationId);
+      if (setSessionUser) {
+        setSessionUser(updatedUser);
+      }
+      setIsPhoneUpdateOtpOpen(false);
+      setIsEditProfileOpen(false);
+      setPhoneUpdateOtp('');
+      alert('Phone number updated successfully!');
+    } catch (err: any) {
+      console.warn('Phone update verify error:', err.message);
+      setPhoneUpdateError(err.message || 'Invalid OTP');
+    } finally {
+      setIsPhoneUpdating(false);
     }
   };
 
@@ -786,7 +839,7 @@ export default function UserProfilePage() {
       )}
 
       {/* Edit Profile Modal */}
-      {isEditProfileOpen && (
+      {isEditProfileOpen && !isPhoneUpdateOtpOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-3xl border border-stone-200 shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-5 animate-in fade-in zoom-in duration-200">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
@@ -795,12 +848,22 @@ export default function UserProfilePage() {
                 <span>Edit Profile Info</span>
               </h3>
               <button
-                onClick={() => setIsEditProfileOpen(false)}
+                onClick={() => {
+                  setIsEditProfileOpen(false);
+                  setEditProfileError('');
+                }}
                 className="p-1 rounded-lg text-stone-400 hover:text-stone-800 hover:bg-stone-100"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {editProfileError && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{editProfileError}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
               <div>
@@ -840,18 +903,80 @@ export default function UserProfilePage() {
               <div className="pt-2 flex items-center space-x-3">
                 <button
                   type="button"
-                  onClick={() => setIsEditProfileOpen(false)}
+                  onClick={() => {
+                    setIsEditProfileOpen(false);
+                    setEditProfileError('');
+                  }}
                   className="w-1/2 py-3 rounded-xl bg-stone-100 text-stone-700 hover:bg-stone-200 font-semibold transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 py-3 rounded-xl bg-[#2C2927] hover:bg-[#CB9700] hover:text-black text-white font-semibold transition-all shadow-md"
+                  disabled={isPhoneUpdating}
+                  className="w-1/2 py-3 rounded-xl bg-[#2C2927] hover:bg-[#CB9700] hover:text-black text-white font-semibold transition-all shadow-md disabled:opacity-50"
                 >
-                  Save Profile
+                  {isPhoneUpdating ? 'Sending OTP...' : 'Save Profile'}
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Phone Update OTP Modal */}
+      {isPhoneUpdateOtpOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-2xl max-w-md w-full p-6 sm:p-8 space-y-5 animate-in fade-in zoom-in duration-200">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-16 h-16 bg-amber-100 text-[#CB9700] rounded-full flex items-center justify-center mx-auto mb-2">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-serif font-bold text-stone-900">
+                Verify New Phone Number
+              </h3>
+              <p className="text-sm text-stone-600 max-w-xs mx-auto">
+                We've sent a secure 4-digit verification code to <span className="font-bold text-stone-900">{editPhone}</span>
+              </p>
+            </div>
+
+            {phoneUpdateError && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{phoneUpdateError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyPhoneUpdate} className="space-y-4">
+              <input
+                type="text"
+                maxLength={4}
+                required
+                placeholder="Enter 4-digit OTP"
+                value={phoneUpdateOtp}
+                onChange={(e) => setPhoneUpdateOtp(e.target.value.replace(/\D/g, ''))}
+                className="w-full text-center tracking-[0.5em] text-2xl px-4 py-4 rounded-xl border-2 border-stone-300 focus:outline-none focus:border-[#CB9700] bg-stone-50 font-mono font-bold"
+              />
+
+              <button
+                type="submit"
+                disabled={isPhoneUpdating || phoneUpdateOtp.length !== 4}
+                className="w-full py-3.5 rounded-xl bg-[#2C2927] hover:bg-[#CB9700] hover:text-black text-white font-extrabold text-sm uppercase tracking-wider transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPhoneUpdating ? 'Verifying...' : 'Verify & Update'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPhoneUpdateOtpOpen(false);
+                  setPhoneUpdateOtp('');
+                  setPhoneUpdateError('');
+                }}
+                className="w-full py-2 text-stone-500 hover:text-stone-800 text-xs font-semibold"
+              >
+                Cancel
+              </button>
             </form>
           </div>
         </div>

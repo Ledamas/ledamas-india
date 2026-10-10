@@ -17,6 +17,41 @@ const googleAuthClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = Router();
 
+function getWelcomeEmailHtml(firstName: string) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0;">
+      <!-- Header -->
+      <div style="background-color: #2e1e12; text-align: center; padding: 30px 0;">
+        <h1 style="color: #c99339; font-family: 'Times New Roman', serif; letter-spacing: 6px; margin: 0; font-weight: normal; font-size: 22px; text-transform: uppercase;">Le Damas</h1>
+      </div>
+      
+      <!-- Body -->
+      <div style="padding: 40px 40px 20px;">
+        <h2 style="color: #333333; font-family: 'Times New Roman', serif; font-weight: normal; font-size: 28px; margin-top: 0; margin-bottom: 25px;">Welcome to LE DAMAS</h2>
+        
+        <p style="color: #444444; font-size: 15px; line-height: 1.6; margin-bottom: 20px;">Hi ${firstName},</p>
+        
+        <p style="color: #444444; font-size: 15px; line-height: 1.6; margin-bottom: 35px;">
+          Thank you for joining our exclusive chocolaterie. Explore our premium collections, handcrafted in small batches.
+        </p>
+        
+        <!-- Button -->
+        <div style="margin-bottom: 40px;">
+          <a href="https://ledamas.in/collections/all" style="display: inline-block; background-color: #2e1e12; color: #c99339; text-decoration: none; padding: 14px 28px; font-weight: bold; font-size: 14px; border-radius: 2px;">Explore the Collection</a>
+        </div>
+        
+        <p style="color: #444444; font-size: 15px; line-height: 1.6; margin-bottom: 5px;">Warm regards,</p>
+        <p style="color: #222222; font-size: 15px; font-weight: bold; margin-top: 0;">The LE DAMAS Team</p>
+      </div>
+      
+      <!-- Footer -->
+      <div style="border-top: 1px solid #eeeeee; padding: 20px 40px; background-color: #fafafa;">
+        <p style="color: #888888; font-size: 12px; margin: 0;">You received this email because you signed up at ledamas.in. <a href="https://ledamas.in" style="color: #888888; text-decoration: underline;">Unsubscribe</a></p>
+      </div>
+    </div>
+  `;
+}
+
 // POST /api/v1/auth/send-otp
 router.post('/send-otp', async (req: Request, res: Response) => {
   try {
@@ -136,8 +171,8 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
 
       // Send Welcome SMS and Email asynchronously
       const welcomeMsg = `Welcome to LE DAMAS! We're thrilled to have you. Enjoy exploring our luxury collections.`;
-      const welcomeEmailHtml = `<h1>Welcome to LE DAMAS</h1><p>We are thrilled to have you. Explore our luxury chocolate collections today!</p>`;
-      
+      const welcomeEmailHtml = getWelcomeEmailHtml('Luxury Connoisseur');
+
       NotificationService.sendSMS(
         user.phone || `+91${tenDigitPhone}`,
         welcomeMsg,
@@ -154,7 +189,7 @@ router.post('/verify-otp', async (req: Request, res: Response) => {
         undefined,
         'CUSTOMER_REGISTERED'
       );
-      
+
     } else {
       const existingId = user.id;
       user = await withDbRetry(() =>
@@ -339,26 +374,7 @@ router.post('/google', async (req: Request, res: Response) => {
         })
       );
 
-      // Send Welcome Email
-      const welcomeEmailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-          <h2 style="color: #c99339;">Welcome to LE DAMAS!</h2>
-          <p>Hi ${name || 'Luxury Connoisseur'},</p>
-          <p>We're thrilled to have you join our exclusive chocolaterie.</p>
-          <p>Explore our premium collections and discover the true meaning of indulgence.</p>
-          <br/>
-          <p>Best regards,<br/>LE DAMAS Team</p>
-        </div>
-      `;
-      
-      NotificationService.sendEmail(
-        email,
-        'Welcome to LE DAMAS',
-        welcomeEmailHtml,
-        user.id,
-        undefined,
-        'CUSTOMER_REGISTERED'
-      ).catch(err => console.error('[EMAIL NOTIFICATION ERROR]', err));
+      // (Email sending moved below)
     } else if (!user.email) {
       const userId = user.id;
       user = await withDbRetry(() =>
@@ -371,6 +387,28 @@ router.post('/google', async (req: Request, res: Response) => {
 
     if (!user) {
       return sendError(res, 'Failed to initialize Google user session.', 500);
+    }
+
+    // Send Welcome Email if not sent yet
+    if (!user.welcomeEmailSent && user.email) {
+      const welcomeEmailHtml = getWelcomeEmailHtml(name || user.name || 'Luxury Connoisseur');
+
+      NotificationService.sendEmail(
+        user.email,
+        'Welcome to LE DAMAS',
+        welcomeEmailHtml,
+        user.id,
+        undefined,
+        'CUSTOMER_REGISTERED'
+      ).catch(err => console.error('[EMAIL NOTIFICATION ERROR]', err));
+
+      // Update flag in DB (don't await so we don't slow down login)
+      withDbRetry(() =>
+        prisma.user.update({
+          where: { id: user!.id },
+          data: { welcomeEmailSent: true }
+        })
+      ).catch(err => console.error('[WELCOME EMAIL FLAG UPDATE ERROR]', err));
     }
 
     // Auto-link any past orders matching email or phone to this user account
@@ -595,30 +633,33 @@ router.post('/profile/request-phone-update', async (req: Request, res: Response)
     if (!rateCheck.allowed) return sendError(res, rateCheck.message || 'OTP rate limit exceeded.', 429);
 
     // Check if another account already uses this number
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await withDbRetry(() => prisma.user.findFirst({
       where: {
         phone: fullPhone,
         id: { not: decoded.userId }
       }
-    });
+    }));
 
     if (existingUser) {
-      return sendError(res, 'Ye number already kisi aur account se linked hai.', 400);
+      return sendError(res, 'This phone number is already linked to another account.', 400);
     }
 
     // Update pendingPhone
-    await prisma.user.update({
+    await withDbRetry(() => prisma.user.update({
       where: { id: decoded.userId },
       data: { pendingPhone: fullPhone }
-    });
+    }));
 
     const result = await sendMessageCentralOtp(fullPhone);
     if (!result.success) return sendError(res, result.message, 400);
 
     return sendSuccess(res, { verificationId: result.verificationId }, result.message);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to request phone update';
+  } catch (error: any) {
     console.error('[PHONE UPDATE REQUEST ERROR]', error);
+    let message = error?.message || 'Failed to request phone update';
+    if (message.toLowerCase().includes('prisma')) {
+      message = 'System is currently busy. Please try again in a few moments.';
+    }
     return sendError(res, message, 500);
   }
 });
@@ -639,7 +680,7 @@ router.post('/profile/verify-phone-update', async (req: Request, res: Response) 
     const { otp, verificationId } = req.body;
     if (!otp) return sendError(res, 'OTP code is required.', 400);
 
-    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    const user = await withDbRetry(() => prisma.user.findUnique({ where: { id: decoded.userId } }));
     if (!user || !user.pendingPhone) {
       return sendError(res, 'No pending phone update found.', 400);
     }
@@ -657,35 +698,36 @@ router.post('/profile/verify-phone-update', async (req: Request, res: Response) 
     }
 
     // Final check for uniqueness before saving
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await withDbRetry(() => prisma.user.findFirst({
       where: {
         phone: user.pendingPhone,
         id: { not: decoded.userId }
       }
-    });
+    }));
 
     if (existingUser) {
-      return sendError(res, 'Ye number already kisi aur account se linked hai.', 400);
+      return sendError(res, 'This phone number is already linked to another account.', 400);
     }
 
+    const pendingPhone = user.pendingPhone;
     const oldPhone = user.phone;
 
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await withDbRetry(() => prisma.user.update({
       where: { id: decoded.userId },
       data: {
-        phone: user.pendingPhone,
+        phone: pendingPhone,
         phoneVerified: true,
         pendingPhone: null
       },
       select: { id: true, name: true, phone: true, phoneVerified: true }
-    });
+    }));
 
     // Update CustomerProfile phone as well
-    await prisma.customerProfile.updateMany({
+    await withDbRetry(() => prisma.customerProfile.updateMany({
       where: { userId: decoded.userId },
-      data: { phone: user.pendingPhone }
-    });
-    
+      data: { phone: pendingPhone }
+    }));
+
     // 5. Rate limiting aur logging: Phone/email change ke events log karo, aur purane number/email pe alert bhejo.
     if (oldPhone) {
       try {
@@ -697,9 +739,12 @@ router.post('/profile/verify-phone-update', async (req: Request, res: Response) 
     }
 
     return sendSuccess(res, updatedUser, 'Phone number updated successfully.');
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to verify phone update';
+  } catch (error: any) {
     console.error('[PHONE UPDATE VERIFY ERROR]', error);
+    let message = error?.message || 'Failed to verify phone update';
+    if (message.toLowerCase().includes('prisma')) {
+      message = 'System is currently busy. Please try again in a few moments.';
+    }
     return sendError(res, message, 500);
   }
 });
@@ -761,7 +806,7 @@ router.post('/popup-claim', async (req: Request, res: Response) => {
 
     const tenDigitPhone = cleanedPhone.slice(-10);
     const fullPhone = `+91${tenDigitPhone}`;
-    
+
     // Check if user already claimed
     const existingClaim = await withDbRetry(() => prisma.popupClaim.findUnique({ where: { phone: fullPhone } }));
     if (existingClaim) {
@@ -831,7 +876,7 @@ router.post('/popup-claim', async (req: Request, res: Response) => {
       where: { id: 'global' },
       data: { totalClaims: { increment: 1 } }
     }));
-    
+
     // Make sure a Coupon exists in the system (or create one if it doesn't exist)
     const existingCoupon = await withDbRetry(() => prisma.coupon.findUnique({ where: { code: settings.couponCode } }));
     if (!existingCoupon) {
@@ -884,13 +929,13 @@ router.post('/popup-claim-direct', async (req: Request, res: Response) => {
     } else if (cleanedPhone.length > 10) {
       tenDigitPhone = cleanedPhone.slice(-10);
     }
-    
+
     if (tenDigitPhone.length !== 10) {
       return sendError(res, 'Please enter a valid 10-digit mobile number.', 400);
     }
 
     const fullPhone = `+91${tenDigitPhone}`;
-    
+
     // Check if user already claimed
     const existingClaim = await withDbRetry(() => prisma.popupClaim.findUnique({ where: { phone: fullPhone } }));
     if (existingClaim) {
@@ -953,7 +998,7 @@ router.post('/popup-claim-direct', async (req: Request, res: Response) => {
       where: { id: 'global' },
       data: { totalClaims: { increment: 1 } }
     }));
-    
+
     // Make sure a Coupon exists in the system
     const existingCoupon = await withDbRetry(() => prisma.coupon.findUnique({ where: { code: settings.couponCode } }));
     if (!existingCoupon) {

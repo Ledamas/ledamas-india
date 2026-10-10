@@ -9,8 +9,8 @@ export function StickyOrderCta() {
   const { openCart, totalItems } = useCart();
   const pathname = usePathname();
 
-  // Hide Order Now floating CTA button on Admin Panel pages
-  if (pathname?.startsWith('/admin')) {
+  // Hide Order Now floating CTA button on Admin Panel pages and Invoice page
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/invoice')) {
     return null;
   }
 
