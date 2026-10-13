@@ -71,7 +71,49 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
 
-      // ─── Any other old /pages/* or unknown /products/* → /shop ──────────
+      // ─── Old Shopify product slugs not on new site → /shop ──────────────
+      {
+        source: '/products/kunafa-pistachio-milk-chocolate',
+        destination: '/shop',
+        permanent: true,
+      },
+      {
+        source: '/products/kunafa-pistachio-cream',
+        destination: '/shop',
+        permanent: true,
+      },
+      {
+        source: '/products/crispy-speculoos-cream-milk-chocolate',
+        destination: '/shop',
+        permanent: true,
+      },
+      {
+        source: '/products/lebubu-milk-chocolate-kunafa-pistachio-filling',
+        destination: '/shop',
+        permanent: true,
+      },
+      {
+        source: '/products/hazelnut-creme-milk-chocolate-mini-bar',
+        destination: '/shop',
+        permanent: true,
+      },
+      {
+        source: '/products/kunafa-pistachio-milk-chocolate-mini-bar',
+        destination: '/shop',
+        permanent: true,
+      },
+      {
+        source: '/products/kunafa-pistachio-dark-chocolate-mini-bar',
+        destination: '/shop',
+        permanent: true,
+      },
+      {
+        source: '/products/crispy-speculoos-cream-milk-chocolate-mini-bar',
+        destination: '/shop',
+        permanent: true,
+      },
+
+      // ─── Any other old /pages/* → /shop ─────────────────────────────────
       {
         source: '/pages/:slug',
         destination: '/shop',

@@ -212,9 +212,9 @@ export const PRODUCTS: Product[] = [
     id: 'sku-4-hazelnut-creme-110g',
     slug: 'hazelnut-creme-milk-chocolate-110g',
     name: 'Hazelnut Creme Milk Chocolate - 110gm',
-    tagline: 'Piedmont Style Roasted Hazelnut Gianduja Jar',
-    shortDescription: 'Creamy milk chocolate jar spread infused with slow-roasted hazelnut gianduja creme.',
-    description: 'A velvety 110g jar of milk chocolate gianduja made with slow-roasted hazelnuts and pure cocoa butter.',
+    tagline: 'Piedmont Style Roasted Hazelnut Creme in Smooth Milk Chocolate',
+    shortDescription: 'Smooth milk chocolate bar filled with slow-roasted hazelnut creme.',
+    description: 'A velvety 110g milk chocolate bar filled with slow-roasted hazelnut creme made with pure cocoa butter.',
     brand: 'LE DAMAS',
     category: 'Milk Chocolate',
     categorySlug: 'milk-chocolate',
@@ -225,7 +225,7 @@ export const PRODUCTS: Product[] = [
       '/Hazelnut-Creme-Milk-Chocolate-4.png'
     ],
     weight: '110gm',
-    origin: 'Roasted Hazelnut Gianduja',
+    origin: 'Roasted Hazelnut Creme',
     price: 749,
     compareAtPrice: 899,
     originalPrice: 899,
@@ -233,13 +233,13 @@ export const PRODUCTS: Product[] = [
     availability: 'InStock',
     inStock: true,
     isFeatured: false,
-    dietaryBadges: ['Piedmont Style Gianduja', 'Preservative Free'],
+    dietaryBadges: ['Piedmont Style', 'Preservative Free'],
     tastingNotes: ['Toasted Hazelnut', 'Smooth Milk Cacao', 'Vanilla Cream'],
-    seoTitle: 'Hazelnut Chocolate Spread 110g Jar | Le Damas India',
-    metaDescription: 'Buy Le Damas Hazelnut Creme Milk Chocolate 110g jar online. Creamy milk chocolate hazelnut spread with roasted hazelnuts. Fast delivery across India.',
+    seoTitle: 'Hazelnut Creme Milk Chocolate 110g | Le Damas India',
+    metaDescription: 'Buy Le Damas Hazelnut Creme Milk Chocolate 110g online. Smooth milk chocolate with creamy roasted hazelnut filling. Fast delivery across India.',
     primaryKeyword: 'hazelnut creme milk chocolate',
-    secondaryKeywords: ['hazelnut chocolate spread', 'gianduja milk chocolate jar', 'hazelnut creme 110g'],
-    imageAlt: 'LE DAMAS Hazelnut Creme Milk Chocolate 110gm Jar'
+    secondaryKeywords: ['hazelnut milk chocolate bar', 'hazelnut creme chocolate', 'hazelnut creme 110g'],
+    imageAlt: 'LE DAMAS Hazelnut Creme Milk Chocolate 110gm Bar'
   },
   // 5. Crispy Speculoos Creme Milk Chocolate - 200gm (Rs. 1,649)
   {
