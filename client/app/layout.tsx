@@ -33,9 +33,9 @@ const scriptFont = Alex_Brush({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://ledamas.in'),
-  title: 'LE DAMAS — Delicious Since 1951',
-  description: 'Discover LE DAMAS — Delicious Since 1951. Artisan Middle Eastern chocolates, Kunafa pistachio chocolates, speculoos cremes, and luxury confectionery.',
+  metadataBase: new URL('https://ledamas.in'),
+  title: 'Le Damas | Delicious Since 1951 | India',
+  description: 'Delicious Since 1951, now in India. Premium Dubai chocolate with Kunafa & Pistachio cream, plus dark chocolate. Fast pan-India delivery.',
   keywords: [
     'Le Damas',
     'Delicious Since 1951',
@@ -54,8 +54,8 @@ export const metadata: Metadata = {
     apple: '/Le-Damas-Sweets-Logo-enhanced.png',
   },
   openGraph: {
-    title: 'LE DAMAS — Delicious Since 1951',
-    description: 'Discover LE DAMAS — Delicious Since 1951. Artisan Middle Eastern chocolates, Kunafa pistachio chocolates, speculoos cremes, and luxury confectionery.',
+    title: 'Le Damas | Delicious Since 1951 | India',
+    description: 'Delicious Since 1951, now in India. Premium Dubai chocolate with Kunafa & Pistachio cream, plus dark chocolate. Fast pan-India delivery.',
     url: 'https://ledamas.in',
     siteName: 'LE DAMAS',
     images: [
@@ -71,9 +71,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'LE DAMAS — Delicious Since 1951',
-    description: 'Artisan Middle Eastern chocolates, Kunafa pistachio chocolates, and luxury confectionery.',
+    title: 'Le Damas | Delicious Since 1951 | India',
+    description: 'Delicious Since 1951, now in India. Premium Dubai chocolate with Kunafa & Pistachio cream, plus dark chocolate. Fast pan-India delivery.',
     images: ['/Le-Damas-Sweets-Logo-enhanced.png'],
+  },
+  alternates: {
+    canonical: 'https://ledamas.in',
   },
 };
 

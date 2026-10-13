@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Printer, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Printer, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../lib/context/auth-context';
 
 export default function InvoicePage() {
@@ -17,9 +17,11 @@ export default function InvoicePage() {
     billedToAddress: '',
     billedToEmail: '',
     invoiceDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-    dueDate: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     fromName: 'Le Damas Sweets',
-    fromAddress: 'Delhi, India',
+    fromAddress: 'Unit no. 514, 5th Floor,
+Manglam Paradise Mall, Sec-3,
+Rohini, New Delhi - 110085',
     items: [] as any[],
     notes: 'Thank you for choosing Le Damas.'
   });
@@ -30,7 +32,7 @@ export default function InvoicePage() {
       const data = localStorage.getItem('ledamas_last_order_invoice');
       if (data) {
         const order = JSON.parse(data);
-        
+
         if (order.customer?.firstName === 'Valued' && order.customer?.lastName === 'Customer' && user) {
           order.customer.firstName = user.name?.split(' ')[0] || '';
           order.customer.lastName = user.name?.split(' ').slice(1).join(' ') || '';
@@ -42,65 +44,40 @@ export default function InvoicePage() {
           order.customer.pincode = user.savedAddress.pincode || '';
         }
 
-        // Map order data to invoice template
         setInvoice({
           invoiceNumber: `NO. ${order.orderNumber || 'LD-0001'}`,
           billedToName: `${order.customer?.firstName || ''} ${order.customer?.lastName || ''}`.trim() || user?.name || '',
           billedToAddress: `${order.customer?.address || ''}\n${order.customer?.city || ''}, ${order.customer?.state || ''} ${order.customer?.pincode || ''}`.replace('N/A', '').trim() || '',
           billedToEmail: order.customer?.email !== 'N/A' ? order.customer?.email : (user?.email || user?.phone || ''),
           invoiceDate: new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-          dueDate: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-            fromName: 'Le Damas Sweets',
-            fromAddress: 'Delhi, India',
-            items: order.items?.map((item: any, i: number) => ({
-              id: i,
-              name: item.productName || item.product?.name || 'Item',
-              desc: item.variantName || item.variant?.name || item.variant?.weight || '',
-              qty: item.quantity || 1,
-              price: item.price ?? (item.variant ? item.variant.price : (item.product?.price || 0))
-            })) || [],
-            notes: 'Thank you for choosing Le Damas.'
-          });
-        } else if (user) {
-          // If no order data, but user is logged in, pre-fill with their profile data
-          setInvoice(prev => ({
-            ...prev,
-            billedToName: user.name || '',
-            billedToEmail: user.email || user.phone || '',
-            billedToAddress: user.savedAddress ? `${user.savedAddress.street || ''} ${user.savedAddress.apartment || ''}\n${user.savedAddress.city || ''}, ${user.savedAddress.state || ''} ${user.savedAddress.pincode || ''}`.trim() : '',
-            invoiceDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-            dueDate: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-          }));
-        }
-      } catch (e) {}
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          fromName: 'Le Damas Sweets',
+          fromAddress: 'Unit no. 514, 5th Floor,
+Manglam Paradise Mall, Sec-3,
+Rohini, New Delhi - 110085',
+          items: order.items?.map((item: any, i: number) => ({
+            id: i,
+            name: item.productName || item.product?.name || 'Item',
+            desc: item.variantName || item.variant?.name || item.variant?.weight || '',
+            qty: item.quantity || 1,
+            price: item.price ?? (item.variant ? item.variant.price : (item.product?.price || 0))
+          })) || [],
+          notes: 'Thank you for choosing Le Damas.'
+        });
+      } else if (user) {
+        setInvoice(prev => ({
+          ...prev,
+          billedToName: user.name || '',
+          billedToEmail: user.email || user.phone || '',
+          billedToAddress: user.savedAddress ? `${user.savedAddress.street || ''} ${user.savedAddress.apartment || ''}\n${user.savedAddress.city || ''}, ${user.savedAddress.state || ''} ${user.savedAddress.pincode || ''}`.trim() : '',
+          invoiceDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        }));
+      }
+    } catch (e) { }
   }, [user]);
 
   if (!mounted) return null;
-
-  const handleUpdate = (field: string, value: any) => {
-    setInvoice(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleItemUpdate = (id: number, field: string, value: any) => {
-    setInvoice(prev => ({
-      ...prev,
-      items: prev.items.map(item => item.id === id ? { ...item, [field]: value } : item)
-    }));
-  };
-
-  const addItem = () => {
-    setInvoice(prev => ({
-      ...prev,
-      items: [...prev.items, { id: Date.now(), name: 'New Item', desc: 'Description', qty: 1, price: 0 }]
-    }));
-  };
-
-  const removeItem = (id: number) => {
-    setInvoice(prev => ({
-      ...prev,
-      items: prev.items.filter(item => item.id !== id)
-    }));
-  };
 
   const grandTotal = invoice.items.reduce((sum, item) => sum + (item.qty * item.price), 0);
 
@@ -110,7 +87,8 @@ export default function InvoicePage() {
 
   return (
     <div className="min-h-screen bg-gray-200 flex justify-center items-start overflow-x-auto py-10 print:py-0 print:bg-white font-sans text-[#2a2622]">
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
         
         .font-playfair { font-family: 'Playfair Display', serif; }
@@ -125,16 +103,6 @@ export default function InvoicePage() {
             background: white; 
           }
           .print-hide { display: none !important; }
-          /* Ensure inputs look like regular text on print */
-          input, textarea {
-            border: none !important;
-            background: transparent !important;
-            resize: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-            outline: none !important;
-          }
         }
       `}} />
 
@@ -150,7 +118,7 @@ export default function InvoicePage() {
 
       {/* A4 Paper Container */}
       <div className="min-w-[210mm] max-w-[210mm] w-[210mm] min-h-[297mm] bg-[#fbf8f1] shadow-2xl relative flex flex-col box-border font-dm overflow-hidden print:shadow-none print:min-w-full print:w-full print:max-w-full print:h-[297mm]">
-        
+
         {/* Top Accent Strip */}
         <div className="flex h-4 w-full">
           <div className="bg-[#12b5aa] w-[70%] h-full"></div>
@@ -159,26 +127,23 @@ export default function InvoicePage() {
 
         {/* Content Wrapper */}
         <div className="px-16 pt-12 pb-10 flex-1 flex flex-col relative">
-          
+
           {/* Header */}
           <div className="flex justify-between items-start mb-16">
             <div className="w-48">
-              <Image 
-                src="/Le-Damas-Sweets-Logo-enhanced.png" 
-                alt="Le Damas" 
-                width={200} 
-                height={84} 
+              <Image
+                src="/Le-Damas-Sweets-Logo-enhanced.png"
+                alt="Le Damas"
+                width={200}
+                height={84}
                 className="h-[84px] w-auto object-contain"
               />
             </div>
             <div className="text-right">
               <h1 className="font-playfair text-6xl tracking-widest text-[#2a2622] mb-2 uppercase">INVOICE</h1>
-              <input 
-                type="text" 
-                value={invoice.invoiceNumber}
-                onChange={e => handleUpdate('invoiceNumber', e.target.value)}
-                className="text-right bg-transparent text-[#8a8277] font-dm text-sm tracking-widest uppercase outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -mr-1 w-40"
-              />
+              <p className="text-right text-[#8a8277] font-dm text-sm tracking-widest uppercase">
+                {invoice.invoiceNumber}
+              </p>
             </div>
           </div>
 
@@ -189,61 +154,28 @@ export default function InvoicePage() {
             {/* Billed To */}
             <div>
               <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">BILLED TO</h3>
-              <input 
-                type="text" 
-                value={invoice.billedToName}
-                onChange={e => handleUpdate('billedToName', e.target.value)}
-                className="w-full bg-transparent text-[#2a2622] font-medium outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 mb-1"
-              />
-              <textarea 
-                value={invoice.billedToAddress}
-                onChange={e => handleUpdate('billedToAddress', e.target.value)}
-                className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 resize-none h-12"
-              />
-              <input 
-                type="text" 
-                value={invoice.billedToEmail}
-                onChange={e => handleUpdate('billedToEmail', e.target.value)}
-                className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1"
-              />
+              <p className="text-[#2a2622] font-medium mb-1 select-none">{invoice.billedToName}</p>
+              <p className="text-[#2a2622] whitespace-pre-line mb-1 select-none">{invoice.billedToAddress}</p>
+              <p className="text-[#2a2622] select-none">{invoice.billedToEmail}</p>
             </div>
 
             {/* Dates */}
             <div>
               <div className="mb-6">
                 <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">INVOICE DATE</h3>
-                <input 
-                  type="text" 
-                  value={invoice.invoiceDate}
-                  onChange={e => handleUpdate('invoiceDate', e.target.value)}
-                  className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1"
-                />
+                <p className="text-[#2a2622] select-none">{invoice.invoiceDate}</p>
               </div>
               <div>
                 <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">DUE DATE</h3>
-                <input 
-                  type="text" 
-                  value={invoice.dueDate}
-                  onChange={e => handleUpdate('dueDate', e.target.value)}
-                  className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1"
-                />
+                <p className="text-[#2a2622] select-none">{invoice.dueDate}</p>
               </div>
             </div>
 
             {/* From */}
             <div>
               <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">FROM</h3>
-              <input 
-                type="text" 
-                value={invoice.fromName}
-                onChange={e => handleUpdate('fromName', e.target.value)}
-                className="w-full bg-transparent text-[#2a2622] font-medium outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 mb-1"
-              />
-              <textarea 
-                value={invoice.fromAddress}
-                onChange={e => handleUpdate('fromAddress', e.target.value)}
-                className="w-full bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 resize-none h-12"
-              />
+              <p className="text-[#2a2622] font-medium mb-1 select-none">{invoice.fromName}</p>
+              <p className="text-[#2a2622] whitespace-pre-line select-none">{invoice.fromAddress}</p>
             </div>
           </div>
 
@@ -257,60 +189,23 @@ export default function InvoicePage() {
 
           {/* Table Rows */}
           <div className="flex-1">
-            {invoice.items.map((item, index) => (
-              <div key={item.id} className="grid grid-cols-12 gap-4 py-4 border-b border-[#e6dfd1] group relative items-start">
+            {invoice.items.map((item) => (
+              <div key={item.id} className="grid grid-cols-12 gap-4 py-4 border-b border-[#e6dfd1] items-start">
                 <div className="col-span-6 pr-4">
-                  <input 
-                    type="text" 
-                    value={item.name}
-                    onChange={e => handleItemUpdate(item.id, 'name', e.target.value)}
-                    className="w-full bg-transparent text-[#2a2622] font-medium outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1"
-                  />
-                  <input 
-                    type="text" 
-                    value={item.desc}
-                    onChange={e => handleItemUpdate(item.id, 'desc', e.target.value)}
-                    className="w-full bg-transparent text-[#8a8277] text-sm outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 mt-1"
-                  />
+                  <p className="text-[#2a2622] font-medium select-none">{item.name}</p>
+                  {item.desc ? <p className="text-[#8a8277] text-sm mt-1 select-none">{item.desc}</p> : null}
                 </div>
                 <div className="col-span-2 text-center pt-1">
-                  <input 
-                    type="number" 
-                    value={item.qty}
-                    onChange={e => handleItemUpdate(item.id, 'qty', Number(e.target.value))}
-                    className="w-16 text-center bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded"
-                  />
+                  <p className="text-[#2a2622] select-none">{item.qty}</p>
                 </div>
                 <div className="col-span-2 text-right pt-1">
-                  <input 
-                    type="number" 
-                    value={item.price}
-                    onChange={e => handleItemUpdate(item.id, 'price', Number(e.target.value))}
-                    className="w-20 text-right bg-transparent text-[#2a2622] outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded"
-                  />
+                  <p className="text-[#2a2622] select-none">{item.price}</p>
                 </div>
-                <div className="col-span-2 text-right pt-1 text-[#2a2622]">
+                <div className="col-span-2 text-right pt-1 text-[#2a2622] select-none">
                   {formatCurrency(item.qty * item.price)}
                 </div>
-
-                {/* Delete Button (Hidden in print) */}
-                <button 
-                  onClick={() => removeItem(item.id)}
-                  className="absolute -right-12 top-6 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity print-hide hover:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             ))}
-
-            {/* Add Item Button */}
-            <button 
-              onClick={addItem}
-              className="mt-4 flex items-center space-x-2 text-[#0b857d] text-sm hover:text-[#12b5aa] transition-colors print-hide"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Item</span>
-            </button>
           </div>
 
           {/* Totals Block */}
@@ -320,21 +215,17 @@ export default function InvoicePage() {
               <span className="font-playfair text-2xl font-bold text-[#0b857d]">{formatCurrency(grandTotal)}</span>
             </div>
           </div>
-          
+
           <div className="h-[1px] w-full bg-[#e6dfd1] mt-8 mb-16"></div>
 
           {/* Footer Notes and Contacts */}
           <div className="flex justify-between items-end mb-12">
             <div>
               <h3 className="text-[#0b857d] text-xs font-bold tracking-widest uppercase mb-4">NOTES</h3>
-              <textarea 
-                value={invoice.notes}
-                onChange={e => handleUpdate('notes', e.target.value)}
-                className="w-64 bg-transparent text-[#8a8277] text-sm outline-none focus:ring-1 focus:ring-[#e6dfd1] rounded px-1 -ml-1 resize-none h-8"
-              />
+              <p className="text-[#8a8277] text-sm select-none">{invoice.notes}</p>
               <div className="font-pinyon text-5xl text-[#e0a21b] mt-4 -ml-2">thank you</div>
             </div>
-            
+
             <div className="text-right text-sm text-[#8a8277] space-y-1">
               <p className="font-medium text-[#2a2622]">ledamas.in</p>
               <p>info@ledamas.in</p>

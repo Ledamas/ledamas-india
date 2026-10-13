@@ -9,7 +9,7 @@ import { fetchApi } from '@/lib/api-client';
 import { calculateCodDetails } from '@/lib/utils/cod-calculator';
 import { initiatePaymentApi, verifyAndCreateOrderApi } from '@/lib/services/product-service';
 import { trackInitiateCheckout, trackPurchase } from '@/lib/meta-pixel';
-import { ArrowLeft, ShieldCheck, Truck, CheckCircle2, Info, Loader2, AlertTriangle, Lock, ArrowRight, Tag, Sparkles, X, Gift } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Truck, CheckCircle2, Info, Loader2, AlertTriangle, Lock, ArrowRight, Tag, Sparkles, X, Gift, MapPin } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 
@@ -102,6 +102,10 @@ export default function CheckoutPage() {
   const [createdOrderNumber, setCreatedOrderNumber] = useState<string>('');
   const [createdOrderDetails, setCreatedOrderDetails] = useState<any>(null);
 
+  // PIN code auto-fill state
+  const [pincodeStatus, setPincodeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [pincodeError, setPincodeError] = useState<string | null>(null);
+
   // Sync cart email/phone for guests (Abandoned Cart)
   useEffect(() => {
     if (items.length === 0 || !form.email) return;
@@ -137,6 +141,36 @@ export default function CheckoutPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Auto-fetch city & state when a 6-digit PIN is entered
+  const fetchPincodeDetails = async (pin: string) => {
+    if (pin.length !== 6 || !/^[1-9][0-9]{5}$/.test(pin)) {
+      setPincodeStatus('idle');
+      setPincodeError(null);
+      return;
+    }
+    setPincodeStatus('loading');
+    setPincodeError(null);
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+      const data = await res.json();
+      if (data?.[0]?.Status === 'Success' && data[0].PostOffice?.length > 0) {
+        const po = data[0].PostOffice[0];
+        setForm((prev) => ({
+          ...prev,
+          city: po.District || po.Name || prev.city,
+          state: po.State || prev.state,
+        }));
+        setPincodeStatus('success');
+      } else {
+        setPincodeStatus('error');
+        setPincodeError('Invalid PIN code — city & state not found.');
+      }
+    } catch {
+      setPincodeStatus('error');
+      setPincodeError('Could not fetch PIN details. Please fill city & state manually.');
+    }
   };
 
   const handleApplyCode = async (codeToTest?: string) => {
@@ -644,15 +678,46 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider mb-1.5">PIN Code *</label>
-                        <input
-                          type="text"
-                          name="pincode"
-                          required
-                          value={form.pincode}
-                          onChange={handleChange}
-                          placeholder="Enter PIN code"
-                          className="w-full bg-[#FAF6ED] border border-[#D6C2B4] rounded-xl px-4 py-3 text-sm text-[#3D2314] placeholder-stone-400 focus:outline-none focus:border-[#CB9700] focus:ring-1 focus:ring-[#CB9700] transition-colors"
-                        />
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="pincode"
+                            required
+                            maxLength={6}
+                            pattern="[1-9][0-9]{5}"
+                            value={form.pincode}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                              setForm((prev) => ({ ...prev, pincode: val }));
+                              if (val.length === 6) fetchPincodeDetails(val);
+                              else { setPincodeStatus('idle'); setPincodeError(null); }
+                            }}
+                            placeholder="6-digit PIN"
+                            className={`w-full bg-[#FAF6ED] border rounded-xl px-4 py-3 pr-10 text-sm text-[#3D2314] placeholder-stone-400 focus:outline-none focus:ring-1 transition-colors ${
+                              pincodeStatus === 'success'
+                                ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-400'
+                                : pincodeStatus === 'error'
+                                ? 'border-red-400 focus:border-red-400 focus:ring-red-300'
+                                : 'border-[#D6C2B4] focus:border-[#CB9700] focus:ring-[#CB9700]'
+                            }`}
+                          />
+                          {/* Status icon */}
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                            {pincodeStatus === 'loading' && <Loader2 className="w-4 h-4 animate-spin text-[#CB9700]" />}
+                            {pincodeStatus === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                            {pincodeStatus === 'error' && <AlertTriangle className="w-4 h-4 text-red-400" />}
+                            {pincodeStatus === 'idle' && <MapPin className="w-4 h-4 text-stone-300" />}
+                          </div>
+                        </div>
+                        {/* Feedback messages */}
+                        {pincodeStatus === 'success' && (
+                          <p className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> City &amp; State auto-filled!
+                          </p>
+                        )}
+                        {pincodeStatus === 'error' && pincodeError && (
+                          <p className="text-[11px] text-red-500 font-medium mt-1">{pincodeError}</p>
+                        )}
                       </div>
                     </div>
                   </div>

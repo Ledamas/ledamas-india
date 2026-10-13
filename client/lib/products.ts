@@ -132,8 +132,8 @@ export const PRODUCTS: Product[] = [
     isNewRelease: true,
     dietaryBadges: ['Pure Cocoa Butter', 'White Chocolate', '200gm Bar'],
     tastingNotes: ['Velvety Cocoa Butter', 'Toasted Hazelnut', 'Bourbon Vanilla'],
-    seoTitle: 'White Chocolate Hazelnut Creme 200gm | LE DAMAS',
-    metaDescription: 'Shop LE DAMAS White Chocolate Hazelnut Creme 200gm bar. Pure cocoa butter white chocolate filled with slow-roasted hazelnut gianduja.',
+    seoTitle: 'White Chocolate Hazelnut Creme Bar 200g | Le Damas',
+    metaDescription: 'Buy Le Damas White Chocolate Hazelnut Creme 200g online. Smooth white chocolate with roasted hazelnut filling. Fast delivery across India.',
     primaryKeyword: 'white chocolate hazelnut creme',
     secondaryKeywords: ['white hazelnut chocolate bar', 'white chocolate 200g', 'hazelnut creme bar'],
     imageAlt: 'LE DAMAS White Chocolate Hazelnut Creme 200gm Bar'
@@ -166,8 +166,8 @@ export const PRODUCTS: Product[] = [
     isFeatured: true,
     dietaryBadges: ['Handcrafted', 'Spiced Cookie Butter'],
     tastingNotes: ['Cinnamon Speculoos', 'Caramelized Sugar', 'Toasted Kunafa Crunch'],
-    seoTitle: 'Speculoos Creme and Kunafa 110gm | Spiced Cookie Spread | LE DAMAS',
-    metaDescription: 'Buy Speculoos Creme and Kunafa 110gm spread online by LE DAMAS. Spiced Belgian speculoos cookie butter mixed with crisp Kunafa pastry bits.',
+    seoTitle: 'Speculoos Kunafa Chocolate Bar 110g | Le Damas India',
+    metaDescription: 'Buy Le Damas Speculoos Creme & Kunafa 110g online. Creamy Speculoos filling with crunchy Kunafa in smooth chocolate. Fast delivery across India.',
     primaryKeyword: 'speculoos creme kunafa',
     secondaryKeywords: ['speculoos kunafa spread', 'cookie butter kunafa', 'speculoos creme jar'],
     imageAlt: 'LE DAMAS Speculoos Creme and Kunafa 110gm Jar'
@@ -201,8 +201,8 @@ export const PRODUCTS: Product[] = [
     isBestSeller: true,
     dietaryBadges: ['Vegetarian', 'Single Origin', 'Artisanal Batch'],
     tastingNotes: ['Bittersweet Dark Cacao', 'Toasted Kataifi Crunch', 'Rich Pistachio Creme'],
-    seoTitle: 'Kunafa Pistachio Dark Chocolate 200gm | Dubai Chocolate Bar | LE DAMAS',
-    metaDescription: 'Shop LE DAMAS Kunafa Pistachio Dark Chocolate 200gm bar. Dark single-origin chocolate stuffed with golden Kunafa pastry and roasted pistachio creme.',
+    seoTitle: 'Kunafa Pistachio Dark Chocolate 200g | Le Damas India',
+    metaDescription: 'Buy Le Damas Kunafa Pistachio Dark Chocolate 200g online. Rich dark chocolate with crunchy Kunafa and creamy pistachio. Fast delivery across India.',
     primaryKeyword: 'kunafa pistachio dark chocolate',
     secondaryKeywords: ['kunafa dark chocolate 200g', 'dubai dark chocolate bar', 'pistachio kunafa dark chocolate'],
     imageAlt: 'LE DAMAS Kunafa Pistachio Dark Chocolate 200gm Bar'
@@ -235,8 +235,8 @@ export const PRODUCTS: Product[] = [
     isFeatured: false,
     dietaryBadges: ['Piedmont Style Gianduja', 'Preservative Free'],
     tastingNotes: ['Toasted Hazelnut', 'Smooth Milk Cacao', 'Vanilla Cream'],
-    seoTitle: 'Hazelnut Creme Milk Chocolate 110gm Jar | LE DAMAS',
-    metaDescription: 'Shop LE DAMAS Hazelnut Creme Milk Chocolate 110gm jar. Creamy milk chocolate gianduja spread crafted with roasted hazelnuts.',
+    seoTitle: 'Hazelnut Chocolate Spread 110g Jar | Le Damas India',
+    metaDescription: 'Buy Le Damas Hazelnut Creme Milk Chocolate 110g jar online. Creamy milk chocolate hazelnut spread with roasted hazelnuts. Fast delivery across India.',
     primaryKeyword: 'hazelnut creme milk chocolate',
     secondaryKeywords: ['hazelnut chocolate spread', 'gianduja milk chocolate jar', 'hazelnut creme 110g'],
     imageAlt: 'LE DAMAS Hazelnut Creme Milk Chocolate 110gm Jar'

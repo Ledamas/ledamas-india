@@ -8,11 +8,11 @@ import { Footer } from '../../components/layout/footer';
 import { ShopClient } from '../../components/shop/shop-client';
 
 export const metadata: Metadata = constructMetadata({
-  title: 'Shop Luxury Chocolates | Kunafa & Single Origin Cacao | LE DAMAS',
-  description: 'Explore the complete LE DAMAS collection. Kunafa Pistachio Dark & Milk chocolates, artisan hazelnut cremes, and 35g mini bars.',
+  title: 'Buy Dubai Kunafa Chocolate Online | Le Damas India',
+  description: 'Shop Dubai chocolate bars, Kunafa Pistachio chocolate and dark chocolate online. Premium gifting boxes with fast pan-India delivery. Order now.',
   canonicalUrl: '/shop',
   keywords: [
-    'buy luxury chocolate online India',
+    'buy dubai chocolate online',
     'kunafa chocolate shop',
     'dubai chocolate buy online',
     'artisan dark chocolate bar',
