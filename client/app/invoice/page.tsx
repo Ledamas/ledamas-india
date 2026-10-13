@@ -50,9 +50,7 @@ export default function InvoicePage() {
           invoiceDate: new Date(order.createdAt || order.date || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
           dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
           fromName: 'Le Damas Sweets',
-          fromAddress: 'Unit no. 514, 5th Floor,
-Manglam Paradise Mall, Sec-3,
-Rohini, New Delhi - 110085',
+          fromAddress: `Unit no. 514, 5th Floor, Manglam Paradise Mall, Sec-3, Rohini, New Delhi - 110085`,
           items: order.items?.map((item: any, i: number) => ({
             id: i,
             name: item.productName || item.product?.name || 'Item',
