@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Search, X, Clock, Flame } from 'lucide-react';
+import { getApiBaseUrl } from '../../lib/api-client';
 import { Product } from '../../lib/types';
 
 // Utility to format price
@@ -70,8 +71,8 @@ export function MobileSearchOverlay() {
       abortControllerRef.current = abortController;
 
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
-        const res = await fetch(`${apiBase ? `${apiBase}/api/v1` : '/api/v1'}/products?search=${encodeURIComponent(query.trim())}`, {
+        const apiBase = getApiBaseUrl();
+        const res = await fetch(`${apiBase}/api/v1/products?search=${encodeURIComponent(query.trim())}`, {
           signal: abortController.signal
         });
         const data = await res.json();

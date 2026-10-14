@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { getApiBaseUrl } from "../../lib/api-client";
 import { useAuth } from "../../lib/context/auth-context";
 
 interface PopupSettings {
@@ -44,8 +45,8 @@ export default function FirstOrderPopup() {
     // Fetch settings
     const fetchSettings = async () => {
       try {
-        const apiBase = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== "undefined" && window.location.hostname === "localhost" ? "http://localhost:5000" : "");
-        const res = await fetch(`${apiBase ? `${apiBase}/api/v1` : "/api/v1"}/auth/popup-settings`);
+        const apiBase = getApiBaseUrl();
+        const res = await fetch(`${apiBase}/api/v1/auth/popup-settings`);
         const data = await res.json();
         if (data.success && data.data?.isEnabled) {
           setSettings(data.data);
@@ -101,8 +102,8 @@ export default function FirstOrderPopup() {
 
     setLoading(true);
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== "undefined" && window.location.hostname === "localhost" ? "http://localhost:5000" : "");
-      const res = await fetch(`${apiBase ? `${apiBase}/api/v1` : "/api/v1"}/auth/popup-claim-direct`, {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/v1/auth/popup-claim-direct`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone: `+91${cleaned}` }),

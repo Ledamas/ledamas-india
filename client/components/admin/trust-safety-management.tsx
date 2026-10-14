@@ -10,6 +10,7 @@ import {
   Ban,
   RefreshCw,
 } from 'lucide-react';
+import { getApiBaseUrl } from '../../lib/api-client';
 
 export interface UserReportItem {
   id: string;
@@ -34,8 +35,8 @@ export interface BlockedUserItem {
   ipAddress: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
-const API_V1_BASE = API_BASE_URL ? `${API_BASE_URL}/api/v1` : '/api/v1';
+const API_BASE_URL = getApiBaseUrl();
+const API_V1_BASE = `${API_BASE_URL}/api/v1`;
 
 export const TrustSafetyManagement: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'reports' | 'blocklist'>('reports');

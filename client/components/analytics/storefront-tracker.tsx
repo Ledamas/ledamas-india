@@ -2,9 +2,10 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { getApiBaseUrl } from '../../lib/api-client';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
-const API_V1_BASE = API_BASE_URL ? `${API_BASE_URL}/api/v1` : '/api/v1';
+const API_BASE_URL = getApiBaseUrl();
+const API_V1_BASE = `${API_BASE_URL}/api/v1`;
 
 // Cookie helper functions
 function getCookie(name: string): string | null {

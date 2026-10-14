@@ -7,7 +7,7 @@ import { Header } from '../../../components/layout/header';
 import { Footer } from '../../../components/layout/footer';
 import { useAuth } from '../../../lib/context/auth-context';
 import { useCart } from '../../../lib/context/cart-context';
-import { fetchApi } from '../../../lib/api-client';
+import { fetchApi, getApiBaseUrl } from '../../../lib/api-client';
 import {
   Package,
   Search,
@@ -133,8 +133,8 @@ export default function UserOrdersPage() {
 
     let eventSource: EventSource | null = null;
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api/v1' : '/api/v1');
-      eventSource = new EventSource(`${apiBase}/orders/stream`, { withCredentials: true });
+      const apiBase = getApiBaseUrl();
+      eventSource = new EventSource(`${apiBase}/api/v1/orders/stream`, { withCredentials: true });
 
       eventSource.addEventListener('order_update', (e: MessageEvent) => {
         try {
