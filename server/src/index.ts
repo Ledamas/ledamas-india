@@ -36,18 +36,26 @@ const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
   : ['http://localhost:3000', 'https://ledamas-india.vercel.app', 'https://ledamas.in', 'https://www.ledamas.in'];
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Allow server-to-server / same-origin requests (no Origin header)
       if (!origin) return callback(null, true);
-      if (
-        allowedOrigins.includes(origin) ||
-        /\.vercel\.app$/.test(origin) ||
-        origin.includes('localhost')
-      ) {
-        return callback(null, true);
-      }
-      return callback(null, true);
+
+      // Always allow explicitly listed origins
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // Allow any Vercel preview deployments (for staging)
+      if (/\.vercel\.app$/.test(origin)) return callback(null, true);
+
+      // Allow localhost ONLY in non-production environments
+      if (!IS_PRODUCTION && origin.includes('localhost')) return callback(null, true);
+
+      // ── Reject everything else ──────────────────────────────────────────
+      console.warn(`[CORS] Blocked request from disallowed origin: ${origin}`);
+      return callback(new Error(`CORS policy: Origin '${origin}' is not allowed.`));
     },
     credentials: true,
   })
