@@ -46,16 +46,52 @@ export async function createOrderInDb(orderPayload: any) {
   }
 }
 
-export async function initiatePaymentApi(orderTotal: number, paymentMethod: string) {
+/**
+ * Initiate payment by sending cart items to the backend.
+ * The backend fetches canonical prices from PostgreSQL and creates the Razorpay order.
+ * Never sends frontend-computed prices or totals.
+ */
+export async function initiatePaymentApi(params: {
+  items: Array<{ productId: string; variantId?: string | null; quantity: number; image?: string }>;
+  paymentMethod: string;
+  couponCode?: string | null;
+  referralCode?: string | null;
+  userId?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}) {
   return await fetchApi('/orders/initiate-payment', {
     method: 'POST',
-    body: JSON.stringify({ orderTotal, paymentMethod }),
+    body: JSON.stringify(params),
   });
 }
 
-export async function verifyAndCreateOrderApi(verificationPayload: any) {
+/**
+ * Verify payment and create order.
+ * Send cart items + payment IDs; never send frontend-computed prices.
+ * The backend re-validates everything from the database.
+ */
+export async function verifyAndCreateOrderApi(verificationPayload: {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  street: string;
+  apartment?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  items: Array<{ productId: string; variantId?: string | null; quantity: number; image?: string }>;
+  paymentMethod: string;
+  couponCode?: string | null;
+  referralCode?: string | null;
+  userId?: string;
+}) {
   return await fetchApi('/orders/verify-and-create', {
     method: 'POST',
     body: JSON.stringify(verificationPayload),
   });
 }
+

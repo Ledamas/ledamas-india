@@ -3,11 +3,11 @@ import { prisma } from '../config/db.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { getRazorpayInstance, verifyRazorpaySignature } from '../utils/razorpay.js';
 import { PaymentStatus, OrderStatus } from '@prisma/client';
-import { calculateCodDetails } from '../utils/cod-calculator.js';
 import { addRealtimeClient, broadcastOrderEvent } from '../utils/realtime.js';
 import { sendOrderStatusSms } from '../utils/message-central.js';
 import { NotificationService } from '../services/notification.service.js';
 import { verifyAndRotateSession } from '../utils/auth-security.js';
+import { computeOrderPricing } from '../utils/pricing-validator.js';
 
 const router = Router();
 
@@ -25,45 +25,21 @@ router.get('/stream', (req: Request, res: Response) => {
   res.write(`event: connected\ndata: ${JSON.stringify({ status: 'CONNECTED', timestamp: new Date().toISOString() })}\n\n`);
 });
 
-async function resolveValidProductItems(items: any[]) {
-  return await Promise.all(
-    (items || []).map(async (item: any) => {
-      const rawId = item.productId || item.id;
-      let validProductId = rawId;
+// In-memory map of pending payment sessions: razorpayOrderId -> server-computed amount (in paise)
+// This prevents the frontend from submitting a different amount than what was authorised.
+const pendingPaymentSessions = new Map<string, { amountPaise: number; createdAt: number }>();
 
-      if (rawId) {
-        const existing = await prisma.product.findFirst({
-          where: {
-            OR: [{ id: rawId }, { slug: rawId }],
-          },
-          select: { id: true },
-        });
-
-        if (existing) {
-          validProductId = existing.id;
-        } else {
-          const anyProd = await prisma.product.findFirst({ select: { id: true } });
-          if (anyProd) {
-            validProductId = anyProd.id;
-          }
-        }
-      }
-
-      return {
-        productId: validProductId,
-        variantId: item.variantId || null,
-        productName: item.name || item.productName || 'Chocolate Box',
-        variantName: item.variantName || item.weight || null,
-        price: Number(item.price) || 0,
-        quantity: Number(item.quantity) || 1,
-        image: item.image || item.images?.[0] || '/logo.png',
-      };
-    })
-  );
-}
+// Clean up sessions older than 30 minutes
+setInterval(() => {
+  const cutoff = Date.now() - 30 * 60 * 1000;
+  for (const [key, val] of pendingPaymentSessions.entries()) {
+    if (val.createdAt < cutoff) pendingPaymentSessions.delete(key);
+  }
+}, 5 * 60 * 1000);
 
 
-// POST /api/v1/orders - Create & persist order in database
+// POST /api/v1/orders - Create & persist order in database (admin/legacy use)
+// NOTE: For customer checkout, use /initiate-payment -> Razorpay -> /verify-and-create.
 router.post('/', async (req: Request, res: Response) => {
   try {
     const {
@@ -76,10 +52,6 @@ router.post('/', async (req: Request, res: Response) => {
       state,
       pincode,
       items,
-      subtotal,
-      shippingFee = 0,
-      discount = 0,
-      total,
       paymentMethod = 'RAZORPAY',
       couponCode = null,
       referralCode = null,
@@ -118,14 +90,32 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
+    // SERVER-SIDE PRICING: fetch real prices from DB, validate coupon/referral
+    const pricingResult = await computeOrderPricing(
+      items,
+      couponCode,
+      referralCode,
+      paymentMethod,
+      associatedUserId,
+      email,
+      phone
+    );
+
+    if ('error' in pricingResult) {
+      return sendError(res, pricingResult.error, 400);
+    }
+
+    const {
+      items: resolvedItems,
+      subtotal: dbSubtotal,
+      discountAmount,
+      couponCode: validCoupon,
+      referralCode: validReferral,
+      codDetails,
+    } = pricingResult;
+
     const totalOrdersCount = await prisma.order.count();
     const orderNumber = `LD-${1025 + totalOrdersCount}`;
-    const baseOrderTotal = (subtotal || 0) + (shippingFee || 0) - (discount || 0) || total || 0;
-    const codDetails = calculateCodDetails(baseOrderTotal, paymentMethod);
-    const resolvedItems = await resolveValidProductItems(items);
-
-    const cleanCouponCode = couponCode ? String(couponCode).trim().toUpperCase() : null;
-    const cleanReferralCode = referralCode ? String(referralCode).trim().toUpperCase() : null;
 
     const newOrder = await prisma.order.create({
       data: {
@@ -138,12 +128,12 @@ router.post('/', async (req: Request, res: Response) => {
         city,
         state,
         pincode,
-        subtotal: subtotal || total,
-        shippingFee,
-        discount,
+        subtotal: dbSubtotal,
+        shippingFee: 0,
+        discount: discountAmount,
         total: codDetails.totalCustomerPays,
-        couponCode: cleanCouponCode,
-        referralCode: cleanReferralCode,
+        couponCode: validCoupon,
+        referralCode: validReferral,
         paymentMethod,
         paymentStatus: PaymentStatus.PENDING,
         orderStatus: OrderStatus.NEW,
@@ -183,15 +173,15 @@ router.post('/', async (req: Request, res: Response) => {
       console.warn('[CUSTOMER PROFILE SYNC NOTICE]', profileErr);
     }
 
-    if (cleanCouponCode) {
+    if (validCoupon) {
       await prisma.coupon.updateMany({
-        where: { code: cleanCouponCode },
+        where: { code: validCoupon },
         data: { timesUsed: { increment: 1 } },
       }).catch(() => { });
     }
-    if (cleanReferralCode) {
+    if (validReferral) {
       await prisma.referralCode.updateMany({
-        where: { code: cleanReferralCode },
+        where: { code: validReferral },
         data: { timesUsed: { increment: 1 } },
       }).catch(() => { });
     }
@@ -281,72 +271,75 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/v1/orders/initiate-payment - Enforce server-side COD calculation & create Razorpay order
+// POST /api/v1/orders/initiate-payment - Server-side pricing + Razorpay order creation
+// SECURITY: Fetches real product prices from DB; never trusts frontend totals.
 router.post('/initiate-payment', async (req: Request, res: Response) => {
   try {
-    const { orderTotal, paymentMethod = 'UPI' } = req.body;
+    const {
+      items,
+      paymentMethod = 'UPI',
+      couponCode = null,
+      referralCode = null,
+      userId = null,
+      email = null,
+      phone = null,
+    } = req.body;
 
-    if (orderTotal === undefined || orderTotal === null || orderTotal <= 0) {
-      return sendError(res, 'Invalid order total amount', 400);
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return sendError(res, 'Order items are required to initiate payment.', 400);
     }
 
-    const isCod = (paymentMethod || '').toLowerCase() === 'cod';
-    let onlineAmount = 0;
-    let codConfirmationCharge = 0;
-    let codAdvance = 0;
-    let codAmount = 0;
+    // Compute pricing entirely server-side from DB
+    const pricingResult = await computeOrderPricing(
+      items,
+      couponCode,
+      referralCode,
+      paymentMethod,
+      userId,
+      email,
+      phone
+    );
 
-    if (isCod) {
-      if (orderTotal < 3000) {
-        onlineAmount = 99;
-        codConfirmationCharge = 99;
-        codAdvance = 0;
-        codAmount = orderTotal;
-      } else {
-        onlineAmount = 99;
-        codConfirmationCharge = 0;
-        codAdvance = 99;
-        codAmount = Math.max(0, orderTotal - 99);
-      }
-    } else {
-      onlineAmount = orderTotal;
-      codConfirmationCharge = 0;
-      codAdvance = 0;
-      codAmount = 0;
+    if ('error' in pricingResult) {
+      return sendError(res, pricingResult.error, 400);
     }
 
-    let razorpayOrderId: string;
-    try {
-      const razorpay = getRazorpayInstance();
-      const razorpayOrder = await razorpay.orders.create({
-        amount: Math.round(onlineAmount * 100), // in paise
-        currency: 'INR',
-        receipt: `rcpt_${Date.now()}`,
-      });
-      razorpayOrderId = razorpayOrder.id;
-    } catch (rzErr) {
-      console.warn('[RAZORPAY API NOTICE] Real Razorpay API call failed (sample/test keys used). Using mock Razorpay order ID:', rzErr);
-      razorpayOrderId = `order_mock_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    }
+    const { codDetails } = pricingResult;
+    const onlineAmount = codDetails.onlinePayableAmount;
+
+    // Create real Razorpay order — never fall back to mock in production
+    const razorpay = getRazorpayInstance();
+    const razorpayOrder = await razorpay.orders.create({
+      amount: Math.round(onlineAmount * 100), // in paise
+      currency: 'INR',
+      receipt: `rcpt_${Date.now()}`,
+    });
+
+    // Store server-side amount so verify-and-create can cross-check
+    pendingPaymentSessions.set(razorpayOrder.id, {
+      amountPaise: Math.round(onlineAmount * 100),
+      createdAt: Date.now(),
+    });
 
     return sendSuccess(
       res,
       {
-        razorpayOrderId,
+        razorpayOrderId: razorpayOrder.id,
         onlineAmount,
         currency: 'INR',
-        keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_key',
-        calculation: {
-          orderTotal,
-          isCod,
-          onlineAmount,
-          codConfirmationCharge,
-          codAdvance,
-          codAmount,
-          totalCustomerExpense: isCod ? (orderTotal < 3000 ? orderTotal + 99 : orderTotal) : orderTotal,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        pricing: {
+          subtotal: pricingResult.subtotal,
+          discountAmount: pricingResult.discountAmount,
+          baseOrderTotal: pricingResult.baseOrderTotal,
+          isCod: codDetails.isCod,
+          onlinePayableAmount: onlineAmount,
+          codAmountToCollect: codDetails.codAmountToCollect,
+          totalCustomerPays: codDetails.totalCustomerPays,
+          codFeeType: codDetails.codFeeType,
         },
       },
-      'Razorpay payment initiated and server calculation verified.'
+      'Razorpay payment initiated with server-verified pricing.'
     );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Initiate payment failed';
@@ -355,7 +348,8 @@ router.post('/initiate-payment', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/v1/orders/verify-and-create - HMAC verification before DB order creation
+// POST /api/v1/orders/verify-and-create - HMAC verification + DB order creation
+// SECURITY: Re-runs full server-side pricing; never trusts any frontend amounts.
 router.post('/verify-and-create', async (req: Request, res: Response) => {
   try {
     const {
@@ -371,9 +365,6 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       state,
       pincode,
       items,
-      subtotal,
-      discount = 0,
-      orderTotal,
       paymentMethod = 'UPI',
       userId,
       couponCode = null,
@@ -384,6 +375,7 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       return sendError(res, 'Missing required payment verification parameters', 400);
     }
 
+    // Verify Razorpay HMAC signature
     const isValidSignature = verifyRazorpaySignature({
       orderId: razorpayOrderId,
       paymentId: razorpayPaymentId,
@@ -394,40 +386,49 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       return sendError(res, 'Payment signature verification failed. Untrusted payment payload.', 400);
     }
 
-    const isCod = (paymentMethod || '').toLowerCase() === 'cod';
-    const computedTotal = (subtotal || 0) - (discount || 0) || orderTotal || 0;
-
-    let onlineAmount = 0;
-    let codConfirmationCharge = 0;
-    let codAdvance = 0;
-    let codAmount = 0;
-
-    if (isCod) {
-      if (computedTotal < 3000) {
-        onlineAmount = 99;
-        codConfirmationCharge = 99;
-        codAdvance = 0;
-        codAmount = computedTotal;
-      } else {
-        onlineAmount = 99;
-        codConfirmationCharge = 0;
-        codAdvance = 99;
-        codAmount = Math.max(0, computedTotal - 99);
-      }
-    } else {
-      onlineAmount = computedTotal;
-      codConfirmationCharge = 0;
-      codAdvance = 0;
-      codAmount = 0;
+    // Validate items are provided
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return sendError(res, 'Order items are required.', 400);
     }
 
-    const totalOrdersCount = await prisma.order.count();
-    const orderNumber = `LD-${1025 + totalOrdersCount}`;
-    const resolvedItems = await resolveValidProductItems(items);
-    const cleanCouponCode = couponCode ? String(couponCode).trim().toUpperCase() : null;
-    const cleanReferralCode = referralCode ? String(referralCode).trim().toUpperCase() : null;
+    // SERVER-SIDE PRICING: Re-compute everything from DB — never trust frontend amounts
+    const pricingResult = await computeOrderPricing(
+      items,
+      couponCode,
+      referralCode,
+      paymentMethod,
+      userId || null,
+      email || null,
+      phone || null
+    );
 
-    // Auto-link user if userId is not explicitly provided
+    if ('error' in pricingResult) {
+      return sendError(res, pricingResult.error, 400);
+    }
+
+    const {
+      items: resolvedItems,
+      subtotal: dbSubtotal,
+      discountAmount,
+      couponCode: validCoupon,
+      referralCode: validReferral,
+      baseOrderTotal,
+      codDetails,
+    } = pricingResult;
+
+    // Cross-check: the Razorpay amount must match what we authorised in initiate-payment
+    const session = pendingPaymentSessions.get(razorpayOrderId);
+    const expectedPaise = Math.round(codDetails.onlinePayableAmount * 100);
+    if (session && Math.abs(session.amountPaise - expectedPaise) > 1) {
+      console.error(
+        `[PAYMENT AMOUNT MISMATCH] razorpayOrderId=${razorpayOrderId} session=${session.amountPaise} computed=${expectedPaise}`
+      );
+      return sendError(res, 'Payment amount mismatch detected. Order rejected for security.', 400);
+    }
+    // Clean up session
+    pendingPaymentSessions.delete(razorpayOrderId);
+
+    // Auto-link user
     let finalUserId = userId || null;
     if (!finalUserId && (phone || email)) {
       const tenDigit = (phone || '').replace(/\D/g, '').slice(-10);
@@ -440,32 +441,34 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
           ],
         },
       });
-      if (existingUser) {
-        finalUserId = existingUser.id;
-      }
+      if (existingUser) finalUserId = existingUser.id;
     }
+
+    const totalOrdersCount = await prisma.order.count();
+    const orderNumber = `LD-${1025 + totalOrdersCount}`;
+    const isCod = codDetails.isCod;
 
     const newOrder = await prisma.order.create({
       data: {
         orderNumber,
         customerName: customerName || 'Valued Customer',
-        email: email || 'customer@ledamas.in',
+        email: (email || 'customer@ledamas.in').trim().toLowerCase(),
         phone: phone || '',
         street: street || '',
         apartment: apartment || '',
         city: city || '',
         state: state || 'Maharashtra',
         pincode: pincode || '',
-        subtotal: subtotal || computedTotal,
+        subtotal: dbSubtotal,
         shippingFee: 0,
-        discount: discount || 0,
-        total: isCod ? (computedTotal < 3000 ? computedTotal + 99 : computedTotal) : computedTotal,
-        orderTotal: computedTotal,
-        codAdvance,
-        codConfirmationCharge,
-        codAmount,
-        couponCode: cleanCouponCode,
-        referralCode: cleanReferralCode,
+        discount: discountAmount,
+        total: codDetails.totalCustomerPays,
+        orderTotal: baseOrderTotal,
+        codAdvance: codDetails.codAdvance,
+        codConfirmationCharge: codDetails.codConfirmationCharge,
+        codAmount: codDetails.codAmountToCollect,
+        couponCode: validCoupon,
+        referralCode: validReferral,
         userId: finalUserId,
         paymentStatus: isCod ? PaymentStatus.ADVANCE_PAID : PaymentStatus.PAID,
         orderStatus: OrderStatus.CONFIRMED,
@@ -482,15 +485,15 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       },
     });
 
-    if (cleanCouponCode) {
+    if (validCoupon) {
       await prisma.coupon.updateMany({
-        where: { code: cleanCouponCode },
+        where: { code: validCoupon },
         data: { timesUsed: { increment: 1 } },
       }).catch(() => { });
     }
-    if (cleanReferralCode) {
+    if (validReferral) {
       await prisma.referralCode.updateMany({
-        where: { code: cleanReferralCode },
+        where: { code: validReferral },
         data: { timesUsed: { increment: 1 } },
       }).catch(() => { });
     }
@@ -508,10 +511,10 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       data: { status: 'CONVERTED' }
     }).catch(err => console.error('[CART CONVERSION ERROR]', err));
 
-    // Update or create CustomerProfile to track stats for CRM
+    // Update or create CustomerProfile
     if (finalUserId || email || phone) {
       try {
-        const orderVal = newOrder.total || computedTotal;
+        const orderVal = codDetails.totalCustomerPays;
         if (finalUserId) {
           const profile = await prisma.customerProfile.findUnique({ where: { userId: finalUserId } });
           if (profile) {
@@ -544,7 +547,7 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       }
     }
 
-    // 1. Dispatch SMS Notification for Order Confirmation
+    // 1. Dispatch SMS Notification
     if (newOrder.phone) {
       sendOrderStatusSms({
         phone: newOrder.phone,
@@ -570,26 +573,30 @@ router.post('/verify-and-create', async (req: Request, res: Response) => {
       </div>
     `;
 
-    NotificationService.sendEmail(
-      email.trim(),
-      `Your LE DAMAS Order Confirmation - #${orderNumber}`,
-      orderEmailHtml,
-      finalUserId || undefined,
-      newOrder.id,
-      'ORDER_CREATED'
-    ).catch(err => console.error('[EMAIL NOTIFICATION ERROR]', err));
+    if (email) {
+      NotificationService.sendEmail(
+        email.trim(),
+        `Your LE DAMAS Order Confirmation - #${orderNumber}`,
+        orderEmailHtml,
+        finalUserId || undefined,
+        newOrder.id,
+        'ORDER_CREATED'
+      ).catch(err => console.error('[EMAIL NOTIFICATION ERROR]', err));
+    }
 
     return sendSuccess(
       res,
       {
         order: newOrder,
         verified: true,
-        calculation: {
-          orderTotal: computedTotal,
-          codConfirmationCharge,
-          codAdvance,
-          codAmount,
-          onlineAmount,
+        pricing: {
+          subtotal: dbSubtotal,
+          discountAmount,
+          baseOrderTotal,
+          isCod,
+          onlinePayableAmount: codDetails.onlinePayableAmount,
+          codAmountToCollect: codDetails.codAmountToCollect,
+          totalCustomerPays: codDetails.totalCustomerPays,
           paymentStatus: newOrder.paymentStatus,
         },
       },

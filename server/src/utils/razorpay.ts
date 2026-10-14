@@ -24,18 +24,24 @@ export const verifyRazorpaySignature = ({
   paymentId: string;
   signature: string;
 }): boolean => {
-  if (process.env.NODE_ENV !== 'production') {
-    if (orderId.startsWith('order_mock_') || signature === 'mock_signature_passed') {
-      return true;
-    }
-  }
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (!keySecret) return false;
+  if (!keySecret) {
+    console.error('[RAZORPAY] RAZORPAY_KEY_SECRET is not set — cannot verify signature.');
+    return false;
+  }
 
   const generatedSignature = crypto
     .createHmac('sha256', keySecret)
     .update(`${orderId}|${paymentId}`)
     .digest('hex');
 
-  return generatedSignature === signature;
+  // crypto.timingSafeEqual prevents timing-based attacks
+  try {
+    const a = Buffer.from(generatedSignature, 'hex');
+    const b = Buffer.from(signature, 'hex');
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 };

@@ -241,8 +241,23 @@ export default function CheckoutPage() {
     trackInitiateCheckout(items, baseOrderTotal);
 
     try {
-      // 1. Enforce server-side calculation and Razorpay order creation
-      const initRes: any = await initiatePaymentApi(baseOrderTotal, form.paymentMethod);
+      // 1. Send cart items to backend — server fetches real prices from DB & creates Razorpay order
+      const cartItemsForBackend = items.map((item) => ({
+        productId: item.product.id,
+        variantId: item.variant?.id ?? null,
+        quantity: item.quantity,
+        image: item.product.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png',
+      }));
+
+      const initRes: any = await initiatePaymentApi({
+        items: cartItemsForBackend,
+        paymentMethod: form.paymentMethod,
+        couponCode: appliedDiscount?.type === 'COUPON' ? appliedDiscount.code : null,
+        referralCode: appliedDiscount?.type === 'REFERRAL' ? appliedDiscount.code : null,
+        userId: user?.id ?? null,
+        email: form.email || null,
+        phone: form.phone || null,
+      });
       const initData = initRes?.data || initRes;
 
       if (!initData || !initData.razorpayOrderId) {
@@ -250,82 +265,15 @@ export default function CheckoutPage() {
       }
 
       const { razorpayOrderId, onlineAmount, keyId } = initData;
+      // Use server-verified pricing for display (never trust frontend calculations for order creation)
+      const serverPricing = initData.pricing || {};
 
       // 2. Load Razorpay SDK Script
       const scriptLoaded = await loadRazorpayScript();
 
-      const processOrderVerification = async (paymentId: string, signature: string) => {
-        const verifyRes: any = await verifyAndCreateOrderApi({
-          razorpayOrderId,
-          razorpayPaymentId: paymentId,
-          razorpaySignature: signature,
-          customerName: `${form.firstName} ${form.lastName}`,
-          email: form.email,
-          phone: form.alternatePhone ? `${form.phone} (Alt: ${form.alternatePhone})` : form.phone,
-          street: form.address,
-          apartment: form.apartment,
-          city: form.city,
-          state: form.state,
-          pincode: form.pincode,
-          items: items.map((item) => ({
-            productId: item.product.id,
-            variantId: item.variant?.id,
-            name: item.product.name,
-            variantName: item.variant?.name || item.variant?.weight,
-            price: item.variant ? item.variant.price : item.product.price,
-            quantity: item.quantity,
-            image: item.product.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png',
-          })),
-          subtotal: totalPrice,
-          discount: discountAmount,
-          couponCode: appliedDiscount?.type === 'COUPON' ? appliedDiscount.code : null,
-          referralCode: appliedDiscount?.type === 'REFERRAL' ? appliedDiscount.code : null,
-          orderTotal: baseOrderTotal,
-          paymentMethod: form.paymentMethod.toUpperCase(),
-          userId: user?.id || undefined,
-        });
-
-        const verifyData = verifyRes?.data || verifyRes;
-        const confirmedOrder = verifyData?.order || (verifyData?.orderNumber ? verifyData : null);
-
-        if (confirmedOrder) {
-          // Track Meta Pixel Purchase event
-          trackPurchase({
-            orderId: confirmedOrder.orderNumber || razorpayOrderId,
-            paymentId,
-            value: baseOrderTotal,
-            items,
-          });
-
-          // Save address and payment method for next time
-          try {
-            localStorage.setItem('ledamas_saved_checkout', JSON.stringify(form));
-            // Save data for invoice generation
-            localStorage.setItem('ledamas_last_order_invoice', JSON.stringify({
-              orderNumber: confirmedOrder.orderNumber || razorpayOrderId,
-              date: new Date().toISOString(),
-              customer: form,
-              items: items,
-              subtotal: totalPrice,
-              discount: discountAmount,
-              total: baseOrderTotal,
-              paymentMethod: form.paymentMethod,
-              isCod: (confirmedOrder.paymentMethod || form.paymentMethod.toUpperCase()) === 'COD',
-            }));
-          } catch (e) {}
-
-          setCreatedOrderDetails(confirmedOrder);
-          setCreatedOrderNumber(confirmedOrder.orderNumber);
-          setOrderSubmitted(true);
-          clearCart();
-        } else {
-          throw new Error(verifyRes?.message || 'Payment signature verification failed.');
-        }
-      };
-
       if (!scriptLoaded || typeof (window as any).Razorpay === 'undefined') {
-        console.warn('[CHECKOUT NOTICE] Razorpay SDK unavailable or test mode. Running direct verification.');
-        await processOrderVerification(`pay_mock_${Date.now()}`, 'mock_signature_passed');
+        setIsSubmitting(false);
+        setPaymentError('Payment gateway could not be loaded. Please check your internet connection and try again.');
         return;
       }
 
@@ -344,10 +292,69 @@ export default function CheckoutPage() {
         order_id: razorpayOrderId,
         handler: async (response: any) => {
           try {
-            await processOrderVerification(
-              response.razorpay_payment_id || `pay_mock_${Date.now()}`,
-              response.razorpay_signature || 'mock_signature_passed'
-            );
+            if (!response.razorpay_payment_id || !response.razorpay_signature) {
+              throw new Error('Incomplete payment response from Razorpay.');
+            }
+            // Verify and create order (server re-validates everything from DB)
+            const verifyRes: any = await verifyAndCreateOrderApi({
+              razorpayOrderId,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              customerName: `${form.firstName} ${form.lastName}`,
+              email: form.email,
+              phone: form.alternatePhone ? `${form.phone} (Alt: ${form.alternatePhone})` : form.phone,
+              street: form.address,
+              apartment: form.apartment,
+              city: form.city,
+              state: form.state,
+              pincode: form.pincode,
+              items: items.map((item) => ({
+                productId: item.product.id,
+                variantId: item.variant?.id ?? null,
+                quantity: item.quantity,
+                image: item.product.images?.[0] || '/Kunafa-Pistachio-Dark-Chocolate-1.png',
+              })),
+              paymentMethod: form.paymentMethod.toUpperCase(),
+              couponCode: appliedDiscount?.type === 'COUPON' ? appliedDiscount.code : null,
+              referralCode: appliedDiscount?.type === 'REFERRAL' ? appliedDiscount.code : null,
+              userId: user?.id ?? undefined,
+            });
+
+            const verifyData = verifyRes?.data || verifyRes;
+            const confirmedOrder = verifyData?.order || (verifyData?.orderNumber ? verifyData : null);
+            const confirmedPricing = verifyData?.pricing || serverPricing;
+
+            if (confirmedOrder) {
+              // Track Meta Pixel Purchase event using server-verified total
+              trackPurchase({
+                orderId: confirmedOrder.orderNumber || razorpayOrderId,
+                paymentId: response.razorpay_payment_id,
+                value: confirmedPricing.baseOrderTotal ?? baseOrderTotal,
+                items,
+              });
+
+              try {
+                localStorage.setItem('ledamas_saved_checkout', JSON.stringify(form));
+                localStorage.setItem('ledamas_last_order_invoice', JSON.stringify({
+                  orderNumber: confirmedOrder.orderNumber,
+                  date: new Date().toISOString(),
+                  customer: form,
+                  items,
+                  subtotal: confirmedPricing.subtotal ?? totalPrice,
+                  discount: confirmedPricing.discountAmount ?? discountAmount,
+                  total: confirmedPricing.baseOrderTotal ?? baseOrderTotal,
+                  paymentMethod: form.paymentMethod,
+                  isCod: confirmedOrder.paymentMethod === 'COD',
+                }));
+              } catch (e) {}
+
+              setCreatedOrderDetails(confirmedOrder);
+              setCreatedOrderNumber(confirmedOrder.orderNumber);
+              setOrderSubmitted(true);
+              clearCart();
+            } else {
+              throw new Error(verifyRes?.message || 'Payment verification failed.');
+            }
           } catch (err: any) {
             setPaymentError(err?.message || 'Payment verification failed.');
             setIsSubmitting(false);
