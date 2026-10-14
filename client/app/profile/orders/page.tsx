@@ -133,7 +133,7 @@ export default function UserOrdersPage() {
 
     let eventSource: EventSource | null = null;
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api/v1' : '/api/v1');
       eventSource = new EventSource(`${apiBase}/orders/stream`, { withCredentials: true });
 
       eventSource.addEventListener('order_update', (e: MessageEvent) => {

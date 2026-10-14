@@ -34,7 +34,8 @@ export interface BlockedUserItem {
   ipAddress: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
+const API_V1_BASE = API_BASE_URL ? `${API_BASE_URL}/api/v1` : '/api/v1';
 
 export const TrustSafetyManagement: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'reports' | 'blocklist'>('reports');
@@ -58,8 +59,8 @@ export const TrustSafetyManagement: React.FC = () => {
     setIsLoading(true);
     try {
       const [reportsRes, blockedRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/v1/admin/security/reports`),
-        fetch(`${API_BASE_URL}/api/v1/admin/security/blocklist`),
+        fetch(`${API_V1_BASE}/admin/security/reports`),
+        fetch(`${API_V1_BASE}/admin/security/blocklist`),
       ]);
 
       if (reportsRes.ok) {
@@ -110,7 +111,7 @@ export const TrustSafetyManagement: React.FC = () => {
 
   const handleResolveReport = async (id: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/reports/${id}`, {
+      const res = await fetch(`${API_V1_BASE}/admin/security/reports/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'RESOLVED' }),
@@ -125,7 +126,7 @@ export const TrustSafetyManagement: React.FC = () => {
 
   const handleDismissReport = async (id: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/reports/${id}`, {
+      const res = await fetch(`${API_V1_BASE}/admin/security/reports/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'DISMISSED' }),
@@ -142,7 +143,7 @@ export const TrustSafetyManagement: React.FC = () => {
     if (!window.confirm(`Are you sure you want to block user ${report.userName} (${report.userPhone})?`)) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/blocklist`, {
+      const res = await fetch(`${API_V1_BASE}/admin/security/blocklist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -166,7 +167,7 @@ export const TrustSafetyManagement: React.FC = () => {
     if (!window.confirm(`Unblock user ${name} and restore site access?`)) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/blocklist/${id}`, {
+      const res = await fetch(`${API_V1_BASE}/admin/security/blocklist/${id}`, {
         method: 'DELETE',
       });
 
@@ -184,7 +185,7 @@ export const TrustSafetyManagement: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/admin/security/blocklist`, {
+      const res = await fetch(`${API_V1_BASE}/admin/security/blocklist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(blockForm),

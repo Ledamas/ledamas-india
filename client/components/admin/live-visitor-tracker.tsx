@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { LiveGlobe3D, GlobeMarker } from './LiveGlobe3D';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
+const API_V1_BASE = API_BASE_URL ? `${API_BASE_URL}/api/v1` : '/api/v1';
 
 export interface LiveAuditSession {
   id: string;
@@ -63,7 +64,7 @@ export const LiveVisitorTracker: React.FC = () => {
   // Fetch real database metrics
   const fetchLiveViewMetrics = async (range: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/analytics/live-view?range=${range}`);
+      const res = await fetch(`${API_V1_BASE}/analytics/live-view?range=${range}`);
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {

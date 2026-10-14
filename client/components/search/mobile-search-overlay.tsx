@@ -70,8 +70,8 @@ export function MobileSearchOverlay() {
       abortControllerRef.current = abortController;
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${apiUrl}/api/v1/products?search=${encodeURIComponent(query.trim())}`, {
+        const apiBase = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
+        const res = await fetch(`${apiBase ? `${apiBase}/api/v1` : '/api/v1'}/products?search=${encodeURIComponent(query.trim())}`, {
           signal: abortController.signal
         });
         const data = await res.json();

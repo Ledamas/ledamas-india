@@ -23,7 +23,8 @@ import {
 import { Product } from '@/lib/types';
 import { getProductsFromDb } from '@/lib/services/product-service';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
+const API_V1_BASE = API_BASE_URL ? `${API_BASE_URL}/api/v1` : '/api/v1';
 
 export type ProductStatus = 'Active' | 'Draft' | 'OutOfStock' | 'Archived';
 
@@ -318,7 +319,7 @@ export const ProductManagement: React.FC = () => {
 
     try {
       const isEdit = Boolean(editingProduct?.id);
-      const url = isEdit ? `${API_BASE_URL}/api/v1/products/${editingProduct!.id}` : `${API_BASE_URL}/api/v1/products`;
+      const url = isEdit ? `${API_V1_BASE}/products/${editingProduct!.id}` : `${API_V1_BASE}/products`;
       const method = isEdit ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -352,7 +353,7 @@ export const ProductManagement: React.FC = () => {
     const nextInStock = nextStatus === 'Active';
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/products/${prod.id}/status`, {
+      const res = await fetch(`${API_V1_BASE}/products/${prod.id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -375,7 +376,7 @@ export const ProductManagement: React.FC = () => {
     if (!window.confirm(`Are you sure you want to permanently delete '${name}' from database?`)) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/products/${id}`, {
+      const res = await fetch(`${API_V1_BASE}/products/${id}`, {
         method: 'DELETE',
         headers: {
           'x-admin-session': 'true',
