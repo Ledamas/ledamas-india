@@ -47,12 +47,17 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: [
-      { url: '/Le-Damas-Sweets-Logo-enhanced.png', type: 'image/png' },
-      { url: '/icon.png', type: 'image/png' }
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/icon.png', sizes: '512x512', type: 'image/png' }
     ],
-    shortcut: '/Le-Damas-Sweets-Logo-enhanced.png',
-    apple: '/Le-Damas-Sweets-Logo-enhanced.png',
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ],
   },
+  manifest: '/site.webmanifest',
   openGraph: {
     title: 'Le Damas | Delicious Since 1951 | India',
     description: 'Delicious Since 1951, now in India. Premium Dubai chocolate with Kunafa & Pistachio cream, plus dark chocolate. Fast pan-India delivery.',
@@ -91,6 +96,11 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${cormorant.variable} ${jakarta.variable} ${scriptFont.variable} scroll-smooth`}>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         <MetaPixelScript />
       </head>
       <body className="bg-[#FDFDFB] text-[#2B2B2B] antialiased selection:bg-[#2AD2C5] selection:text-white min-h-screen flex flex-col font-sans pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">

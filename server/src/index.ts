@@ -21,6 +21,8 @@ import {
   couponRateLimiter,
 } from './middleware/rate-limit.middleware.js';
 
+import path from 'path';
+
 dotenv.config();
 
 const app: Express = express();
@@ -94,6 +96,9 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// Static files (favicons, icons, public assets)
+app.use(express.static(path.join(process.cwd(), 'public')));
 
 // Global Rate Limiter: Apply to all incoming routes to prevent server flooding
 app.use(globalRateLimiter);

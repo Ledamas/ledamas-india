@@ -44,7 +44,7 @@ export default function AdminPage() {
       localStorage.removeItem('ledamas_admin_session');
       localStorage.removeItem('ledamas_admin_auth_time');
       sessionStorage.removeItem('ledamas_admin_session');
-    } catch (e) {}
+    } catch (e) { }
     setIsUnlocked(false);
   };
 
