@@ -54,14 +54,16 @@ export function getOrCreateSessionId(): string {
   return sid;
 }
 
+import { isAdminRoute } from '@/lib/utils/admin-check';
+
 // Send event to backend tracking API
 export async function trackStorefrontEvent(eventType: string, extraData: Record<string, any> = {}) {
   try {
     if (typeof window === 'undefined') return;
     const pathname = window.location.pathname;
 
-    // Do NOT track admin pages or admin panel logins
-    if (pathname.startsWith('/admin')) return;
+    // Do NOT track admin pages, subdomains, or admin panel logins
+    if (isAdminRoute(pathname)) return;
 
     const visitorId = getOrCreateVisitorId();
     const sessionId = getOrCreateSessionId();
@@ -93,14 +95,14 @@ export function StorefrontTracker() {
 
   useEffect(() => {
     // Do not track admin users/pages
-    if (!pathname || pathname.startsWith('/admin')) return;
+    if (isAdminRoute(pathname)) return;
 
     // 1. Send page_view on route load
     trackStorefrontEvent('page_view');
 
     // 2. Setup Heartbeat every 20 seconds while tab is visible
     const interval = setInterval(() => {
-      if (document.visibilityState === 'visible' && !window.location.pathname.startsWith('/admin')) {
+      if (document.visibilityState === 'visible' && !isAdminRoute(window.location.pathname)) {
         trackStorefrontEvent('heartbeat');
       }
     }, 20000);

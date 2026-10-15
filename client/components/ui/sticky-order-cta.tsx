@@ -1,16 +1,22 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '../../lib/context/cart-context';
+import { isAdminRoute } from '../../lib/utils/admin-check';
 
 export function StickyOrderCta() {
   const { openCart, totalItems } = useCart();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
 
-  // Hide Order Now floating CTA button on Admin Panel pages and Invoice page
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/invoice')) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Completely hide Order Now floating CTA button on Admin Panel pages, admin subdomains, and Invoice pages
+  if (!mounted || isAdminRoute(pathname) || pathname?.startsWith('/invoice')) {
     return null;
   }
 

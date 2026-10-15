@@ -6,6 +6,7 @@ import { X, CheckCircle, Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { getApiBaseUrl } from "../../lib/api-client";
 import { useAuth } from "../../lib/context/auth-context";
+import { isAdminRoute } from "../../lib/utils/admin-check";
 
 interface PopupSettings {
   isEnabled: boolean;
@@ -31,6 +32,11 @@ export default function FirstOrderPopup() {
   const popupClaimedKey = "ledamas_first_order_claimed";
 
   useEffect(() => {
+    // Completely suppress popup on Admin Panel or Admin Subdomain
+    if (isAdminRoute(pathname)) {
+      return;
+    }
+
     // If user is logged in, don't show the popup at all
     if (isAuthenticated) {
       return;
@@ -44,6 +50,7 @@ export default function FirstOrderPopup() {
     
     // Fetch settings
     const fetchSettings = async () => {
+      if (isAdminRoute(pathname)) return;
       try {
         const apiBase = getApiBaseUrl();
         const res = await fetch(`${apiBase}/api/v1/auth/popup-settings`);
@@ -122,8 +129,8 @@ export default function FirstOrderPopup() {
     }
   };
 
-  // Do not render the popup on any admin pages, checkout pages, or if user is authenticated
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/checkout') || isAuthenticated) {
+  // Do not render the popup on any admin pages, admin subdomains, checkout pages, or if user is authenticated
+  if (isAdminRoute(pathname) || pathname?.startsWith('/checkout') || isAuthenticated) {
     return null;
   }
 

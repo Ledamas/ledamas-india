@@ -6,13 +6,19 @@ import { usePathname } from 'next/navigation';
 import { Home, Search, ShoppingBag, User, Flame } from 'lucide-react';
 import { useCart } from '@/lib/context/cart-context';
 import { useAuth } from '@/lib/context/auth-context';
+import { isAdminRoute } from '@/lib/utils/admin-check';
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { totalItems, openCart } = useCart();
   const { isAuthenticated, openLoginModal } = useAuth();
 
-  if (pathname.startsWith('/checkout') || pathname.startsWith('/admin') || pathname.startsWith('/invoice') || pathname === '/search') {
+  if (
+    isAdminRoute(pathname) ||
+    pathname.startsWith('/checkout') ||
+    pathname.startsWith('/invoice') ||
+    pathname === '/search'
+  ) {
     return null;
   }
 

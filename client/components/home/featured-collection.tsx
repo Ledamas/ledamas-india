@@ -74,7 +74,7 @@ export function FeaturedCollection() {
     {
       id: 'kunafa-pistachio',
       label: 'KUNAFA PISTACHIO',
-      image: '/Kunafa-Pistachio-Dark-Chocolate-1.png',
+      image: '/Kunafa-Pistachio-Milk-Chocolate-1.png',
     },
   ];
 

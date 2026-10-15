@@ -1,19 +1,25 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { ShieldCheck, X } from 'lucide-react';
+import { isAdminRoute } from '@/lib/utils/admin-check';
 
 export function CookieConsentBanner() {
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
+    if (isAdminRoute(pathname)) {
+      return;
+    }
     try {
       const consent = localStorage.getItem('ld_cookie_consent');
       if (!consent) {
         setIsVisible(true);
       }
     } catch (e) {}
-  }, []);
+  }, [pathname]);
 
   const handleAccept = () => {
     try {
@@ -22,7 +28,7 @@ export function CookieConsentBanner() {
     setIsVisible(false);
   };
 
-  if (!isVisible) return null;
+  if (isAdminRoute(pathname) || !isVisible) return null;
 
   return (
     <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 bg-[#1A1817] text-white p-4 rounded-xl border border-stone-700 shadow-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-5">

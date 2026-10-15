@@ -62,7 +62,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-slate-800 flex font-sans selection:bg-amber-500 selection:text-white">
+    <div id="admin-root" data-admin-panel="true" className="min-h-screen bg-[#F8F9FA] text-slate-800 flex font-sans selection:bg-amber-500 selection:text-white">
       {/* Light Seller Hub Sidebar */}
       <AdminSidebar
         activeTab={activeTab}

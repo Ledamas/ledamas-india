@@ -161,7 +161,7 @@ export function AdminLockScreen({ onUnlock }: AdminLockScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0E0C0B] text-white flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-[#CB9700] selection:text-black">
+    <div id="admin-root" data-admin-panel="true" className="min-h-screen bg-[#0E0C0B] text-white flex items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-[#CB9700] selection:text-black">
       {/* Background Decorative Ambient Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#CB9700]/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-[#2AD2C5]/5 rounded-full blur-[100px] pointer-events-none" />
