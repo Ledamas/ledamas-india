@@ -32,30 +32,60 @@ app.set('trust proxy', 1);
 // Security & Middleware Stack
 app.use(helmet());
 
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
-  : ['http://localhost:3000', 'https://ledamas-india.vercel.app', 'https://ledamas.in', 'https://www.ledamas.in'];
+const rawCorsOrigin = process.env.CORS_ORIGIN?.trim() || '';
+const configuredOrigins = rawCorsOrigin
+  ? rawCorsOrigin.split(',').map((s) => s.trim()).filter(Boolean)
+  : [];
 
+const defaultOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'https://ledamas.in',
+  'https://www.ledamas.in',
+  'https://ledamas-india.vercel.app',
+];
+
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...configuredOrigins]));
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow server-to-server / same-origin requests (no Origin header)
+      // 1. Allow server-to-server / same-origin requests (no Origin header)
       if (!origin) return callback(null, true);
 
-      // Always allow explicitly listed origins
+      // 2. Allow wildcard if explicitly configured
+      if (allowedOrigins.includes('*') || rawCorsOrigin === '*') {
+        return callback(null, true);
+      }
+
+      // 3. Always allow explicitly listed origins
       if (allowedOrigins.includes(origin)) return callback(null, true);
 
-      // Allow any Vercel preview deployments (for staging)
+      // 4. Allow any subdomains of ledamas.in
+      if (/^https?:\/\/([a-zA-Z0-9-]+\.)*ledamas\.in(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+
+      // 5. Allow any Vercel preview deployments (for staging)
       if (/\.vercel\.app$/.test(origin)) return callback(null, true);
 
-      // Allow localhost ONLY in non-production environments
-      if (!IS_PRODUCTION && origin.includes('localhost')) return callback(null, true);
+      // 6. Allow localhost and 127.0.0.1
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return callback(null, true);
+      }
 
-      // ── Reject everything else ──────────────────────────────────────────
-      console.warn(`[CORS] Blocked request from disallowed origin: ${origin}`);
-      return callback(new Error(`CORS policy: Origin '${origin}' is not allowed.`));
+      // 7. Allow AWS EC2 hostname / private network ranges
+      if (
+        /amazonaws\.com(:\d+)?$/.test(origin) ||
+        /^https?:\/\/(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.)/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      // 8. Reject origin cleanly without crashing the Express process
+      console.warn(`[CORS] Blocked request from origin: ${origin}. Add to CORS_ORIGIN in server/.env if legitimate.`);
+      return callback(null, false);
     },
     credentials: true,
   })
@@ -69,32 +99,41 @@ app.use(morgan('dev'));
 app.use(globalRateLimiter);
 
 // API Routes Mounting with Targeted Security Rate Limiters
+// Handles both /api/v1/*, /v1/*, and root path aliases to prevent Nginx proxy stripping 404s
 app.use('/api/v1/health', healthRoutes);
+app.use('/v1/health', healthRoutes);
 app.use('/health', healthRoutes);
 
 // Auth & OTP Routes (Protected against OTP spam & brute force)
 app.use('/api/v1/auth', authRateLimiter, authRoutes);
+app.use('/v1/auth', authRateLimiter, authRoutes);
 app.use('/auth', authRateLimiter, authRoutes);
 
 app.use('/api/v1/products', productsRoutes);
+app.use('/v1/products', productsRoutes);
 app.use('/products', productsRoutes);
 
 app.use('/api/v1/orders', ordersRoutes);
+app.use('/v1/orders', ordersRoutes);
 app.use('/orders', ordersRoutes);
 
 app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/v1/analytics', analyticsRoutes);
 app.use('/analytics', analyticsRoutes);
 
 // Admin Routes (Contains rate-limited POST /login)
 app.use('/api/v1/admin', adminRoutes);
+app.use('/v1/admin', adminRoutes);
 app.use('/admin', adminRoutes);
 
 // Coupon & Referral Routes (Protected against coupon enumeration)
 app.use('/api/v1/coupons', couponRateLimiter, couponsRoutes);
+app.use('/v1/coupons', couponRateLimiter, couponsRoutes);
 app.use('/coupons', couponRateLimiter, couponsRoutes);
 
 // Cart Routes
 app.use('/api/v1/cart', cartRoutes);
+app.use('/v1/cart', cartRoutes);
 app.use('/cart', cartRoutes);
 
 // Root Route Welcome

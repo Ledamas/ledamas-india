@@ -22,14 +22,18 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    if (process.env.NODE_ENV !== 'development') {
-      return [];
-    }
+    const backendTarget =
+      process.env.INTERNAL_API_URL?.trim().replace(/\/+$/, '') ||
+      'http://127.0.0.1:5000';
 
     return [
       {
         source: '/api/v1/:path*',
-        destination: 'http://localhost:5000/api/v1/:path*',
+        destination: `${backendTarget}/api/v1/:path*`,
+      },
+      {
+        source: '/api/:path*',
+        destination: `${backendTarget}/:path*`,
       },
     ];
   },

@@ -1,31 +1,54 @@
 export function getApiBaseUrl(): string {
   const configured = process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (configured) {
-    return configured.replace(/\/+$/, '').replace(/\/api\/v1\/?$/, '');
-  }
 
   if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:5000';
-    }
-    return window.location.origin;
-  }
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-  if (process.env.NODE_ENV === 'development') {
+    // If running in a real browser on a live domain or remote IP:
+    // Ignore 'localhost' if it was accidentally baked in during build
+    if (!isLocalhost) {
+      if (configured && !configured.includes('localhost') && !configured.includes('127.0.0.1')) {
+        return configured.replace(/\/+$/, '').replace(/\/api\/v1\/?$/, '');
+      }
+      // On live production domains, use same-origin (handled by Nginx or Next.js rewrites)
+      return window.location.origin;
+    }
+
+    // Localhost development browser
+    if (configured) {
+      return configured.replace(/\/+$/, '').replace(/\/api\/v1\/?$/, '');
+    }
     return 'http://localhost:5000';
   }
 
-  return 'https://www.ledamas.in';
+  // Server-Side Rendering (SSR) context on AWS / Docker
+  const internal = process.env.INTERNAL_API_URL?.trim();
+  if (internal) {
+    return internal.replace(/\/+$/, '').replace(/\/api\/v1\/?$/, '');
+  }
+
+  // If configured with an external production domain, SSR can use it
+  if (configured && !configured.includes('localhost') && !configured.includes('127.0.0.1')) {
+    return configured.replace(/\/+$/, '').replace(/\/api\/v1\/?$/, '');
+  }
+
+  // Production SSR fallback to local Express server instance
+  return 'http://127.0.0.1:5000';
+}
+
+export function getApiV1BaseUrl(): string {
+  return `${getApiBaseUrl()}/api/v1`;
 }
 
 const API_BASE_URL = getApiBaseUrl();
 
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const baseUrl = getApiBaseUrl();
   const normalizedEndpoint = endpoint.startsWith('/api/v1')
     ? endpoint
     : `/api/v1${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
-  const url = `${API_BASE_URL}${normalizedEndpoint}`;
+  const url = `${baseUrl}${normalizedEndpoint}`;
 
   const isAdminRoute = endpoint.startsWith('/admin') || endpoint.startsWith('admin');
   const tokenKey = isAdminRoute ? 'ledamas_admin_session' : 'ledamas_auth_token';
