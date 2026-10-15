@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Cormorant_Garamond, Plus_Jakarta_Sans, Alex_Brush } from 'next/font/google';
 import './globals.css';
 import { Suspense } from 'react';
@@ -104,6 +105,10 @@ export default function RootLayout({
         <MetaPixelScript />
       </head>
       <body className="bg-[#FDFDFB] text-[#2B2B2B] antialiased selection:bg-[#2AD2C5] selection:text-white min-h-screen flex flex-col font-sans pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+        />
         <AuthProvider>
           <CartProvider>
             <Suspense fallback={null}>
