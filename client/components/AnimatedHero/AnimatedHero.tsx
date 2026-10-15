@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion';
 
 /* ---- Settings ---- */
-const DIWALI = true; // set false after the festival
+const DIWALI = false; // set true during festival season
 const CTA_HREF = '/collections';
 const CTA_LABEL = 'Explore collection';
 const VIDEO_DESKTOP = '/hero/hero.mp4';
@@ -351,6 +351,10 @@ export function AnimatedHero() {
       className="group/hero relative isolate h-[54svh] min-h-[360px] max-h-[460px] w-full touch-pan-y overflow-hidden rounded-b-[1.75rem] bg-[#0c0806] outline-none border-none [transform:translateZ(0)] md:h-[100svh] md:max-h-none md:min-h-[640px] md:rounded-none -mt-px"
       style={{ overscrollBehaviorX: 'contain', transform: 'translateZ(0)' }}
     >
+      {/* Primary Semantic H1 for SEO & Screen Readers */}
+      <h1 className="sr-only">
+        Artisanal Dubai Kunafa & Pistachio Luxury Chocolates in India &mdash; Le Damas Delicious Since 1951
+      </h1>
       <style>{`
         /* Fairy lights hang from the header's bottom line.
            If they sit wrong, set --hero-lights-top on this section (e.g. 12.5rem). */

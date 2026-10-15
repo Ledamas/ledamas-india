@@ -415,9 +415,9 @@ export function Footer() {
 
       {/* CarbonSmith-Style Edge-to-Edge Typography Brand Banner */}
       <div className="w-full overflow-hidden px-2 text-center select-none pt-2 pb-1">
-        <h1 className="font-serif text-[16.5vw] sm:text-[17.5vw] leading-[0.82] font-light tracking-tight text-[#FAF6ED] uppercase w-full block hover:text-[#2AD2C5] transition-colors duration-500">
+        <div className="font-serif text-[16.5vw] sm:text-[17.5vw] leading-[0.82] font-light tracking-tight text-[#FAF6ED] uppercase w-full block hover:text-[#2AD2C5] transition-colors duration-500">
           Le Damas
-        </h1>
+        </div>
 
         {/* 'Delicious Since 1951' placed between two lines */}
         <div className="flex items-center justify-center gap-4 mt-2 mb-1 max-w-xl mx-auto px-4">
