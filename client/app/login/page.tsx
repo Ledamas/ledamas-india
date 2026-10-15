@@ -46,7 +46,9 @@ function LoginContent() {
   }, [isTimerActive, resendTimer]);
 
   const googleInitializedRef = useRef(false);
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+  const googleClientId =
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+    '567312898865-69mhoqn5vsb6s5amtcf8amujr5ehkgkh.apps.googleusercontent.com';
   const isRealGoogleClientId = Boolean(
     googleClientId &&
     googleClientId.trim() !== '' &&
@@ -91,20 +93,29 @@ function LoginContent() {
 
   const handleGoogleSignInClick = async () => {
     setErrorMsg(null);
-    if (isRealGoogleClientId && typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
-      initGoogleSDK();
-      try {
-        (window as any).google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.log('[GOOGLE ONE TAP NOT DISPLAYED] Prompt notice.');
-          }
-        });
-      } catch (e) {
-        console.warn('[GOOGLE GSI INIT ERROR]', e);
-        setErrorMsg('Failed to trigger Google Sign-In prompt.');
-      }
-    } else {
+
+    if (!isRealGoogleClientId) {
       setErrorMsg('Google Sign-In is not configured. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID.');
+      return;
+    }
+
+    if (typeof window === 'undefined') return;
+
+    if (!(window as any).google?.accounts?.id) {
+      setErrorMsg('Google Sign-In service is loading. Please try again in 2 seconds.');
+      return;
+    }
+
+    initGoogleSDK();
+    try {
+      (window as any).google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          console.log('[GOOGLE ONE TAP NOT DISPLAYED] Prompt notice.');
+        }
+      });
+    } catch (e) {
+      console.warn('[GOOGLE GSI INIT ERROR]', e);
+      setErrorMsg('Failed to trigger Google Sign-In prompt. Please check your browser popup settings.');
     }
   };
 

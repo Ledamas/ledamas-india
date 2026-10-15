@@ -43,7 +43,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   }, [isTimerActive, resendTimer]);
 
   const googleInitializedRef = useRef(false);
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+  const googleClientId =
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+    '567312898865-69mhoqn5vsb6s5amtcf8amujr5ehkgkh.apps.googleusercontent.com';
   const isRealGoogleClientId = Boolean(
     googleClientId &&
     googleClientId.trim() !== '' &&
@@ -92,16 +94,28 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const handleGoogleSignInClick = async () => {
     setErrorMessage(null);
 
-    if (isRealGoogleClientId && typeof window !== 'undefined' && (window as any).google?.accounts?.id) {
-      try {
-        initGoogleSDK();
-        (window as any).google.accounts.id.prompt();
-      } catch (e) {
-        console.warn('[GOOGLE GSI PROMPT ERROR]', e);
-        setErrorMessage('Failed to trigger Google Sign-In prompt.');
-      }
-    } else {
+    if (!isRealGoogleClientId) {
       setErrorMessage('Google Sign-In is not configured. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID.');
+      return;
+    }
+
+    if (typeof window === 'undefined') return;
+
+    if (!(window as any).google?.accounts?.id) {
+      setErrorMessage('Google Sign-In service is loading. Please try again in 2 seconds.');
+      return;
+    }
+
+    try {
+      initGoogleSDK();
+      (window as any).google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          console.warn('[GOOGLE ONE TAP NOT DISPLAYED]', notification.getNotDisplayedReason?.());
+        }
+      });
+    } catch (e) {
+      console.warn('[GOOGLE GSI PROMPT ERROR]', e);
+      setErrorMessage('Failed to trigger Google Sign-In prompt. Please check your browser popup settings.');
     }
   };
 
